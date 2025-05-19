@@ -1,0 +1,141 @@
+.review-item {
+  border: 1px solid #e0e0e0;
+  border-radius: 5px;
+  padding: 15px;
+  margin-bottom: 15px;
+  background-color: #fff;
+  transition: box-shadow 0.2s ease-in-out;
+  position: relative; /* For potential absolute positioning inside */
+}
+
+.review-item:hover {
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.review-item.editing {
+  border-color: #007bff;
+  background-color: #f8faff;
+}
+
+.item-details {
+  margin-bottom: 10px;
+  font-size: 0.9em;
+  line-height: 1.5;
+  color: #444;
+}
+
+.item-details strong {
+  color: #000;
+  margin-right: 5px;
+}
+
+.item-content-display {
+  background-color: #f9f9f9;
+  border: 1px solid #eee;
+  padding: 8px;
+  margin-top: 5px;
+  border-radius: 3px;
+  max-height: 100px; /* Limit display height */
+  overflow-y: auto;
+  white-space: pre-wrap; /* Preserve whitespace */
+  word-wrap: break-word;
+}
+
+.item-actions {
+  margin-top: 10px;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end; /* Align buttons to the right */
+}
+
+.item-actions button {
+  padding: 5px 12px;
+  font-size: 0.85em;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.item-actions button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.item-actions .approve-button,
+.item-actions button:first-of-type { /* Style the first button (Edit/Approve) */
+  background-color: #28a745;
+  color: white;
+  border-color: #28a745;
+}
+.item-actions .approve-button:hover:not(:disabled),
+.item-actions button:first-of-type:hover:not(:disabled) {
+  background-color: #218838;
+  border-color: #1e7e34;
+}
+
+.item-actions .reject-button {
+  background-color: #dc3545;
+  color: white;
+  border-color: #dc3545;
+}
+.item-actions .reject-button:hover:not(:disabled) {
+  background-color: #c82333;
+  border-color: #bd2130;
+}
+
+.item-actions button:last-of-type:not(.reject-button):not(.approve-button) { /* Style Cancel/other buttons */
+  background-color: #6c757d;
+  color: white;
+  border-color: #6c757d;
+}
+.item-actions button:last-of-type:not(.reject-button):not(.approve-button):hover:not(:disabled) {
+  background-color: #5a6268;
+  border-color: #545b62;
+}
+
+
+/* Editor Styles */
+.item-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.item-editor label {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.9em;
+  color: #333;
+}
+
+.item-editor label span {
+  margin-bottom: 4px;
+  font-weight: bold;
+}
+
+.item-editor input[type="text"],
+.item-editor input[type="number"],
+.item-editor select,
+.item-editor textarea {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 0.95em;
+  width: 100%; /* Make inputs take full width */
+  box-sizing: border-box; /* Include padding and border in width */
+}
+
+.item-editor textarea {
+  resize: vertical; /* Allow vertical resize */
+  min-height: 60px;
+}
+
+.item-error {
+  color: #dc3545;
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  padding: 8px;
+  border-radius: 4px;
+  font-size: 0.85em;
+  margin-top: 5px;
+}

@@ -1,0 +1,75 @@
+.pdf-review-list-container {
+  padding: 20px;
+  font-family: sans-serif;
+  max-width: 800px;
+  margin: 20px auto;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+}
+
+.pdf-review-list-container h2 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 25px;
+}
+
+.review-list {
+  list-style: none;
+  padding: 0;
+}
+
+.review-list-item {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  margin-bottom: 15px;
+  padding: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: box-shadow 0.2s ease-in-out;
+}
+
+.review-list-item:hover {
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.review-item-info {
+  flex-grow: 1;
+  margin-right: 20px;
+  line-height: 1.5;
+}
+
+.review-item-info strong {
+  color: #555;
+}
+
+.review-item-actions {
+  flex-shrink: 0;
+}
+
+.review-button {
+  background-color: #007bff;
+  color: white;
+  padding: 8px 15px;
+  border: none;
+  border-radius: 4px;
+  text-decoration: none;
+  cursor: pointer;
+  font-size: 0.9em;
+  transition: background-color 0.2s ease;
+}
+
+.review-button:hover {
+  background-color: #0056b3;
+}
+
+.error-message {
+  color: #dc3545;
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  padding: 10px;
+  border-radius: 5px;
+  text-align: center;
+}

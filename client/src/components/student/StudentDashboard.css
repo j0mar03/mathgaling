@@ -1,0 +1,618 @@
+/* Kid-Friendly Student Dashboard Styles */
+body {
+  font-family: 'Nunito', 'Comic Sans MS', 'Arial', sans-serif;
+  background-color: #f0f8ff; /* AliceBlue - a very soft pastel blue */
+}
+
+.student-dashboard {
+  max-width: 900px; /* Slightly reduced for better focus */
+  margin: 20px auto;
+  padding: 25px;
+  background-color: #fffaf0; /* FloralWhite - a warm pastel */
+  border-radius: 25px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  font-size: 16px; /* Base font size */
+  color: #5D4037; /* Soft brown for text */
+}
+
+/* General Button Style */
+.button {
+  display: inline-block;
+  padding: 12px 25px;
+  border-radius: 25px; /* Rounded buttons */
+  text-decoration: none;
+  font-weight: bold;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  border: none;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  font-size: 1em; /* Relative to parent */
+}
+
+.button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  text-decoration: none; /* Ensure no underline on hover for links styled as buttons */
+}
+
+/* Dashboard Header */
+.dashboard-header {
+  text-align: center;
+  margin-bottom: 35px;
+  padding: 20px;
+  background: linear-gradient(135deg, #FFEFBA, #FFFFFF); /* Soft yellow to white */
+  border-radius: 20px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+}
+
+.dashboard-header h1 {
+  color: #FF8C69; /* Soft Coral */
+  font-size: 2.2em; /* Larger, friendly */
+  margin-bottom: 8px;
+  font-weight: 700; /* Nunito bold */
+}
+
+.dashboard-header .subtitle {
+  color: #777;
+  font-size: 1.1em;
+  margin-bottom: 15px;
+}
+
+.encouragement-text {
+  color: #6A5ACD; /* SlateBlue */
+  font-style: italic;
+  font-size: 1.1em;
+  margin-bottom: 20px;
+}
+
+.progress-button {
+  background-color: #FFB6C1; /* LightPink */
+  color: white;
+  padding: 12px 28px;
+  font-size: 1.1em;
+}
+
+.progress-button:hover {
+  background-color: #FFC0CB; /* Pink */
+}
+
+/* Progress Stats Section */
+.progress-stats {
+  background: #fff;
+  border-radius: 15px;
+  padding: 15px;
+  margin: 20px auto;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  max-width: 400px; /* Center this block */
+}
+
+.streak-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.streak-icon {
+  font-size: 1.8em;
+  margin-right: 10px;
+  color: #FFD700; /* Gold */
+  animation: pulse 1.5s infinite;
+}
+
+.streak-count {
+  font-size: 1.2em;
+  font-weight: bold;
+  color: #FF8C69; /* Soft Coral */
+}
+
+.daily-progress {
+  text-align: center;
+}
+
+.progress-bar {
+  background: #e0e0e0; /* Light grey for track */
+  border-radius: 10px;
+  height: 18px;
+  margin: 8px 0;
+  overflow: hidden;
+}
+
+.progress-fill {
+  background: linear-gradient(90deg, #90EE90, #32CD32); /* LightGreen to LimeGreen */
+  height: 100%;
+  border-radius: 10px;
+  transition: width 0.5s ease;
+}
+
+.progress-text {
+  font-size: 0.95em;
+  color: #555;
+}
+
+/* Learning Path Focus Section */
+.learning-path-focus {
+  margin: 30px 0;
+  padding: 25px;
+  background-color: #E6E6FA; /* Lavender */
+  border-radius: 20px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.07);
+  text-align: center;
+}
+
+.focus-header h2 {
+  color: #483D8B; /* DarkSlateBlue */
+  font-size: 1.8em;
+  margin-bottom: 10px;
+}
+
+.focus-header p {
+  color: #6A5ACD; /* SlateBlue */
+  font-size: 1.1em;
+  margin-bottom: 20px;
+}
+
+.focus-card {
+  background-color: #fff;
+  border-radius: 15px;
+  padding: 20px;
+  margin-top: 15px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+  border: 3px solid; /* Border color set by JS */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.focus-emoji {
+  font-size: 4em; /* Large emoji */
+  margin-bottom: 15px;
+}
+
+.focus-content h3 {
+  color: #5D4037; /* Soft Brown */
+  font-size: 1.6em;
+  margin-bottom: 10px;
+}
+
+.focus-description {
+  color: #777;
+  font-size: 1em;
+  line-height: 1.6;
+  margin-bottom: 20px;
+  max-width: 500px;
+}
+
+.focus-details {
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+  max-width: 400px;
+  margin-bottom: 25px;
+  gap: 15px;
+}
+
+.detail-item {
+  text-align: center;
+}
+
+.detail-label {
+  display: block;
+  font-size: 0.9em;
+  color: #888;
+  margin-bottom: 5px;
+}
+
+.detail-value {
+  font-size: 1.1em;
+  font-weight: bold;
+}
+
+.mastery-bar-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 120px; /* Fixed width for alignment */
+  margin: 0 auto; /* Center if needed */
+}
+
+.mastery-bar-container .mastery-bar {
+  flex-grow: 1;
+  height: 12px;
+  background-color: #f0f0f0;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.mastery-bar-container .mastery-fill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 0.5s ease-in-out;
+}
+
+.mastery-percentage-text {
+  font-size: 0.95em;
+  font-weight: bold;
+  color: #555;
+}
+
+.start-learning-button {
+  padding: 15px 35px;
+  font-size: 1.3em;
+  color: white;
+  /* background-color set by JS */
+}
+
+/* Recommended Topics Section - Secondary */
+.recommended-topics-section {
+  margin: 30px 0;
+  padding: 20px;
+  background-color: #FFF5EE; /* Seashell - very light warm pastel */
+  border-radius: 20px;
+}
+
+.recommended-topics-section h2 {
+  text-align: center;
+  color: #D2691E; /* Chocolate */
+  font-size: 1.6em;
+  margin-bottom: 10px;
+}
+
+.recommended-topics-section > p {
+  text-align: center;
+  color: #8B4513; /* SaddleBrown */
+  font-size: 1em;
+  margin-bottom: 20px;
+}
+
+.recommended-topics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+.recommended-topic-card {
+  background-color: #fff;
+  border-radius: 15px;
+  padding: 15px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  text-align: center;
+  border: 2px solid #FFE4B5; /* Moccasin */
+}
+
+.topic-card-emoji {
+  font-size: 2.5em;
+  margin-bottom: 10px;
+}
+
+.recommended-topic-card h3 {
+  color: #5D4037;
+  font-size: 1.2em;
+  margin-bottom: 10px;
+  min-height: 40px; /* For alignment */
+}
+
+.recommended-topic-card .mastery-info {
+  font-size: 0.9em;
+  margin-bottom: 15px;
+}
+
+.recommended-topic-card .mastery-percentage {
+  font-weight: bold;
+  color: #20B2AA; /* LightSeaGreen */
+}
+
+.recommended-topic-card .mastery-bar {
+  height: 8px;
+  background-color: #f0f0f0;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 5px;
+}
+
+.recommended-topic-card .mastery-fill {
+  height: 100%;
+  background-color: #20B2AA; /* LightSeaGreen */
+  border-radius: 4px;
+}
+
+.recommended-topic-card .practice-button {
+  background-color: #FFA07A; /* LightSalmon */
+  color: white;
+  font-size: 1em;
+  padding: 10px 20px;
+}
+
+.recommended-topic-card .practice-button:hover {
+  background-color: #FA8072; /* Salmon */
+}
+
+
+/* Topics Toggle */
+.topics-toggle {
+  text-align: center;
+  margin: 35px 0;
+}
+
+.toggle-button {
+  background-color: #F0E68C; /* Khaki */
+  border: 2px solid #BDB76B; /* DarkKhaki */
+  color: #5D4037; /* Soft Brown */
+  padding: 12px 28px;
+  font-size: 1.1em;
+}
+
+.toggle-button:hover {
+  background-color: #E0D77C;
+}
+
+.toggle-button.active {
+  background-color: #BDB76B; /* DarkKhaki */
+  color: white;
+}
+
+/* All Topics Section (Hidden by Default) */
+.all-topics-section {
+  margin-top: 30px;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 20px;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.06);
+}
+
+.all-topics-section > h2 { /* Targeting the main h2 of this section */
+  color: #4682B4; /* SteelBlue */
+  font-size: 1.7em;
+  text-align: center;
+  margin-bottom: 25px;
+  padding-bottom: 10px;
+  border-bottom: 2px dashed #B0C4DE; /* LightSteelBlue */
+}
+
+.quarter-section {
+  margin-bottom: 30px;
+  padding: 15px;
+  background: #F5F5F5; /* WhiteSmoke - very light grey for slight distinction */
+  border-radius: 15px;
+}
+
+.quarter-title {
+  color: #5F9EA0; /* CadetBlue */
+  font-size: 1.5em;
+  margin-bottom: 20px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #B0E0E6; /* PowderBlue */
+}
+
+.topic-group {
+  margin-bottom: 25px;
+}
+
+.topic-group h3 {
+  color: #778899; /* LightSlateGray */
+  font-size: 1.3em;
+  margin-bottom: 15px;
+}
+
+.content-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 18px;
+}
+
+.content-card.kc-card { /* Specific to KCs in all topics */
+  background-color: #fff;
+  border: 1px solid #DCDCDC; /* Gainsboro */
+  border-radius: 12px;
+  padding: 15px;
+  box-shadow: 0 3px 7px rgba(0,0,0,0.04);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.content-card.kc-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 5px 10px rgba(0,0,0,0.08);
+}
+
+.kc-card h4 {
+  color: #5D4037;
+  font-size: 1.1em;
+  margin-bottom: 8px;
+  min-height: 3em; /* Ensure space for 2 lines */
+}
+
+.kc-card .mastery-info {
+  font-size: 0.9em;
+  margin-bottom: 12px;
+}
+.kc-card .mastery-percentage {
+  color: #3CB371; /* MediumSeaGreen */
+}
+.kc-card .mastery-bar {
+  height: 7px;
+}
+.kc-card .mastery-fill {
+  background-color: #3CB371; /* MediumSeaGreen */
+}
+
+.start-kc-button {
+  background-color: #87CEEB; /* SkyBlue */
+  color: white;
+  font-size: 1em;
+  padding: 10px 18px;
+  width: 100%;
+}
+.start-kc-button:hover {
+  background-color: #7AC5CD; /* MediumTurquoise */
+}
+
+/* Fun Practice Options */
+.fun-practice-section {
+  margin-top: 35px;
+  padding: 25px;
+  background: linear-gradient(135deg, #FFFACD, #FFEBCD); /* LemonChiffon to BlanchedAlmond */
+  border-radius: 20px;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.06);
+  text-align: center;
+}
+
+.fun-practice-section > h3 { /* Targeting the main h3 of this section */
+  color: #FF7F50; /* Coral */
+  font-size: 1.7em;
+  margin-bottom: 20px;
+}
+
+.fun-practice-section .content-cards { /* Re-using .content-cards for layout */
+  gap: 25px; /* Slightly larger gap for these special cards */
+}
+
+.fun-practice-section .content-card { /* Styling for cards within fun practice */
+  background-color: #fff;
+  border: 2px dashed #FFA07A; /* LightSalmon */
+  min-height: 220px; /* Ensure cards have some height */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.fun-practice-section .content-card h4 {
+  color: #DC143C; /* Crimson */
+  font-size: 1.3em;
+}
+.fun-practice-section .content-card p {
+  font-size: 0.95em;
+  color: #555;
+  flex-grow: 1;
+}
+.fun-practice-section .button,
+.fun-practice-section .challenge-button,
+.fun-practice-section .start-quiz-button {
+  width: auto; /* Allow button to size to content */
+  padding: 12px 25px;
+  margin: 10px auto 0; /* Center button */
+  display: block;
+}
+
+.challenge-button { /* General challenge button style */
+  background: linear-gradient(135deg, #8A2BE2, #BA55D3); /* BlueViolet to MediumOrchid */
+  color: white;
+}
+.challenge-button:hover {
+  background: linear-gradient(135deg, #7B1FA2, #A74DBA);
+}
+
+.start-quiz-button { /* General start quiz button style */
+  background-color: #32CD32; /* LimeGreen */
+  color: white;
+}
+.start-quiz-button:hover {
+  background-color: #2E8B57; /* SeaGreen */
+}
+
+
+/* Loading and Error States */
+.loading, .error-container {
+  text-align: center;
+  padding: 30px;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  margin: 20px;
+  color: #5D4037;
+}
+
+.loading h2, .error-container h2 {
+  font-size: 1.5em;
+  margin-bottom: 10px;
+  color: #CD5C5C; /* IndianRed */
+}
+.loading p, .error-container p {
+  font-size: 1.1em;
+  margin-bottom: 15px;
+}
+.loading-animation {
+  font-size: 3em;
+  animation: spin 2s linear infinite;
+  color: #FFD700; /* Gold */
+}
+.error-container button {
+  background-color: #FF6347; /* Tomato */
+  color: white;
+}
+.error-container button:hover {
+  background-color: #E55337;
+}
+
+/* Animations */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+  100% { transform: scale(1); }
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .student-dashboard {
+    padding: 15px;
+    font-size: 15px;
+  }
+  
+  .dashboard-header h1 {
+    font-size: 1.8em;
+  }
+  .dashboard-header .subtitle {
+    font-size: 1em;
+  }
+
+  .focus-card {
+    padding: 15px;
+  }
+  .focus-emoji {
+    font-size: 3em;
+  }
+  .focus-content h3 {
+    font-size: 1.4em;
+  }
+  .focus-details {
+    flex-direction: column;
+    gap: 10px;
+  }
+  .mastery-bar-container {
+    width: 100%;
+  }
+  .start-learning-button {
+    font-size: 1.1em;
+    padding: 12px 25px;
+  }
+
+  .content-cards, .recommended-topics-grid {
+    grid-template-columns: 1fr; /* Single column on smaller screens */
+  }
+
+  .fun-practice-section .content-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-header h1 {
+    font-size: 1.6em;
+  }
+  .button {
+    padding: 10px 20px;
+    font-size: 0.95em;
+  }
+  .focus-content h3 {
+    font-size: 1.2em;
+  }
+  .start-learning-button {
+    font-size: 1em;
+  }
+  .recommended-topic-card h3, .kc-card h4 {
+    font-size: 1em;
+  }
+}

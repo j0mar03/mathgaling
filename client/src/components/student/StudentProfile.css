@@ -1,0 +1,227 @@
+/* Student Profile Styles */
+.student-profile {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: 'Comic Sans MS', 'Bubblegum Sans', cursive;
+}
+
+.profile-header {
+    text-align: center;
+    margin-bottom: 30px;
+    padding: 20px;
+    background: linear-gradient(135deg, #FFD700, #FFA500);
+    border-radius: 20px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.profile-header h1 {
+    font-size: 2.5em;
+    color: #fff;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+    margin-bottom: 10px;
+}
+
+.profile-header p {
+    font-size: 1.2em;
+    color: #fff;
+}
+
+.profile-content {
+    background: #fff;
+    border-radius: 20px;
+    padding: 30px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.profile-avatar-section {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.profile-avatar-section h3 {
+    color: #2c3e50;
+    font-size: 1.5em;
+    margin-bottom: 15px;
+}
+
+.avatar-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.avatar-option {
+    font-size: 2em;
+    padding: 15px;
+    border: 3px solid #e0e0e0;
+    border-radius: 15px;
+    background: #fff;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.avatar-option:hover {
+    transform: scale(1.1);
+    border-color: #4a90e2;
+}
+
+.avatar-option.selected {
+    border-color: #4a90e2;
+    background: #e8f4ff;
+    transform: scale(1.1);
+}
+
+.profile-form {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.form-group {
+    margin-bottom: 25px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: #2c3e50;
+    font-size: 1.1em;
+    font-weight: bold;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 1em;
+    font-family: inherit;
+    transition: border-color 0.3s ease;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    border-color: #4a90e2;
+    outline: none;
+}
+
+.color-options {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.color-option {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 3px solid #e0e0e0;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.color-option:hover {
+    transform: scale(1.1);
+}
+
+.color-option.selected {
+    border-color: #2c3e50;
+    transform: scale(1.1);
+}
+
+.error-message {
+    background: #ffebee;
+    color: #c62828;
+    padding: 10px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.success-message {
+    background: #e8f5e9;
+    color: #2e7d32;
+    padding: 10px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.form-actions {
+    text-align: center;
+    margin-top: 30px;
+}
+
+.save-button {
+    background: linear-gradient(135deg, #4a90e2, #357abd);
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 25px;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: inherit;
+}
+
+.save-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
+}
+
+.save-button:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.profile-loading {
+    text-align: center;
+    padding: 50px;
+    font-family: inherit;
+}
+
+.profile-loading h2 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+}
+
+.profile-loading p {
+    color: #7f8c8d;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .student-profile {
+        padding: 15px;
+    }
+
+    .avatar-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .profile-header h1 {
+        font-size: 2em;
+    }
+
+    .profile-header p {
+        font-size: 1em;
+    }
+}
+
+@media (max-width: 480px) {
+    .avatar-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .profile-header h1 {
+        font-size: 1.8em;
+    }
+
+    .color-options {
+        justify-content: center;
+    }
+}

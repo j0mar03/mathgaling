@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: its-kids-client
+    env: static
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./build
+    envVars:
+      - key: REACT_APP_API_URL
+        value: https://its-kids-server.onrender.com
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html 

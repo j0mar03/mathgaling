@@ -1,0 +1,111 @@
+/* Inherit overlay style if needed, or define specifically */
+/* .modal-overlay { ... } */
+
+.modal-content.confirm-assign-modal {
+  background-color: #fff;
+  padding: 25px;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  width: 90%;
+  max-width: 500px; /* Slightly smaller width maybe */
+  max-height: 80vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.confirm-assign-modal h3 {
+  margin-top: 0;
+  color: #333;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+}
+
+.assignment-summary {
+  margin-bottom: 15px;
+  background-color: #f9f9f9;
+  padding: 10px;
+  border: 1px solid #eee;
+  border-radius: 4px;
+}
+
+.assignment-summary h4 {
+  margin-top: 0;
+  margin-bottom: 8px;
+  color: #555;
+}
+
+.assignment-summary ul {
+  list-style-type: disc;
+  padding-left: 20px;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.assignment-summary li {
+  margin-bottom: 4px;
+}
+
+.notes-section {
+  margin-bottom: 20px;
+}
+
+.notes-section label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: #555;
+}
+
+.notes-section textarea {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  min-height: 80px;
+  resize: vertical;
+}
+
+/* Use existing modal-actions styles if defined globally or copy from AssignPracticeModal.css */
+.confirm-assign-modal .modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: auto; 
+  padding-top: 15px;
+  border-top: 1px solid #eee;
+}
+
+.confirm-assign-modal .modal-actions button {
+  padding: 10px 15px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.confirm-assign-modal .modal-actions button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.confirm-assign-modal .modal-actions .button-secondary {
+  background-color: #6c757d;
+  color: white;
+}
+
+.confirm-assign-modal .modal-actions .button-secondary:hover:not(:disabled) {
+  background-color: #5a6268;
+}
+
+.confirm-assign-modal .modal-actions button:not(.button-secondary):not(:disabled) {
+  background-color: #28a745; /* Green for confirm */
+  color: white;
+}
+
+.confirm-assign-modal .modal-actions button:not(.button-secondary):not(:disabled):hover {
+  background-color: #218838;
+}

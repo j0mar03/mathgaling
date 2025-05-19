@@ -1,0 +1,36 @@
+{
+  "name": "its-prototype",
+  "version": "1.0.0",
+  "description": "Bayesian-Fuzzy Intelligent Tutoring System for Philippine Grade 3-4 Mathematics",
+  "main": "index.js",
+  "react-scripts": "^5.0.1",
+  "scripts": {
+    "start": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "cross-env NODE_ENV=development nodemon client/server/index.js",
+    "client": "cd client && npm start",
+    "build": "cd client && npm run build",
+    "install-all": "npm install && cd client && npm install",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "intelligent-tutoring-system",
+    "bayesian-knowledge-tracing",
+    "fuzzy-logic",
+    "education",
+    "mathematics"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "cross-env": "^7.0.3",
+    "nodemon": "^3.1.9"
+  }
+}

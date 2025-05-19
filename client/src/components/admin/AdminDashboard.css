@@ -1,0 +1,231 @@
+/* Admin Dashboard Styles */
+
+.admin-dashboard {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.admin-dashboard h1 {
+  color: #333;
+  font-size: 28px;
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #4a90e2;
+}
+
+.admin-dashboard h2 {
+  color: #444;
+  font-size: 22px;
+  margin-bottom: 15px;
+}
+
+/* Dashboard Tab Navigation */
+.dashboard-tabs {
+  display: flex;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #ddd;
+  overflow-x: auto; /* Keep horizontal scroll on small screens if needed */
+  flex-wrap: wrap; /* Allow wrapping */
+  gap: 5px; /* Add gap between buttons */
+}
+
+.tab-button {
+  padding: 12px 20px;
+  border: none;
+  background: #f5f7fa;
+  color: #434a54;
+  margin-right: 5px;
+  cursor: pointer;
+  border-radius: 5px 5px 0 0;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.tab-button:hover {
+  background: #e9ecef;
+}
+
+.tab-button.active {
+  background: #4a90e2;
+  color: white;
+  border-bottom: 3px solid #4a90e2;
+}
+
+/* Style for the new review link button to match tabs */
+.review-link-button {
+  padding: 12px 20px;
+  border: none;
+  background: #f5f7fa;
+  color: #434a54;
+  cursor: pointer;
+  border-radius: 5px 5px 0 0;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  text-decoration: none; /* Remove link underline */
+  display: inline-block; /* Behave like a button */
+}
+
+.review-link-button:hover {
+  background: #e9ecef;
+}
+
+/* Ensure consistent margin if needed (already handled by gap in flex container) */
+/* .tab-button, .review-link-button { margin-right: 5px; } */
+
+/* Action Buttons */
+.admin-button {
+  background-color: #4a90e2;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-right: 10px;
+  margin-bottom: 15px;
+  transition: background-color 0.3s;
+}
+
+.admin-button:hover {
+  background-color: #3a7bc8;
+}
+
+.admin-button.secondary {
+  background-color: #6c757d;
+}
+
+.admin-button.secondary:hover {
+  background-color: #5a6268;
+}
+
+.admin-button.danger {
+  background-color: #dc3545;
+}
+
+.admin-button.danger:hover {
+  background-color: #c82333;
+}
+
+/* User and Data Tables */
+.admin-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+  background-color: white;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.admin-table th {
+  background-color: #f8f9fa;
+  padding: 12px 15px;
+  text-align: left;
+  font-weight: 600;
+  color: #495057;
+  border-bottom: 2px solid #dee2e6;
+}
+
+.admin-table td {
+  padding: 12px 15px;
+  border-bottom: 1px solid #e9ecef;
+  vertical-align: middle;
+}
+
+.admin-table tr:last-child td {
+  border-bottom: none;
+}
+
+.admin-table tr:hover {
+  background-color: #f8f9fa;
+}
+
+/* Forms */
+.admin-form {
+  background-color: white;
+  padding: 20px;
+  border-radius: 5px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  margin-bottom: 20px;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+  color: #495057;
+}
+
+.form-control {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.form-control:focus {
+  border-color: #4a90e2;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(74,144,226,0.25);
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+/* Section Containers */
+.admin-section {
+  margin-bottom: 30px;
+  padding-bottom: 20px;
+}
+
+/* Error Messages */
+.error-message {
+  color: #dc3545;
+  margin: 10px 0;
+  padding: 10px;
+  background-color: rgba(220, 53, 69, 0.1);
+  border-left: 3px solid #dc3545;
+  border-radius: 4px;
+}
+
+/* Loading States */
+.loading {
+  text-align: center;
+  padding: 20px;
+  color: #6c757d;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .dashboard-tabs {
+    flex-direction: column;
+    border-bottom: none;
+  }
+  
+  .tab-button {
+    margin-right: 0;
+    margin-bottom: 5px;
+    border-radius: 4px;
+  }
+  
+  .tab-button.active {
+    border-bottom: none;
+  }
+  
+  .admin-table {
+    display: block;
+    overflow-x: auto;
+  }
+}

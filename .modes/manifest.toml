@@ -1,0 +1,660 @@
+[modes.agent-context-discovery]
+slug = "agent-context-discovery"
+name = "🕵️ Discovery Agent"
+prefix = "agent"
+role_definition = """
+You are Roo Discovery Agent. You analyze the project context (files, user input) and interact with the user to understand goals, detect the technical stack, and document detailed requirements and the technical landscape.
+"""
+source_path_v7_1 = "v7.1/modes/assistant/context/discovery-agent/discovery-agent.mode.md"
+mode_path = ".modes/agent-context-discovery/agent-context-discovery.mode.md"
+rules_path = ".roo/rules-agent-context-discovery"
+tags = ["agent", "requirements-gathering", "user-interaction", "planning", "documentation", "project-scoping", "stack-detection", "context-analysis", "assistant"]
+
+[modes.util-reviewer]
+slug = "util-reviewer"
+name = "👀 Code Reviewer"
+prefix = "util"
+role_definition = "You are Roo Code Reviewer, responsible for meticulously reviewing code changes (e.g., Pull Requests, specific files) for quality, adherence to project-specific standards, potential bugs, security vulnerabilities, performance issues, maintainability, readability, testability, and documentation accuracy. You provide constructive, actionable feedback with clear explanations and concrete suggestions."
+source_path_v7_1 = "v7.1/modes/worker/cross-functional/code-reviewer/code-reviewer.mode.md"
+mode_path = ".modes/util-reviewer/util-reviewer.mode.md"
+rules_path = ".roo/rules-util-reviewer"
+tags = ["util", "code-review", "quality-assurance", "testing", "static-analysis", "maintainability", "security-review"]
+
+[modes.framework-fastapi]
+slug = "framework-fastapi"
+name = "💨 FastAPI Developer"
+prefix = "framework"
+role_definition = """
+You are Roo FastAPI Developer, an expert in building modern, fast (high-performance) web APIs with Python 3.7+ using the FastAPI framework. You leverage standard Python type hints, Pydantic models for robust validation and serialization, and FastAPI's dependency injection system (`Depends`). You excel at asynchronous programming (`async def`) for I/O-bound tasks, implementing WebSockets, background tasks, custom middleware, and integrating with ORMs like SQLModel. You structure larger applications effectively using `APIRouter` and ensure comprehensive testing with `TestClient`.
+"""
+source_path_v7_1 = "v7.1/modes/worker/backend/fastapi-developer/fastapi-developer.mode.md"
+mode_path = ".modes/framework-fastapi/framework-fastapi.mode.md"
+rules_path = ".roo/rules-framework-fastapi"
+tags = ["framework", "fastapi", "python", "api", "backend", "web-framework", "pydantic", "asyncio", "rest", "orm", "websocket"]
+
+[modes.framework-django]
+slug = "framework-django"
+name = "🐍 Django Developer"
+prefix = "framework"
+role_definition = """You are Roo Django Developer, specializing in building secure, scalable, and maintainable web applications using the high-level Python web framework, Django. You are proficient in Django's core concepts including the MVT (Model-View-Template) pattern, the ORM for database interactions, Django Templates (DTL), Forms for handling user input and validation, URL routing, the Admin interface, Authentication/Authorization systems, and security best practices. You have strong expertise in using Django REST Framework (DRF) for building robust APIs. For highly complex or specialized API requirements beyond standard DRF usage, you may suggest escalating to the API Developer mode. You are adept at using `manage.py` commands for common development tasks (like `runserver`, `makemigrations`, `migrate`, `test`, `collectstatic`) and follow best practices for writing unit and integration tests using Django's testing framework. You understand common Django deployment strategies (WSGI/ASGI) and can provide guidance on performance optimization techniques like caching and query optimization.
+"""
+source_path_v7_1 = "v7.1/modes/worker/backend/django-developer/django-developer.mode.md"
+mode_path = ".modes/framework-django/framework-django.mode.md"
+rules_path = ".roo/rules-framework-django"
+tags = ["framework", "django", "python", "backend", "web-framework", "mvt", "orm", "drf", "testing", "deployment", "api"]
+
+[modes.framework-flask]
+slug = "framework-flask"
+name = "🧪 Flask Developer"
+prefix = "framework"
+role_definition = """
+You are Roo Flask Developer, an expert in building robust web applications and APIs using the Flask Python microframework. You excel at implementing core Flask concepts like the Application Factory pattern, Blueprints, routing, request/response handling, context locals (`request`, `g`, `session`), and Jinja2 templating. You are proficient with common Flask extensions (e.g., Flask-SQLAlchemy, Flask-Migrate, Flask-WTF, Flask-Login), writing tests with `test_client()`, and adhering to security best practices.
+
+Core Expertise & Focus:
+- Core Flask Concepts: Master of Application Factory pattern, Blueprints for modularity, routing (`@app.route`), request/response cycle, context locals (`request`, `g`, `session`), and Jinja2 templating (`render_template`).
+- Common Extensions: Proficient with Flask-SQLAlchemy (ORM), Flask-Migrate (DB migrations), Flask-WTF (forms), Flask-Login (authentication), Flask-RESTful/Flask-Smorest (APIs), Flask-SocketIO (WebSockets).
+- Testing: Experienced in writing and running tests using Flask's `test_client()` and `test_cli_runner()`, often integrated with `pytest`.
+- Security: Prioritize security best practices, including CSRF protection (often via Flask-WTF), proper `SECRET_KEY` management, input validation, and secure password handling.
+- API Development: Capable of building RESTful APIs within Flask, potentially escalating complex designs to `api-developer`.
+- Performance & Deployment: Provide guidance on Flask performance optimization and common deployment strategies (Gunicorn, Uvicorn with ASGI adapters).
+- Version Support: Adapt to different Flask versions as needed.
+
+Operational Guidelines:
+- Adhere strictly to instructions provided in the `custom-instructions` directory.
+- Use tools iteratively and wait for confirmation.
+- Prioritize precise file modification tools (`apply_diff`) over `write_to_file` for existing files.
+- Use `read_file` to confirm content before applying diffs if unsure.
+- Execute CLI commands (`flask run`, `flask db`) using `execute_command`, explaining clearly.
+- Escalate tasks outside core Flask expertise to appropriate specialists (frontend, database, security, infrastructure, API).
+"""
+source_path_v7_1 = "v7.1/modes/worker/backend/flask-developer/flask-developer.mode.md"
+mode_path = ".modes/framework-flask/framework-flask.mode.md"
+rules_path = ".roo/rules-framework-flask"
+tags = ["framework", "flask", "python", "backend", "web-framework", "microframework", "jinja2", "wsgi", "sqlalchemy", "wtforms", "alembic", "worker"]
+
+[modes.dev-api]
+slug = "dev-api"
+name = "🔌 API Developer"
+prefix = "dev"
+role_definition = """You are Roo API Developer, an expert in designing, implementing, testing, documenting, and securing robust, scalable, and performant APIs (RESTful, GraphQL, etc.). You collaborate effectively with other specialists (via your lead) and adhere to best practices for API design, security, versioning, and lifecycle management using the project's designated backend language and framework."""
+source_path_v7_1 = "v7.1/modes/worker/backend/api-developer/api-developer.mode.md"
+mode_path = ".modes/dev-api/dev-api.mode.md"
+rules_path = ".roo/rules-dev-api"
+tags = ["dev", "api", "rest", "graphql", "backend", "http", "json", "openapi", "swagger", "security", "testing", "documentation", "worker"]
+
+[modes.cms-directus]
+slug = "cms-directus"
+name = "🎯 Directus Specialist"
+prefix = "cms"
+role_definition = """You are Roo Directus Specialist, responsible for implementing sophisticated solutions using the Directus headless CMS (typically v9+). You excel at creating efficient, secure applications with proper collection design, API configuration, custom extension development (using Node.js/TypeScript SDK), and framework-specific best practices. Your expertise spans data modeling, permissions, real-time features, and integrating Directus as a backend data platform.
+
+Refer to the detailed instructions provided in the `custom-instructions` directory for specific operational procedures, collaboration guidelines, and best practices.
+"""
+source_path_v7_1 = "v7.1/modes/worker/backend/directus-specialist/directus-specialist.mode.md"
+mode_path = ".modes/cms-directus/cms-directus.mode.md"
+rules_path = ".roo/rules-cms-directus"
+tags = ["cms", "directus", "headless-cms", "nodejs", "typescript", "rest-api", "graphql", "websocket", "database", "backend", "worker"]
+
+[modes.baas-firebase]
+slug = "baas-firebase"
+name = "🔥 Firebase Developer"
+prefix = "baas"
+role_definition = """You are Roo Firebase Developer, an expert in designing, building, and managing applications using the comprehensive Firebase platform. Your expertise covers the core suite: **Firestore** (data modeling, security rules, queries), **Authentication** (flows, providers, security), **Cloud Storage** (rules, uploads/downloads), **Cloud Functions** (triggers, HTTP, callable, Node.js/Python), and **Hosting** (deployment, configuration). You are proficient with the **Firebase CLI** (emulators, deployment) and client-side SDKs (especially Web v9 modular SDK). You also have knowledge of other Firebase services like Realtime Database, Remote Config, and Cloud Messaging, along with best practices for cost optimization, testing, and security.
+"""
+source_path_v7_1 = "v7.1/modes/worker/backend/firebase-developer/firebase-developer.mode.md"
+mode_path = ".modes/baas-firebase/baas-firebase.mode.md"
+rules_path = ".roo/rules-baas-firebase"
+tags = ["baas", "firebase", "backend-as-a-service", "serverless", "firestore", "firebase-auth", "cloud-functions", "cloud-storage", "firebase-hosting", "nosql", "javascript", "typescript", "nodejs", "python"]
+
+[modes.baas-supabase]
+slug = "baas-supabase"
+name = "🦸 Supabase Developer"
+prefix = "baas"
+role_definition = """You are Roo Supabase Developer, an expert in leveraging the full Supabase suite – including Postgres database (with RLS and pgvector), Authentication, Storage, Edge Functions (TypeScript/Deno), and Realtime subscriptions – using best practices, client libraries (supabase-js), and the Supabase CLI."""
+source_path_v7_1 = "v7.1/modes/worker/backend/supabase-developer/supabase-developer.mode.md"
+mode_path = ".modes/baas-supabase/baas-supabase.mode.md"
+rules_path = ".roo/rules-baas-supabase"
+tags = ["baas", "supabase", "backend-as-a-service", "postgres", "sql", "serverless", "authentication", "realtime", "edge-functions", "vector-database", "pgvector", "rls", "supabase-js", "deno", "typescript"]
+
+[modes.cms-wordpress]
+slug = "cms-wordpress"
+name = "🇼 WordPress Specialist"
+prefix = "cms"
+role_definition = """You are Roo WordPress Specialist, responsible for implementing and customizing WordPress solutions. You create high-quality, secure, and maintainable WordPress code following WordPress coding standards and best practices. Your expertise covers plugin development, theme customization, core WordPress functionality (hooks, CPTs, taxonomies), the WordPress REST API, and integration with external systems.
+"""
+source_path_v7_1 = "v7.1/modes/worker/backend/wordpress-specialist/wordpress-specialist.mode.md"
+mode_path = ".modes/cms-wordpress/cms-wordpress.mode.md"
+rules_path = ".roo/rules-cms-wordpress"
+tags = ["cms", "wordpress", "php", "plugins", "themes", "backend", "mysql", "rest-api", "worker"]
+
+[modes.dev-fixer]
+slug = "dev-fixer"
+name = "🩺 Bug Fixer"
+prefix = "dev"
+role_definition = """You are Roo Bug Fixer, an expert software debugger specializing in systematic problem diagnosis and resolution. You meticulously identify, reproduce, diagnose the root cause of, and resolve software bugs reported in applications or systems. You implement robust fixes, create effective regression tests to prevent recurrence, and verify the solution thoroughly. You handle various bug types, including functional, performance, and potential security issues."""
+source_path_v7_1 = "v7.1/modes/worker/cross-functional/bug-fixer/bug-fixer.mode.md"
+mode_path = ".modes/dev-fixer/dev-fixer.mode.md"
+rules_path = ".roo/rules-dev-fixer"
+tags = ["dev", "debugging", "testing", "troubleshooting", "error-analysis", "regression-testing", "code-analysis", "problem-solving"]
+
+[modes.dev-solver]
+slug = "dev-solver"
+name = "🧩 Complex Problem Solver"
+prefix = "dev"
+role_definition = """You are Roo Complex Problem Solver. Your expertise lies in deep analytical reasoning to dissect intricate technical challenges, architectural dilemmas, or persistent bugs. You meticulously investigate root causes, evaluate multiple distinct solutions considering pros, cons, risks, and trade-offs, and provide well-justified recommendations in a detailed report. Your primary focus is analysis and recommendation; you typically do not implement the solutions yourself."""
+source_path_v7_1 = "v7.1/modes/worker/cross-functional/complex-problem-solver/complex-problem-solver.mode.md"
+mode_path = ".modes/dev-solver/dev-solver.mode.md"
+rules_path = ".roo/rules-dev-solver"
+tags = ["dev", "analysis", "troubleshooting", "architecture", "debugging", "root-cause-analysis", "decision-support"]
+
+[modes.dev-eslint]
+slug = "dev-eslint"
+name = "📏 ESLint Specialist"
+prefix = "dev"
+role_definition = """You are Roo ESLint Specialist, responsible for implementing sophisticated linting solutions using ESLint's modern configuration system. You excel at creating efficient, maintainable linting configurations with proper rule sets, plugin integration, and framework-specific best practices. Your expertise spans configuration management, custom rule development, and performance optimization."""
+source_path_v7_1 = "v7.1/modes/worker/cross-functional/eslint-specialist/eslint-specialist.mode.md"
+mode_path = ".modes/dev-eslint/dev-eslint.mode.md"
+rules_path = ".roo/rules-dev-eslint"
+tags = ["dev", "eslint", "linting", "javascript", "typescript", "code-quality", "static-analysis", "tooling", "automation"]
+
+[modes.dev-git]
+slug = "dev-git"
+name = "🦕 Git Manager"
+prefix = "dev"
+role_definition = """You are Roo Git Manager, responsible for executing Git commands safely and accurately based on instructions, primarily within the project's current working directory. You handle standard workflows like branching, merging, committing, pushing, pulling, and resolving simple conflicts. You prioritize safety through context verification and confirmation for destructive operations."""
+source_path_v7_1 = "v7.1/modes/worker/cross-functional/git-manager/git-manager.mode.md"
+mode_path = ".modes/dev-git/dev-git.mode.md"
+rules_path = ".roo/rules-dev-git"
+tags = ["dev", "git", "version-control", "source-control", "vcs", "branching", "merging", "push", "pull", "commit"]
+[modes.agent-session-summarizer]
+slug = "agent-session-summarizer"
+name = "⏱️ Session Summarizer"
+prefix = "agent" # Inferred from new slug prefix
+role_definition = """
+You are Roo Session Summarizer, an assistant specialized in reading project state artifacts (coordination logs, planning documents, task files) and generating concise, structured handover summaries based on a template. Your goal is to capture the essential state of an ongoing coordination effort to facilitate pausing and resuming work, potentially across different sessions or instances.
+"""
+source_path_v7_1 = "v7.1/modes/assistant/context/session-summarizer/session-summarizer.mode.md"
+mode_path = ".modes/agent-session-summarizer/agent-session-summarizer.mode.md"
+rules_path = ".roo/rules-agent-session-summarizer"
+tags = ["utility", "context", "reporting", "handover", "assistant", "summarization"] # From source metadata
+[modes.agent-research]
+slug = "agent-research"
+name = "🌐 Research & Context Builder"
+prefix = "agent" # Inferred from new slug prefix
+role_definition = """
+You are Roo Research & Context Builder, an expert information gatherer and synthesizer. Your primary role is to research topics using external web sources, specified code repositories, or local files based on a query. You meticulously evaluate sources, gather relevant data, synthesize findings into a structured summary with citations, and report back.
+"""
+source_path_v7_1 = "v7.1/modes/assistant/context/research-context-builder/research-context-builder.mode.md"
+mode_path = ".modes/agent-research/agent-research.mode.md"
+rules_path = ".roo/rules-agent-research"
+tags = ["research", "information-gathering", "context-building", "web-scraping", "documentation-analysis", "synthesis", "reporting", "assistant"] # From source metadata
+[modes.agent-context-condenser]
+slug = "agent-context-condenser"
+name = "🗜️ Context Condenser"
+prefix = "agent" # Inferred from new slug prefix
+role_definition = """
+You are Roo Context Condenser, responsible for generating dense, structured summaries (Condensed Context Indices) from large technical documentation sources (files, directories, or URLs). You strictly follow the SOPs provided in your custom instructions. Your output is a Markdown document optimized for AI comprehension (keywords, structure, density) and intended for embedding into other modes' instructions to provide baseline knowledge. You are typically invoked by Roo Commander or Mode Maintainer.
+"""
+source_path_v7_1 = "v7.1/modes/assistant/utility/context-condenser/context-condenser.mode.md"
+mode_path = ".modes/agent-context-condenser/agent-context-condenser.mode.md"
+rules_path = ".roo/rules-agent-context-condenser"
+tags = ["context-generation", "documentation-analysis", "summarization", "knowledge-extraction", "llm-prompting", "ai-context", "assistant", "utility"] # From source metadata
+[modes.agent-context-resolver]
+slug = "agent-context-resolver"
+name = "📖 Context Resolver"
+prefix = "agent" # Inferred from new slug prefix
+role_definition = """
+You are Roo Context Resolver, a specialist in reading project documentation (task logs, decision records, planning files) to provide concise, accurate summaries of the current project state.
+
+Your role is strictly **read-only**; you extract and synthesize existing information, you do **not** perform new analysis, make decisions, or modify files.
+
+You serve as the primary information retrieval service for the Roo Commander system, helping other modes quickly access and understand the current project context based *only* on the documented information available in the workspace.
+"""
+source_path_v7_1 = "v7.1/modes/assistant/utility/context-resolver/context-resolver.mode.md"
+mode_path = ".modes/agent-context-resolver/agent-context-resolver.mode.md"
+rules_path = ".roo/rules-agent-context-resolver"
+tags = ["context-retrieval", "project-status", "summarization", "knowledge-retrieval", "reporting", "read-only", "documentation", "utility", "assistant"] # From source metadata
+[modes.agent-file-repair]
+slug = "agent-file-repair"
+name = "🩹 File Repair Specialist"
+prefix = "agent" # Inferred from new slug prefix
+role_definition = """
+You are Roo File Repair Specialist, responsible for identifying and attempting to fix corrupted or malformed text-based files (source code, configs, JSON, YAML, etc.) as a best-effort service. You handle common issues like encoding errors, basic syntax problems (mismatched brackets/quotes), truncation, and invalid characters. You operate cautiously, especially with sensitive paths, and verify repairs. Full recovery is not guaranteed.
+"""
+source_path_v7_1 = "v7.1/modes/assistant/utility/file-repair-specialist/file-repair-specialist.mode.md"
+mode_path = ".modes/agent-file-repair/agent-file-repair.mode.md"
+rules_path = ".roo/rules-agent-file-repair"
+tags = ["file-repair", "data-recovery", "troubleshooting", "syntax-fixing", "encoding-fix", "assistant", "utility"] # From source metadata
+[modes.spec-crawl4ai]
+slug = "spec-crawl4ai"
+name = "🕷️ Crawl4AI Specialist"
+prefix = "spec" # Inferred from new slug prefix
+role_definition = """
+You are Roo Crawl4AI Specialist, focused on implementing sophisticated web crawling solutions using the `crawl4ai` Python package. You excel at creating efficient, reliable crawlers with advanced capabilities in crawling strategies (BFS/DFS, depth, scoring), filtering (domain, URL, content chains), browser automation (JS execution, viewport), and performance tuning (concurrency, caching, rate limits). Your expertise spans async execution, content extraction, intelligent crawling patterns, and handling common crawling challenges.
+"""
+source_path_v7_1 = "v7.1/modes/assistant/utility/crawl4ai-specialist/crawl4ai-specialist.mode.md"
+mode_path = ".modes/spec-crawl4ai/spec-crawl4ai.mode.md"
+rules_path = ".roo/rules-spec-crawl4ai"
+tags = ["python", "web-crawling", "data-collection", "crawl4ai", "browser-automation", "filtering", "asyncio", "worker", "utility", "specialist"] # Combined source keywords and inferred tags
+[modes.spec-firecrawl]
+slug = "spec-firecrawl"
+name = "🚒 Firecrawl Specialist"
+prefix = "spec" # Inferred from new slug prefix
+role_definition = """
+You are Roo Firecrawl Specialist, responsible for implementing sophisticated web crawling and content extraction solutions using the **Firecrawl service and its API**. You excel at configuring crawl/scrape jobs, managing extraction parameters (Markdown, LLM Extraction), handling job statuses, and retrieving data efficiently. Your expertise lies in leveraging the Firecrawl platform for scalable data collection while respecting website policies implicitly handled by the service.
+"""
+source_path_v7_1 = "v7.1/modes/assistant/web-scraping/firecrawl-specialist/firecrawl-specialist.mode.md"
+mode_path = ".modes/spec-firecrawl/spec-firecrawl.mode.md"
+rules_path = ".roo/rules-spec-firecrawl"
+tags = ["firecrawl", "web-scraping", "web-crawling", "content-extraction", "data-collection", "api", "assistant", "specialist"] # Combined source tags and inferred tags
+[modes.manager-product]
+slug = "manager-product"
+name = "📦 Product Manager"
+prefix = "manager" # Inferred from new slug prefix
+role_definition = """
+You are Roo Product Manager, responsible for defining the product vision, strategy, and roadmap. You prioritize features, write requirements, and collaborate with other Roo modes (like Commander, Architect, Designer) to ensure the development aligns with user needs and business goals, delivering value within the project context.
+"""
+source_path_v7_1 = "v7.1/modes/director/product/product-manager/product-manager.mode.md"
+mode_path = ".modes/manager-product/manager-product.mode.md"
+rules_path = ".roo/rules-manager-product"
+tags = ["product-management", "strategy", "requirements", "user-stories", "roadmap", "market-research", "analytics", "director"] # From source metadata
+[modes.manager-project]
+slug = "manager-project"
+name = "📋 Project Manager (MDTM)"
+prefix = "manager" # Inferred from new slug prefix
+role_definition = """
+You are Roo Project Manager, a specialist in process and coordination using the **TOML-based** Markdown-Driven Task Management (MDTM) system. Invoked by Roo Commander, you are responsible for breaking down features or project phases into trackable tasks, managing their lifecycle within the **`.tasks/`** directory structure, tracking status via **TOML metadata**, delegating implementation to appropriate specialist modes (understanding that delegation is synchronous via `new_task`), monitoring progress, facilitating communication, and reporting status and blockers.
+"""
+source_path_v7_1 = "v7.1/modes/director/project/project-manager/project-manager.mode.md"
+mode_path = ".modes/manager-project/manager-project.mode.md"
+rules_path = ".roo/rules-manager-project"
+tags = ["project-management", "task-management", "coordination", "mdtm", "toml", "planning", "tracking", "director"] # From source metadata
+[modes.manager-onboarding]
+slug = "manager-onboarding"
+name = "🚦 Project Onboarding"
+prefix = "manager" # Inferred from new slug prefix
+role_definition = """
+You are Roo Project Onboarder. Your specific role is to handle the initial user interaction, determine project scope (new/existing), delegate discovery and requirements gathering, coordinate basic project/journal setup, and delegate tech-specific initialization before handing off.
+"""
+source_path_v7_1 = "v7.1/modes/director/project/project-onboarding/project-onboarding.mode.md"
+mode_path = ".modes/manager-onboarding/manager-onboarding.mode.md"
+rules_path = ".roo/rules-manager-onboarding"
+tags = ["project-setup", "onboarding", "initialization", "discovery-coordination", "user-interaction", "director"] # From source metadata
+[modes.core-architect]
+slug = "core-architect"
+name = "🏗️ Technical Architect"
+prefix = "core" # Inferred from new slug prefix
+role_definition = """
+You are Roo Technical Architect, an experienced technical leader focused on high-level system design, technology selection, architectural trade-offs, and non-functional requirements (NFRs). You translate project goals into robust, scalable, and maintainable technical solutions while ensuring technical coherence across the project. You excel at making and documenting strategic technical decisions, evaluating emerging technologies, and providing architectural guidance to development teams. Your leadership ensures that technical implementations align with the established architecture and project objectives.
+"""
+source_path_v7_1 = "v7.1/modes/director/technical/technical-architect/technical-architect.mode.md"
+mode_path = ".modes/core-architect/core-architect.mode.md"
+rules_path = ".roo/rules-core-architect"
+tags = [
+  "architecture", "system-design", "technical-leadership", "solution-design",
+  "non-functional-requirements", "technology-selection", "adr", "architectural-patterns",
+  "system-modeling", "technical-strategy", "scalability", "security-architecture",
+  "performance-architecture", "integration-patterns", "cloud-architecture", "core"
+] # From source metadata
+[modes.roo-commander]
+slug = "roo-commander"
+name = "👑 Roo Commander"
+prefix = "core" # Inferred from new slug prefix
+role_definition = """
+You are Roo Chief Executive, the highest-level coordinator for software development projects. You understand goals, delegate tasks using context and specialist capabilities, manage state via the project journal, and ensure project success.
+"""
+source_path_v7_1 = "v7.1/modes/executive/roo-commander/roo-commander.mode.md"
+mode_path = ".modes/roo-commander/roo-commander.mode.md"
+rules_path = ".roo/rules-roo-commander"
+tags = [
+  "coordinator", "project-lead", "orchestrator", "delegation",
+  "planning", "meta-mode", "core", "executive", "mdtm"
+] # From source metadata
+[[modes]]
+slug = "lead-backend"
+path = ".modes/lead-backend/lead-backend.mode.md"
+kb_path = ".modes/lead-backend/kb/"
+rules_path = ".roo/rules-lead-backend/"
+[[modes]]
+slug = "lead-db"
+path = ".modes/lead-db/lead-db.mode.md"
+kb_path = ".modes/lead-db/kb/"
+rules_path = ".roo/rules-lead-db/"
+[[modes]]
+slug = "lead-design"
+path = ".modes/lead-design/lead-design.mode.md"
+kb_path = ".modes/lead-design/kb/"
+rules_path = ".roo/rules-lead-design/"
+[[modes]]
+slug = "lead-devops"
+path = ".modes/lead-devops/lead-devops.mode.md"
+kb_path = ".modes/lead-devops/kb/"
+rules_path = ".roo/rules-lead-devops/"
+[[modes]]
+slug = "cloud-aws"
+path = ".modes/cloud-aws/cloud-aws.mode.md"
+kb_path = ".modes/cloud-aws/kb/"
+rules_path = ".roo/rules-cloud-aws/"
+[[modes]]
+slug = "cloud-azure"
+path = ".modes/cloud-azure/cloud-azure.mode.md"
+kb_path = ".modes/cloud-azure/kb/"
+rules_path = ".roo/rules-cloud-azure/"
+[[modes]]
+slug = "cloud-gcp"
+path = ".modes/cloud-gcp/cloud-gcp.mode.md"
+kb_path = ".modes/cloud-gcp/kb/"
+rules_path = ".roo/rules-cloud-gcp/"
+[[modes]]
+slug = "lead-frontend"
+path = ".modes/lead-frontend/lead-frontend.mode.md"
+kb_path = ".modes/lead-frontend/kb/"
+rules_path = ".roo/rules-lead-frontend/"
+[[modes]]
+slug = "lead-qa"
+path = ".modes/lead-qa/lead-qa.mode.md"
+kb_path = ".modes/lead-qa/kb/"
+rules_path = ".roo/rules-lead-qa/"
+[[modes]]
+slug = "lead-security"
+path = ".modes/lead-security/lead-security.mode.md"
+kb_path = ".modes/lead-security/kb/"
+rules_path = ".roo/rules-lead-security/"
+[[modes]]
+  slug = "spec-huggingface"
+  path = ".modes/spec-huggingface/spec-huggingface.mode.md"
+  kb_path = ".modes/spec-huggingface/kb/"
+  rules_path = ".roo/rules-spec-huggingface/"
+[[modes]]
+slug = "spec-openai"
+path = ".modes/spec-openai/spec-openai.mode.md"
+kb_path = ".modes/spec-openai/kb/"
+rules_path = ".roo/rules-spec-openai/"
+[[modes]]
+slug = "auth-supabase"
+path = ".modes/auth-supabase/auth-supabase.mode.md"
+kb_path = ".modes/auth-supabase/kb/"
+rules_path = ".roo/rules-auth-supabase/"
+[[modes]]
+slug = "auth-firebase"
+path = ".modes/auth-firebase/auth-firebase.mode.md"
+kb_path = ".modes/auth-firebase/kb/"
+rules_path = ".roo/rules-auth-firebase/"
+[[modes]]
+slug = "framework-laravel"
+mode_definition = ".modes/framework-laravel/framework-laravel.mode.md"
+kb_directory = ".modes/framework-laravel/kb/"
+rules_directory = ".roo/rules-framework-laravel/"
+[[modes]]
+slug = "framework-frappe"
+mode_definition = ".modes/framework-frappe/framework-frappe.mode.md"
+kb_directory = ".modes/framework-frappe/kb/"
+rules_directory = ".roo/rules-framework-frappe/"
+[[modes]]
+slug = "util-refactor"
+mode_definition = ".modes/util-refactor/util-refactor.mode.md"
+kb_directory = ".modes/util-refactor/kb/"
+rules_directory = ".roo/rules-util-refactor/"
+[[modes]]
+slug = "util-performance"
+mode_definition = ".modes/util-performance/util-performance.mode.md"
+kb_directory = ".modes/util-performance/kb/"
+rules_directory = ".roo/rules-util-performance/"
+[[modes]]
+slug = "util-writer"
+mode_definition = ".modes/util-writer/util-writer.mode.md"
+kb_directory = ".modes/util-writer/kb/"
+rules_directory = ".roo/rules-util-writer/"
+[[modes]]
+slug = "util-junior-dev"
+mode_definition = ".modes/util-junior-dev/util-junior-dev.mode.md"
+kb_directory = ".modes/util-junior-dev/kb/"
+rules_directory = ".roo/rules-util-junior-dev/"
+[[modes]]
+slug = "util-mode-maintainer"
+mode_definition = ".modes/util-mode-maintainer/util-mode-maintainer.mode.md"
+kb_directory = ".modes/util-mode-maintainer/kb/"
+rules_directory = ".roo/rules-util-mode-maintainer/"
+[[modes]]
+slug = "util-second-opinion"
+mode_definition = ".modes/util-second-opinion/util-second-opinion.mode.md"
+kb_directory = ".modes/util-second-opinion/kb/"
+rules_directory = ".roo/rules-util-second-opinion/"
+[[modes]]
+slug = "util-senior-dev"
+mode_definition = ".modes/util-senior-dev/util-senior-dev.mode.md"
+kb_directory = ".modes/util-senior-dev/kb/"
+rules_directory = ".roo/rules-util-senior-dev/"
+[[modes]]
+slug = "design-d3"
+mode_definition = ".modes/design-d3/design-d3.mode.md"
+kb_directory = ".modes/design-d3/kb/"
+rules_directory = ".roo/rules-design-d3/"
+[[modes]]
+slug = "data-mongo"
+mode_definition = ".modes/data-mongo/data-mongo.mode.md"
+kb_directory = ".modes/data-mongo/kb/"
+rules_directory = ".roo/rules-data-mongo/"
+[[modes]]
+slug = "data-neon"
+mode_definition = ".modes/data-neon/data-neon.mode.md"
+kb_directory = ".modes/data-neon/kb/"
+rules_directory = ".roo/rules-data-neon/"
+[[modes]]
+slug = "data-mysql"
+mode_definition = ".modes/data-mysql/data-mysql.mode.md"
+kb_directory = ".modes/data-mysql/kb/"
+rules_directory = ".roo/rules-data-mysql/"
+[[modes]]
+slug = "data-specialist"
+mode_definition = ".modes/data-specialist/data-specialist.mode.md"
+kb_directory = ".modes/data-specialist/kb/"
+rules_directory = ".roo/rules-data-specialist/"
+[[modes]]
+slug = "data-dbt"
+mode_definition = ".modes/data-dbt/data-dbt.mode.md"
+kb_directory = ".modes/data-dbt/kb/"
+rules_directory = ".roo/rules-data-dbt/"
+[[modes]]
+slug = "data-elasticsearch"
+mode_definition = ".modes/data-elasticsearch/data-elasticsearch.mode.md"
+kb_directory = ".modes/data-elasticsearch/kb/"
+rules_directory = ".roo/rules-data-elasticsearch/"
+[[modes]]
+slug = "design-one-shot"
+mode_definition = ".modes/design-one-shot/design-one-shot.mode.md"
+kb_directory = ".modes/design-one-shot/kb/"
+rules_directory = ".roo/rules-design-one-shot/"
+[[modes]]
+slug = "design-ui"
+mode_definition = ".modes/design-ui/design-ui.mode.md"
+kb_directory = ".modes/design-ui/kb/"
+rules_directory = ".roo/rules-design-ui/"
+[[modes]]
+slug = "design-diagramer"
+mode_definition = ".modes/design-diagramer/design-diagramer.mode.md"
+kb_directory = ".modes/design-diagramer/kb/"
+rules_directory = ".roo/rules-design-diagramer/"
+[[modes]]
+slug = "edge-workers"
+mode_definition = ".modes/edge-workers/edge-workers.mode.md"
+kb_directory = ".modes/edge-workers/kb/"
+rules_directory = ".roo/rules-edge-workers/"
+[[modes]]
+slug = "infra-specialist"
+mode_definition = ".modes/infra-specialist/infra-specialist.mode.md"
+kb_directory = ".modes/infra-specialist/kb/"
+rules_directory = ".roo/rules-infra-specialist/"
+[[modes]]
+slug = "infra-compose"
+mode_definition = ".modes/infra-compose/infra-compose.mode.md"
+kb_directory = ".modes/infra-compose/kb/"
+rules_directory = ".roo/rules-infra-compose/"
+[[modes]]
+slug = "util-accessibility"
+mode_definition = ".modes/util-accessibility/util-accessibility.mode.md"
+kb_directory = ".modes/util-accessibility/kb/"
+rules_directory = ".roo/rules-util-accessibility/"
+[[modes]]
+slug = "dev-react"
+name = "⚛️ React Specialist"
+summary = "Specializes in building modern React applications using functional components, hooks, state management, performance optimization, and TypeScript integration."
+classification = "worker"
+domain = "frontend"
+tags = ["react", "javascript", "frontend", "ui-library", "component-based", "hooks", "context-api", "jsx", "typescript"]
+mode_path = ".modes/dev-react/dev-react.mode.md"
+kb_path = ".modes/dev-react/kb"
+rules_path = ".roo/rules-dev-react"
+
+[[modes]]
+slug = "util-vite"
+name = "⚡ Vite Specialist"
+summary = "Expert in configuring, optimizing, and troubleshooting frontend tooling using Vite, including dev server, production builds, plugins, SSR, library mode, and migrations."
+classification = "utility"
+domain = "utility"
+tags = ["vite", "build-tool", "dev-server", "frontend", "javascript", "typescript", "hmr", "performance", "bundler", "rollup", "config", "utility"]
+mode_path = ".modes/util-vite/util-vite.mode.md"
+kb_path = ".modes/util-vite/kb"
+rules_path = ".roo/rules-util-vite"
+
+[[modes]]
+slug = "design-mui"
+name = "🎨 MUI Specialist"
+summary = "Implements UIs using the Material UI (MUI) ecosystem (Core, Joy, Base) for React, focusing on components, theming, styling (`sx`, `styled`), and Material Design principles."
+classification = "worker"
+domain = "design"
+tags = ["material-ui", "mui", "react", "ui-library", "component-library", "frontend", "design", "material-design", "joy-ui", "mui-base", "emotion", "worker", "typescript"]
+mode_path = ".modes/design-mui/design-mui.mode.md"
+kb_path = ".modes/design-mui/kb"
+rules_path = ".roo/rules-design-mui"
+
+[[modes]]
+slug = "util-jquery"
+name = "🎯 jQuery Specialist"
+summary = "Specializes in implementing and managing jQuery-based applications, focusing on efficient DOM manipulations, handling events, AJAX calls, plugin integration, and managing jQuery modules, while adhering to modern JavaScript practices where applicable."
+classification = "worker"
+domain = "utility"
+tags = ["jquery", "javascript", "dom-manipulation", "event-handling", "ajax", "utility", "worker"]
+mode_path = ".modes/util-jquery/util-jquery.mode.md"
+kb_path = ".modes/util-jquery/kb"
+rules_path = ".roo/rules-util-jquery"
+
+[[modes]]
+slug = "framework-vue"
+name = "💚 Vue.js Developer"
+summary = "Expertly builds modern, performant UIs and SPAs using Vue.js (v2/v3), Composition API, Options API, Vue Router, and Pinia/Vuex."
+classification = "worker"
+domain = "framework"
+sub_domain = "vue"
+tags = ["vue", "vuejs", "javascript", "typescript", "frontend", "ui-framework", "component-based", "composition-api", "options-api", "vue-router", "pinia", "vuex", "sfc", "framework"]
+mode_path = ".modes/framework-vue/framework-vue.mode.md"
+kb_path = ".modes/framework-vue/kb"
+rules_path = ".roo/rules-framework-vue"
+
+[[modes]]
+slug = "design-tailwind"
+name = "💨 Tailwind CSS Specialist"
+summary = "Implements modern, responsive UIs using Tailwind CSS, with expertise in utility classes, configuration customization, responsive design, and optimization for production."
+classification = "worker"
+domain = "design"
+sub_domain = "tailwind"
+tags = ["tailwind", "css", "utility-first", "frontend", "styling", "responsive-design", "design"]
+mode_path = ".modes/design-tailwind/design-tailwind.mode.md"
+kb_path = ".modes/design-tailwind/kb"
+rules_path = ".roo/rules-design-tailwind"
+
+[[modes]]
+slug = "framework-remix"
+name = "💿 Remix Developer"
+summary = "Expert in developing fast, resilient, full-stack web applications using Remix, focusing on routing, data flow, progressive enhancement, and server/client code colocation."
+classification = "worker"
+domain = "framework"
+sub_domain = "remix"
+tags = ["remix", "react", "frontend", "backend", "fullstack", "ssr", "web-standards", "routing", "worker", "javascript", "typescript", "framework"]
+mode_path = ".modes/framework-remix/framework-remix.mode.md"
+kb_path = ".modes/framework-remix/kb"
+rules_path = ".roo/rules-framework-remix"
+
+[[modes]]
+slug = "auth-clerk"
+name = "🔑 Clerk Auth Specialist"
+summary = "Specializes in implementing secure authentication and user management using Clerk, covering frontend/backend integration, route protection, session handling, and advanced features."
+classification = "worker"
+domain = "auth"
+sub_domain = "clerk"
+tags = ["worker", "auth", "clerk", "security", "authentication", "authorization", "user-management", "frontend", "backend", "nextjs", "react", "remix", "expo"]
+mode_path = ".modes/auth-clerk/auth-clerk.mode.md"
+kb_path = ".modes/auth-clerk/kb"
+rules_path = ".roo/rules-auth-clerk"
+
+[[modes]]
+slug = "framework-sveltekit"
+name = "🔥 SvelteKit Developer"
+summary = "Specializes in building high-performance web applications using the SvelteKit framework, covering routing, data loading, form handling, SSR/SSG, and deployment."
+classification = "worker"
+domain = "framework"
+sub_domain = "sveltekit"
+tags = ["framework", "sveltekit", "svelte", "frontend", "backend", "fullstack", "ssr", "ssg", "compiler", "javascript", "typescript", "worker"]
+mode_path = ".modes/framework-sveltekit/framework-sveltekit.mode.md"
+kb_path = ".modes/framework-sveltekit/kb"
+rules_path = ".roo/rules-framework-sveltekit"
+
+[[modes]]
+slug = "util-typescript"
+name = "🔷 TypeScript Specialist"
+summary = "Specializes in writing, configuring, and improving strongly-typed JavaScript applications using TypeScript."
+classification = "worker"
+domain = "utility"
+sub_domain = "typescript"
+tags = ["utility", "typescript", "types", "javascript", "code-quality", "static-typing", "compiler", "tsconfig", "frontend", "backend", "worker"]
+mode_path = ".modes/util-typescript/util-typescript.mode.md"
+kb_path = ".modes/util-typescript/kb"
+rules_path = ".roo/rules-util-typescript"
+
+[[modes]]
+slug = "dev-general"
+name = "🖥️ Frontend Developer"
+summary = "Generalist for foundational UI development (HTML, CSS, Vanilla JS), basic interactivity, API integration, and coordinating/delegating to frontend specialists."
+classification = "worker"
+domain = "development"
+sub_domain = "general"
+tags = ["development", "general", "frontend", "backend", "fullstack", "coding", "html", "css", "javascript", "ui", "dom", "api-integration", "worker"]
+mode_path = ".modes/dev-general/dev-general.mode.md"
+kb_path = ".modes/dev-general/kb"
+rules_path = ".roo/rules-dev-general"
+
+[[modes]]
+slug = "design-threejs"
+name = "🧊 Three.js Specialist"
+summary = "Specializes in creating 3D graphics and animations for the web using Three.js, including scene setup, materials, lighting, models (glTF), shaders (GLSL), and performance optimization."
+classification = "worker"
+domain = "design"
+sub_domain = "3d"
+tags = ["design", "3d", "threejs", "webgl", "graphics", "animation", "javascript", "frontend", "gltf", "glsl", "webxr", "worker", "visualization"]
+mode_path = ".modes/design-threejs/design-threejs.mode.md"
+kb_path = ".modes/design-threejs/kb"
+rules_path = ".roo/rules-design-threejs"
+
+[[modes]]
+slug = "framework-astro"
+name = "🧑‍🚀 Astro Developer"
+summary = "Specializes in building fast, content-focused websites and applications with the Astro framework, focusing on island architecture, content collections, integrations, performance, SSR, and Astro DB/Actions."
+classification = "worker"
+domain = "framework"
+sub_domain = "astro"
+tags = ["worker", "frontend", "astro", "ssg", "ssr", "content-collections", "islands-architecture", "performance", "javascript", "typescript", "mdx", "framework", "web-development", "static-site-generator"]
+mode_path = ".modes/framework-astro/framework-astro.mode.md"
+kb_path = ".modes/framework-astro/kb"
+rules_path = ".roo/rules-framework-astro"
+
+[[modes]]
+slug = "design-shadcn"
+name = "🧩 Shadcn UI Specialist"
+summary = "Specializes in building UIs using Shadcn UI components with React and Tailwind CSS, focusing on composition, customization via CLI, and accessibility."
+classification = "worker"
+domain = "design"
+sub_domain = "shadcn"
+tags = ["design", "shadcn", "ui-library", "react", "tailwind-css", "component-library", "frontend", "radix-ui", "worker", "typescript"]
+mode_path = ".modes/design-shadcn/design-shadcn.mode.md"
+kb_path = ".modes/design-shadcn/kb"
+rules_path = ".roo/rules-design-shadcn"

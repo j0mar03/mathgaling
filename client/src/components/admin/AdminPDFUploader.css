@@ -1,0 +1,255 @@
+/* Admin PDF Uploader Styles */
+
+.admin-uploader {
+  padding: 0 0 40px 0;
+}
+
+.admin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #e6e9ed;
+}
+
+.admin-header h2 {
+  margin: 0;
+  color: #434a54;
+}
+
+.back-button {
+  background: none;
+  border: none;
+  color: #4a89dc;
+  cursor: pointer;
+  font-size: 16px;
+  padding: 8px 0;
+  display: flex;
+  align-items: center;
+}
+
+.back-button:hover {
+  text-decoration: underline;
+}
+
+.delete-button {
+  background-color: #ed5565;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.delete-button:hover {
+  background-color: #da4453;
+}
+
+/* Admin List View */
+.admin-pdf-list {
+  width: 100%;
+}
+
+.empty-state {
+  padding: 40px;
+  text-align: center;
+  background-color: #f9fafc;
+  border-radius: 8px;
+  color: #656d78;
+}
+
+.uploads-table {
+  width: 100%;
+  margin-top: 20px;
+  border: 1px solid #e6e9ed;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.table-header {
+  display: grid;
+  grid-template-columns: 3fr 1fr 2fr 1.5fr 1.5fr;
+  background-color: #f5f7fa;
+  font-weight: 600;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e6e9ed;
+}
+
+.table-row {
+  display: grid;
+  grid-template-columns: 3fr 1fr 2fr 1.5fr 1.5fr;
+  padding: 12px 16px;
+  border-bottom: 1px solid #e6e9ed;
+  transition: background-color 0.2s ease;
+}
+
+.table-row:last-child {
+  border-bottom: none;
+}
+
+.table-row:hover {
+  background-color: #f9fafc;
+}
+
+.col-filename, .col-status, .col-teacher, .col-date, .col-actions {
+  display: flex;
+  align-items: center;
+}
+
+.col-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.action-button {
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
+}
+
+.view-button {
+  background-color: #4fc1e9;
+  color: white;
+}
+
+.view-button:hover {
+  background-color: #3bafda;
+}
+
+/* Admin Detail View */
+.admin-pdf-detail {
+  width: 100%;
+}
+
+.pdf-detail-header {
+  margin-bottom: 30px;
+}
+
+.pdf-meta {
+  background-color: #f5f7fa;
+  padding: 20px;
+  border-radius: 8px;
+  margin-top: 15px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+}
+
+.detail-sections {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+}
+
+.detail-section {
+  background-color: #fff;
+  border: 1px solid #e6e9ed;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.detail-section h3 {
+  margin-top: 0;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e6e9ed;
+}
+
+.detail-list {
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.detail-item {
+  padding: 15px;
+  margin-bottom: 10px;
+  background-color: #f9fafc;
+  border-radius: 6px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.detail-item div {
+  margin-bottom: 5px;
+}
+
+.detail-item div:last-child {
+  margin-bottom: 0;
+}
+
+/* Delete Confirmation Modal */
+.delete-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.delete-modal-content {
+  background-color: white;
+  padding: 30px;
+  border-radius: 8px;
+  max-width: 500px;
+  width: 90%;
+}
+
+.delete-modal-content h3 {
+  margin-top: 0;
+  color: #434a54;
+}
+
+.delete-modal-content p {
+  margin-bottom: 20px;
+  color: #656d78;
+}
+
+.delete-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 1024px) {
+  .detail-sections {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .table-header, .table-row {
+    grid-template-columns: 2fr 1fr 1fr;
+  }
+  
+  .col-teacher, .col-date {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .table-header, .table-row {
+    grid-template-columns: 2fr 1fr;
+  }
+  
+  .col-status {
+    display: none;
+  }
+  
+  .delete-modal-actions {
+    flex-direction: column;
+  }
+  
+  .delete-modal-actions button {
+    width: 100%;
+  }
+}
