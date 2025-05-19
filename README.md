@@ -1,2 +1,0 @@
-# mathgaling
-ITS philippine Elementary
