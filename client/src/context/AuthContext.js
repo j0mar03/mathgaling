@@ -190,8 +190,19 @@ export const AuthProvider = ({ children }) => {
             }
             
             // Create a standardized error object to return
+            let errorMessage = 'Login failed';
+            
+            // Ensure we have a string message, not an object
+            if (error.response?.data?.error) {
+                errorMessage = typeof error.response.data.error === 'string' 
+                    ? error.response.data.error 
+                    : 'Server error occurred';
+            } else if (error.message && typeof error.message === 'string') {
+                errorMessage = error.message;
+            }
+            
             const errorObj = {
-                message: error.response?.data?.error || error.message || 'Login failed',
+                message: errorMessage,
                 code: error.response?.status || 500
             };
             

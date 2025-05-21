@@ -29,20 +29,27 @@ const Login = () => {
       navigate(`/${role}`);
     } catch (err) {
       console.log('Login error in component:', err);
-      // Handle different error formats that might come from the server
+      
+      // Default error message
       let errorMessage = 'Oops! Something went wrong. Please try again.';
       
-      // Handle standardized error object from AuthContext
-      if (err && typeof err === 'object') {
-        if (err.message) {
-          errorMessage = err.message;
-        } else if (err.code && err.code === 500) {
-          errorMessage = 'Server error occurred. Please try again later.';
-        } else if (err.response?.data?.error) {
-          errorMessage = err.response.data.error;
+      try {
+        // Handle standardized error object from AuthContext
+        if (err && typeof err === 'object') {
+          if (typeof err.message === 'string') {
+            errorMessage = err.message;
+          } else if (err.code && err.code === 500) {
+            errorMessage = 'Server error occurred. Please try again later.';
+          } else if (err.response?.data?.error && typeof err.response.data.error === 'string') {
+            errorMessage = err.response.data.error;
+          }
+        } else if (typeof err === 'string') {
+          errorMessage = err;
         }
-      } else if (typeof err === 'string') {
-        errorMessage = err;
+      } catch (e) {
+        // If anything goes wrong while trying to extract the error message,
+        // just use the default message
+        console.error('Error while processing error object:', e);
       }
       
       setError(errorMessage);
