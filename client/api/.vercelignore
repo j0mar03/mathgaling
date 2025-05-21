@@ -1,0 +1,48 @@
+# Dependencies
+node_modules
+*/node_modules
+**/node_modules
+../node_modules
+../../node_modules
+
+# Build artifacts
+build
+*/build
+**/build
+dist
+*/dist
+**/dist
+
+# Development files
+.git
+.github
+.vscode
+*/.git
+**/.git
+.env.local
+.env.development
+.DS_Store
+
+# Test files
+test
+tests
+__tests__
+*/test
+*/tests
+*/__tests__
+**/test
+**/tests
+**/__tests__
+
+# Large files
+*.pdf
+**/*.pdf
+uploads/pdf
+**/uploads/pdf
+
+# Documentation
+docs
+*/docs
+**/docs
+*.md
+**/*.md
