@@ -25,7 +25,28 @@ app.use(require('cors')({
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
 }));
-app.use(express.json());
+
+// JSON body parser with error handling
+app.use(express.json({ 
+  limit: '1mb',
+  verify: (req, res, buf) => {
+    // Store raw body for debugging
+    req.rawBody = buf.toString();
+  }
+}));
+
+// Catch JSON parsing errors
+app.use((err, req, res, next) => {
+  if (err instanceof SyntaxError && err.status === 400 && 'body' in err) {
+    console.error('❌ JSON parsing error:', err.message);
+    return res.status(400).json({ 
+      error: 'Invalid JSON in request body',
+      message: 'The request body contains invalid JSON'
+    });
+  }
+  // Pass error to next middleware
+  next(err);
+});
 
 // Basic routes
 app.get('/api/health', (req, res) => {
@@ -39,51 +60,95 @@ app.get('/api/health', (req, res) => {
 // Mock auth route for testing
 app.post('/api/auth/login', (req, res) => {
   try {
-    const { email, password } = req.body;
-    console.log(`📧 Login attempt for: ${email}`);
+    // Log incoming request
+    console.log('📥 Login request received with body:', JSON.stringify(req.body || {}));
     
-    // Test user credentials
+    // Check if body exists
+    if (!req.body) {
+      console.warn('⚠️ Empty request body in login attempt');
+      return res.status(400).json({
+        error: 'Missing request body'
+      });
+    }
+    
+    const { email, password } = req.body;
+    
+    // Log attempt
+    console.log(`📧 Login attempt for: ${email || 'unknown email'}`);
+    
+    // Validate required fields
+    if (!email || !password) {
+      console.warn('⚠️ Missing email or password in login attempt');
+      return res.status(400).json({
+        error: 'Email and password are required'
+      });
+    }
+    
+    // Test user credentials with proper JWT token format
     if (email === 'admin@example.com' && password === 'admin123') {
-      return res.json({
-        token: 'mock-admin-token',
+      // Create a simple JWT-like token (not real JWT, just for simulation)
+      const payload = JSON.stringify({ id: 999, auth_id: email, role: 'admin' });
+      const base64Payload = Buffer.from(payload).toString('base64');
+      const mockToken = `header.${base64Payload}.signature`;
+      
+      console.log('✅ Admin login successful');
+      return res.status(200).json({
+        token: mockToken,
         user: { id: 999, auth_id: email },
         role: 'admin'
       });
     }
     
     if (email === 'teacher@example.com' && password === 'teacher123') {
-      return res.json({
-        token: 'mock-teacher-token',
+      const payload = JSON.stringify({ id: 888, auth_id: email, role: 'teacher' });
+      const base64Payload = Buffer.from(payload).toString('base64');
+      const mockToken = `header.${base64Payload}.signature`;
+      
+      console.log('✅ Teacher login successful');
+      return res.status(200).json({
+        token: mockToken,
         user: { id: 888, auth_id: email },
         role: 'teacher'
       });
     }
     
     if (email === 'student@example.com' && password === 'student123') {
-      return res.json({
-        token: 'mock-student-token',
+      const payload = JSON.stringify({ id: 777, auth_id: email, role: 'student' });
+      const base64Payload = Buffer.from(payload).toString('base64');
+      const mockToken = `header.${base64Payload}.signature`;
+      
+      console.log('✅ Student login successful');
+      return res.status(200).json({
+        token: mockToken,
         user: { id: 777, auth_id: email },
         role: 'student'
       });
     }
     
     if (email === 'parent@example.com' && password === 'parent123') {
-      return res.json({
-        token: 'mock-parent-token',
+      const payload = JSON.stringify({ id: 666, auth_id: email, role: 'parent' });
+      const base64Payload = Buffer.from(payload).toString('base64');
+      const mockToken = `header.${base64Payload}.signature`;
+      
+      console.log('✅ Parent login successful');
+      return res.status(200).json({
+        token: mockToken,
         user: { id: 666, auth_id: email },
         role: 'parent'
       });
     }
     
     // Default case - failed login
+    console.warn('❌ Invalid credentials for:', email);
     return res.status(401).json({
-      error: 'Invalid credentials'
+      error: 'Invalid credentials. Please use demo accounts: admin@example.com/admin123, teacher@example.com/teacher123, student@example.com/student123, or parent@example.com/parent123'
     });
   } catch (error) {
-    console.error('Login error:', error);
+    console.error('❌ Login error:', error);
     return res.status(500).json({
       error: 'Server error during login',
-      message: error.message
+      message: error.message || 'Unknown error',
+      stack: process.env.NODE_ENV === 'production' ? null : error.stack
     });
   }
 });
@@ -137,8 +202,47 @@ app.use('/api/*', (req, res) => {
   });
 });
 
-// Export the serverless handler
+// Add error handler middleware
+app.use((err, req, res, next) => {
+  console.error('❌ Global error handler caught:', err);
+  // Send a proper error response
+  res.status(500).json({
+    error: 'Server error',
+    message: err.message || 'Unknown error occurred',
+    path: req.url,
+    method: req.method,
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Export the serverless handler with error trapping
 module.exports = (req, res) => {
-  console.log(`📡 Request: ${req.method} ${req.url}`);
-  return app(req, res);
+  // Generate a unique request ID for tracking
+  const reqId = Math.random().toString(36).substring(2, 15);
+  
+  // Log request details
+  console.log(`📡 Request ${reqId}: ${req.method} ${req.url}`);
+  
+  // Add request ID to req object for logging
+  req.id = reqId;
+  
+  // Add response logger
+  const originalEnd = res.end;
+  res.end = function() {
+    console.log(`📤 Response ${reqId}: ${res.statusCode} ${res.statusMessage || ''}`);
+    return originalEnd.apply(this, arguments);
+  };
+  
+  // Try/catch for any synchronous errors in the handler
+  try {
+    return app(req, res);
+  } catch (error) {
+    console.error(`❌ Unhandled error in request ${reqId}:`, error);
+    res.status(500).json({
+      error: 'Unhandled server error',
+      message: 'The server encountered an unexpected error processing your request',
+      requestId: reqId,
+      timestamp: new Date().toISOString()
+    });
+  }
 };
