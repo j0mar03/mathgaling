@@ -109,6 +109,83 @@ export const AuthProvider = ({ children }) => {
     }, []); // Run this interceptor setup only once on mount
 
     const login = async (email, password) => {
+        // Development mode - enable mock authentication for easy testing and demos
+        if (process.env.NODE_ENV !== 'production') {
+            // Check for special development accounts
+            if (email === 'admin@example.com' && password === 'admin123') {
+                console.warn('⚠️ DEVELOPMENT MODE: Using mock admin authentication');
+                const mockToken = `dev-token-admin-${Date.now()}`;
+                const mockUser = { id: 999, auth_id: email, role: 'admin' };
+                
+                // Store in localStorage
+                localStorage.setItem('authToken', mockToken);
+                
+                // Update auth state
+                setUser(mockUser);
+                setToken(mockToken);
+                
+                return { user: mockUser, role: 'admin', token: mockToken };
+            }
+            
+            if (email === 'teacher@example.com' && password === 'teacher123') {
+                console.warn('⚠️ DEVELOPMENT MODE: Using mock teacher authentication');
+                const mockToken = `dev-token-teacher-${Date.now()}`;
+                const mockUser = { 
+                    id: 888, 
+                    auth_id: email, 
+                    role: 'teacher',
+                    classrooms: [
+                        { id: 1, name: 'Grade 3A', description: 'Mock classroom' },
+                        { id: 2, name: 'Grade 4B', description: 'Mock classroom' }
+                    ]
+                };
+                
+                localStorage.setItem('authToken', mockToken);
+                setUser(mockUser);
+                setToken(mockToken);
+                
+                return { user: mockUser, role: 'teacher', token: mockToken };
+            }
+            
+            if (email === 'student@example.com' && password === 'student123') {
+                console.warn('⚠️ DEVELOPMENT MODE: Using mock student authentication');
+                const mockToken = `dev-token-student-${Date.now()}`;
+                const mockUser = { 
+                    id: 777, 
+                    auth_id: email, 
+                    role: 'student',
+                    grade_level: 3
+                };
+                
+                localStorage.setItem('authToken', mockToken);
+                setUser(mockUser);
+                setToken(mockToken);
+                
+                return { user: mockUser, role: 'student', token: mockToken };
+            }
+            
+            if (email === 'parent@example.com' && password === 'parent123') {
+                console.warn('⚠️ DEVELOPMENT MODE: Using mock parent authentication');
+                const mockToken = `dev-token-parent-${Date.now()}`;
+                const mockUser = { 
+                    id: 666, 
+                    auth_id: email, 
+                    role: 'parent',
+                    students: [
+                        { id: 101, name: 'Mock Child 1', grade: 3 },
+                        { id: 102, name: 'Mock Child 2', grade: 4 }
+                    ]
+                };
+                
+                localStorage.setItem('authToken', mockToken);
+                setUser(mockUser);
+                setToken(mockToken);
+                
+                return { user: mockUser, role: 'parent', token: mockToken };
+            }
+        }
+        
+        // Normal authentication flow for production or non-mock logins
         try {
             const response = await axios.post('/api/auth/login', { email, password });
             

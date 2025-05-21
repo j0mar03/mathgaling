@@ -23,6 +23,7 @@ const Login = () => {
     }
 
     try {
+      // Use the login function from AuthContext (which now handles mock logins internally)
       const result = await login(email, password);
       // Safely access properties and provide defaults to avoid undefined errors
       const role = result?.role || 'student';
@@ -30,26 +31,16 @@ const Login = () => {
     } catch (err) {
       console.log('Login error in component:', err);
       
-      // Default error message
+      // Simple error handling with a default message
       let errorMessage = 'Oops! Something went wrong. Please try again.';
       
-      try {
-        // Handle standardized error object from AuthContext
-        if (err && typeof err === 'object') {
-          if (typeof err.message === 'string') {
-            errorMessage = err.message;
-          } else if (err.code && err.code === 500) {
-            errorMessage = 'Server error occurred. Please try again later.';
-          } else if (err.response?.data?.error && typeof err.response.data.error === 'string') {
-            errorMessage = err.response.data.error;
-          }
-        } else if (typeof err === 'string') {
-          errorMessage = err;
-        }
-      } catch (e) {
-        // If anything goes wrong while trying to extract the error message,
-        // just use the default message
-        console.error('Error while processing error object:', e);
+      // Try to extract a string error message if available
+      if (typeof err === 'string') {
+        errorMessage = err;
+      } else if (err && typeof err.message === 'string') {
+        errorMessage = err.message;
+      } else if (err && err.code === 500) {
+        errorMessage = 'Server error occurred. Please try again later.';
       }
       
       setError(errorMessage);

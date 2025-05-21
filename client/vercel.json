@@ -11,7 +11,11 @@
     },
     {
       "src": "api/serverless.js",
-      "use": "@vercel/node"
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": ["api/**", "server/**"],
+        "buildCommand": "cd api && npm install"
+      }
     }
   ],
   "routes": [

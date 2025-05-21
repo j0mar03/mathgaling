@@ -1,4 +1,12 @@
 // Serverless adapter for Vercel
+// Explicitly import pg to ensure it's available for Sequelize
+try {
+  require('pg');
+  console.log('PostgreSQL driver loaded successfully');
+} catch (error) {
+  console.error('Error loading PostgreSQL driver:', error);
+}
+
 const app = require('./index');
 
 module.exports = (req, res) => {
