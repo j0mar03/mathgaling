@@ -7,6 +7,10 @@ const bcrypt = require('bcrypt'); // Need bcrypt for hashing password
 const db = require('../models');
 const { Student, Teacher, Parent, Admin, KnowledgeComponent } = db; // Import models, including Admin and KnowledgeComponent
 const SALT_ROUNDS = 10; // Consistent salt rounds
+const fs = require('fs');
+const csv = require('csv-parser');
+const { createObjectCsvWriter } = require('csv-writer');
+const path = require('path');
 
 // List all users (Students, Teachers, Parents)
 exports.listUsers = async (req, res) => {
@@ -500,4 +504,234 @@ exports.getKnowledgeComponent = async (req, res) => {
         console.error(`Error fetching Knowledge Component ID ${kcId}:`, error);
         res.status(500).json({ error: 'Failed to fetch knowledge component.' });
     }
+};
+
+// CSV Template Download
+exports.getCSVTemplate = async (req, res) => {
+    try {
+        // Create a CSV template file
+        const tempDir = path.join(__dirname, '../uploads/csv/templates');
+        
+        // Ensure directory exists
+        if (!fs.existsSync(tempDir)) {
+            fs.mkdirSync(tempDir, { recursive: true });
+        }
+        
+        const tempFilePath = path.join(tempDir, 'user_import_template.csv');
+        
+        // Create the CSV writer
+        const csvWriter = createObjectCsvWriter({
+            path: tempFilePath,
+            header: [
+                { id: 'role', title: 'Role' },
+                { id: 'name', title: 'Name' },
+                { id: 'email', title: 'Email' },
+                { id: 'password', title: 'Password' },
+                { id: 'grade_level', title: 'Grade Level (Students Only)' },
+                { id: 'subject_taught', title: 'Subject Taught (Teachers Only)' },
+                { id: 'phone_number', title: 'Phone Number (Parents Only)' }
+            ]
+        });
+        
+        // Add sample data
+        const sampleData = [
+            {
+                role: 'student',
+                name: 'Sample Student',
+                email: 'student@example.com',
+                password: 'password123',
+                grade_level: '3',
+                subject_taught: '',
+                phone_number: ''
+            },
+            {
+                role: 'teacher',
+                name: 'Sample Teacher',
+                email: 'teacher@example.com',
+                password: 'password123',
+                grade_level: '',
+                subject_taught: 'Math',
+                phone_number: ''
+            },
+            {
+                role: 'parent',
+                name: 'Sample Parent',
+                email: 'parent@example.com',
+                password: 'password123',
+                grade_level: '',
+                subject_taught: '',
+                phone_number: '555-123-4567'
+            }
+        ];
+        
+        // Write the data to the CSV file
+        await csvWriter.writeRecords(sampleData);
+        
+        // Send the file as a download
+        res.download(tempFilePath, 'user_import_template.csv', (err) => {
+            if (err) {
+                console.error('Error sending template file:', err);
+                // Don't try to send another response if headers have already been sent
+                if (!res.headersSent) {
+                    res.status(500).json({ error: 'Failed to generate template' });
+                }
+            }
+        });
+    } catch (error) {
+        console.error('Error generating CSV template:', error);
+        res.status(500).json({ error: 'Failed to generate template' });
+    }
+};
+
+// CSV Users Upload
+exports.uploadCSVUsers = async (req, res) => {
+    try {
+        // Check if a file was uploaded
+        if (!req.file) {
+            return res.status(400).json({ error: 'No file uploaded' });
+        }
+        
+        const results = [];
+        const errors = [];
+        const successfulUsers = [];
+        
+        // Create a readable stream from the uploaded file
+        const parser = fs.createReadStream(req.file.path)
+            .pipe(csv())
+            .on('data', async (data) => {
+                // Push data to results array
+                results.push(data);
+            })
+            .on('end', async () => {
+                // Process all the users
+                for (const user of results) {
+                    try {
+                        // Basic validation
+                        if (!user.role || !user.name || !user.email || !user.password) {
+                            errors.push({
+                                email: user.email || 'Unknown',
+                                error: 'Missing required field (role, name, email, or password)'
+                            });
+                            continue;
+                        }
+                        
+                        // Check if user already exists
+                        const existingUser = await findUserByEmail(user.email);
+                        if (existingUser) {
+                            errors.push({
+                                email: user.email,
+                                error: 'User with this email already exists'
+                            });
+                            continue;
+                        }
+                        
+                        // Hash password
+                        const hashedPassword = await bcrypt.hash(user.password, SALT_ROUNDS);
+                        
+                        // Create user based on role
+                        const userData = {
+                            name: user.name,
+                            auth_id: user.email,
+                            password: hashedPassword
+                        };
+                        
+                        // Add role-specific fields
+                        if (user.role === 'student' && user.grade_level) {
+                            userData.grade_level = user.grade_level;
+                        } 
+                        else if (user.role === 'teacher' && user.subject_taught) {
+                            userData.subject_taught = user.subject_taught;
+                        }
+                        else if (user.role === 'parent' && user.phone_number) {
+                            userData.phone_number = user.phone_number;
+                        }
+                        
+                        let newUser;
+                        
+                        switch (user.role.toLowerCase()) {
+                            case 'student':
+                                newUser = await Student.create(userData);
+                                // Create a learning path for the new student
+                                await db.LearningPath.create({
+                                    student_id: newUser.id,
+                                    is_active: true,
+                                    current_position: 0
+                                });
+                                break;
+                            case 'teacher':
+                                newUser = await Teacher.create(userData);
+                                break;
+                            case 'parent':
+                                newUser = await Parent.create(userData);
+                                break;
+                            case 'admin':
+                                newUser = await Admin.create(userData);
+                                break;
+                            default:
+                                errors.push({
+                                    email: user.email,
+                                    error: 'Invalid role specified'
+                                });
+                                continue;
+                        }
+                        
+                        // Add to successful users
+                        const userInfo = newUser.toJSON();
+                        delete userInfo.password;
+                        successfulUsers.push({
+                            ...userInfo,
+                            role: user.role.toLowerCase()
+                        });
+                        
+                    } catch (err) {
+                        errors.push({
+                            email: user.email || 'Unknown',
+                            error: `Creation failed: ${err.message}`
+                        });
+                    }
+                }
+                
+                // Clean up the uploaded file
+                fs.unlink(req.file.path, (err) => {
+                    if (err) console.error('Error deleting file:', err);
+                });
+                
+                // Return the results
+                res.status(200).json({
+                    success: true,
+                    message: `${successfulUsers.length} users created successfully. ${errors.length} users failed.`,
+                    created: successfulUsers,
+                    errors: errors
+                });
+            });
+            
+    } catch (error) {
+        console.error('Error processing CSV:', error);
+        
+        // Clean up the uploaded file if it exists
+        if (req.file && req.file.path) {
+            fs.unlink(req.file.path, (err) => {
+                if (err) console.error('Error deleting file:', err);
+            });
+        }
+        
+        res.status(500).json({ error: 'Failed to process CSV file' });
+    }
+};
+
+// Helper function to find user by email across models
+const findUserByEmail = async (email) => {
+    let user = await Student.findOne({ where: { auth_id: email } });
+    if (user) return { user, role: 'student' };
+
+    user = await Teacher.findOne({ where: { auth_id: email } });
+    if (user) return { user, role: 'teacher' };
+
+    user = await Parent.findOne({ where: { auth_id: email } });
+    if (user) return { user, role: 'parent' };
+
+    user = await Admin.findOne({ where: { auth_id: email } }); 
+    if (user) return { user, role: 'admin' };
+
+    return null;
 };

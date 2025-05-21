@@ -1,0 +1,5 @@
+Role,Name,Email,Password,Grade Level (Students Only),Subject Taught (Teachers Only),Phone Number (Parents Only)
+student,Test Student 1,teststudent1@example.com,password123,3,,
+student,Test Student 2,teststudent2@example.com,password123,4,,
+teacher,Test Teacher,testteacher@example.com,password123,,Math,
+parent,Test Parent,testparent@example.com,password123,,,555-123-4567

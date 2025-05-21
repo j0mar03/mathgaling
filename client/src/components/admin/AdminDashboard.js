@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom'; // Import Link for navigation
 import { useAuth } from '../../context/AuthContext';
 import AddUserForm from './AddUserForm';
 import EditUserForm from './EditUserForm'; // Import the edit form component
+import CSVUserUpload from './CSVUserUpload'; // Import the CSV upload component
 import KnowledgeComponentList from './KnowledgeComponentList'; // Import KC List
 import KnowledgeComponentForm from './KnowledgeComponentForm'; // Import KC Form
 import AdminPDFUploader from './AdminPDFUploader'; // Import PDF Uploader component
@@ -16,6 +17,7 @@ const AdminDashboard = () => {
     const [error, setError] = useState(null);
     const [showAddForm, setShowAddForm] = useState(false);
     const [editingUser, setEditingUser] = useState(null); // State for user being edited
+    const [showCsvUpload, setShowCsvUpload] = useState(false); // State for CSV upload visibility
     const [showKcForm, setShowKcForm] = useState(false); // State for KC form visibility
     const [editingKc, setEditingKc] = useState(null); // State for KC being edited
     const [activeTab, setActiveTab] = useState('users'); // 'users', 'kcs', 'content', 'pdf'
@@ -56,7 +58,18 @@ const AdminDashboard = () => {
         setShowAddForm(prev => !prev);
         setError('');
         setEditingUser(null); // Ensure edit form is hidden when showing add form
+        setShowCsvUpload(false); // Hide CSV upload when showing add form
         setShowKcForm(false); // Hide KC form if showing add user form
+        setEditingKc(null);
+    };
+    
+    // Toggle CSV upload form visibility
+    const handleToggleCsvUpload = () => {
+        setShowCsvUpload(prev => !prev);
+        setError('');
+        setShowAddForm(false); // Hide add form when showing CSV upload
+        setEditingUser(null);
+        setShowKcForm(false); // Hide KC form if showing CSV upload
         setEditingKc(null);
     };
     
@@ -65,6 +78,7 @@ const AdminDashboard = () => {
         setActiveTab(tab);
         setShowAddForm(false);
         setEditingUser(null);
+        setShowCsvUpload(false);
         setShowKcForm(false);
         setEditingKc(null);
         setError('');
@@ -220,24 +234,34 @@ const AdminDashboard = () => {
             {activeTab === 'users' && (
             <section className="admin-section">
                 <h2>User Management</h2>
-                {/* Toggle Button and Add/Edit User Form */}
-                {!showAddForm && !editingUser ? (
-                    <button onClick={handleToggleAddForm} className="admin-button">Add New User</button>
-                ) : editingUser ? ( // If editingUser is set, show Edit form
+                {/* Toggle Buttons for Add User and CSV Upload */}
+                {!showAddForm && !editingUser && !showCsvUpload && (
+                    <div>
+                        <button onClick={handleToggleAddForm} className="admin-button">Add Single User</button>
+                        <button onClick={handleToggleCsvUpload} className="admin-button">Bulk Import Users</button>
+                    </div>
+                )}
+                
+                {/* User Forms: Edit User, Add User, or CSV Upload */}
+                {editingUser ? (
                     <EditUserForm
                         userToEdit={editingUser}
                         onUserUpdated={handleUserUpdated}
                         onCancel={handleCancelEdit}
                     />
-                ) : showAddForm ? ( // Otherwise, if showAddForm is true, show Add form
+                ) : showAddForm ? (
                     <AddUserForm onUserAdded={handleUserAdded} onCancel={handleCancelAdd} />
+                ) : showCsvUpload ? (
+                    <CSVUserUpload onUsersAdded={fetchUsers} />
                 ) : null}
 
-                {/* Display user-related error only if no user form is shown */}
-                {error && !showAddForm && !editingUser && <div className="error-message">Error: {error}</div>}
+                {/* Display user-related error only if no form is shown */}
+                {error && !showAddForm && !editingUser && !showCsvUpload && (
+                    <div className="error-message">Error: {error}</div>
+                )}
 
                 {/* User List Table */}
-                {!showAddForm && !editingUser && ( // Only render table if no user form is shown
+                {!showAddForm && !editingUser && !showCsvUpload && ( // Only render table if no form is shown
                     loading ? (
                         <p className="loading">Loading users...</p>
                     ) : error ? (

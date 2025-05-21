@@ -112,15 +112,22 @@ export const AuthProvider = ({ children }) => {
         try {
             const response = await axios.post('/api/auth/login', { email, password });
             if (response.data && response.data.token) {
-                const { token, user, role } = response.data; // Destructure response
-                // Construct the user object with the role included
-                const userWithRole = { id: user.id, auth_id: user.auth_id, role: role };
+                const token = response.data.token;
+                const user = response.data.user || {}; // Provide empty object as fallback
+                const role = response.data.role || 'student'; // Provide default role as fallback
+                
+                // Safely construct the user object with the role included
+                const userWithRole = { 
+                    id: user.id || 0, 
+                    auth_id: user.auth_id || email, 
+                    role: role 
+                };
                 
                 // Set token state first to enable authenticated requests
                 setToken(token);
                 
                 // If user is a teacher, fetch their classrooms
-                if (role === 'teacher') {
+                if (role === 'teacher' && user.id) {
                     try {
                         // Fetch classrooms for the teacher
                         const classroomsResponse = await axios.get(`/api/teachers/${user.id}/classrooms`, {
@@ -134,13 +141,15 @@ export const AuthProvider = ({ children }) => {
                         }
                     } catch (classroomsError) {
                         console.error("Failed to fetch teacher's classrooms during login:", classroomsError);
+                        // Continue without classroom data if fetch fails
+                        userWithRole.classrooms = [];
                     }
                 }
                 
                 // Set user state now with all data including potentially classrooms
                 setUser(userWithRole);
                 
-                // Return the complete user object
+                // Return the complete user object with safe fallbacks
                 return { 
                     user: userWithRole, 
                     role: role, 

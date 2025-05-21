@@ -23,7 +23,9 @@ const Login = () => {
     }
 
     try {
-      const { user, role } = await login(email, password);
+      const result = await login(email, password);
+      // Safely access properties and provide defaults to avoid undefined errors
+      const role = result?.role || 'student';
       navigate(`/${role}`);
     } catch (err) {
       setError(err.response?.data?.error || 'Oops! Something went wrong. Please try again.');
