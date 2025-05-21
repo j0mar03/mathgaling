@@ -13,8 +13,23 @@
       "src": "api/serverless.js",
       "use": "@vercel/node",
       "config": {
-        "includeFiles": ["api/**", "server/**"],
-        "buildCommand": "cd api && npm install --production && cd ../server && npm install --production"
+        "includeFiles": [
+          "api/**", 
+          "server/controllers/**",
+          "server/middleware/**",
+          "server/models/**",
+          "server/routes/**",
+          "server/utils/**",
+          "server/config/**",
+          "server/index.js"
+        ],
+        "excludeFiles": [
+          "**/*.pdf",
+          "**/node_modules/**",
+          "server/uploads/pdf/**",
+          "server/examples/**"
+        ],
+        "buildCommand": "cd api && npm install --production"
       }
     }
   ],
