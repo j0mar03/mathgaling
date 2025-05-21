@@ -14,7 +14,7 @@
       "use": "@vercel/node",
       "config": {
         "includeFiles": ["api/**", "server/**"],
-        "buildCommand": "cd api && npm install"
+        "buildCommand": "cd api && npm install --production && cd ../server && npm install --production"
       }
     }
   ],
@@ -47,5 +47,11 @@
       "src": "/(.*)",
       "dest": "/index.html"
     }
-  ]
+  ],
+  "env": {
+    "NODE_ENV": "production",
+    "JWT_SECRET": "@jwt_secret_key",
+    "DATABASE_URL": "@database_url",
+    "ALLOW_TEST_AUTH": "false"
+  }
 }

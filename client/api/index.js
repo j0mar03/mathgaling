@@ -27,6 +27,26 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Debug endpoint
+app.get('/api/debug', (req, res) => {
+  try {
+    // Load and run the debug script
+    const debugFn = require('./debug');
+    return debugFn(req, res);
+  } catch (error) {
+    console.error('Error running debug script:', error);
+    // Return basic info if debug script fails
+    res.status(500).json({
+      status: 'error',
+      message: 'Debug script failed to load',
+      error: error.message,
+      timestamp: new Date().toISOString(),
+      cwd: process.cwd(),
+      nodeVersion: process.version
+    });
+  }
+});
+
 // Auth routes - must be registered before centralized routes
 app.post('/api/auth/register/student', authController.registerStudent);
 app.post('/api/auth/register/teacher', authController.registerTeacher);
