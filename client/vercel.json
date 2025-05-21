@@ -8,9 +8,17 @@
         "distDir": "build",
         "buildCommand": "npm run vercel-build"
       }
+    },
+    {
+      "src": "api/serverless.js",
+      "use": "@vercel/node"
     }
   ],
   "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/api/serverless.js"
+    },
     {
       "src": "/static/(.*)",
       "dest": "/static/$1"
@@ -36,4 +44,4 @@
       "dest": "/index.html"
     }
   ]
-} 
+}
