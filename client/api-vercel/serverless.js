@@ -1,6 +1,9 @@
 // Lightweight serverless adapter for Vercel
 console.log('🔄 Initializing lightweight serverless adapter for Vercel');
 
+// Set initialization flag (default to false)
+global.apiInitialized = false;
+
 // Environment check
 console.log('📊 Environment:', process.env.NODE_ENV);
 console.log('📂 Working directory:', process.cwd());
@@ -10,38 +13,32 @@ console.log('- SUPABASE_URL:', process.env.SUPABASE_URL ? '✅ Set' : '❌ Missi
 console.log('- SUPABASE_KEY:', process.env.SUPABASE_KEY ? '✅ Set' : '❌ Missing');
 console.log('- JWT_SECRET:', process.env.JWT_SECRET ? '✅ Set' : '❌ Missing');
 
-// Preload critical modules
-try {
-  require('express');
-  require('jsonwebtoken');
-  require('pg');
-  require('@supabase/supabase-js');
-  console.log('✅ Critical modules loaded successfully');
-} catch (error) {
-  console.error('❌ Error loading critical modules:', error.message);
-}
-
-// Initialize Supabase
-const supabaseClient = require('./supabase');
-const supabase = supabaseClient.init();
-
-// Simple Express app for fallback
+// Create Express app FIRST to ensure it's always available
 const express = require('express');
 const app = express();
 
-// Middleware
-app.use(require('cors')({
-  origin: '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  credentials: true
-}));
+// CORS middleware (basic)
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
 
-// JSON body parser with error handling
-app.use(express.json({ 
+// Basic JSON parsing (with error handling)
+app.use(express.json({
   limit: '1mb',
   verify: (req, res, buf) => {
-    // Store raw body for debugging
-    req.rawBody = buf.toString();
+    try {
+      // Store raw body for debugging
+      req.rawBody = buf.toString();
+    } catch (e) {
+      // Ignore errors
+    }
   }
 }));
 
@@ -54,18 +51,136 @@ app.use((err, req, res, next) => {
       message: 'The request body contains invalid JSON'
     });
   }
-  // Pass error to next middleware
   next(err);
 });
 
-// Basic routes
+// CRITICAL: Debug endpoint that works even if initialization fails
+app.get('/api/debug', async (req, res) => {
+  try {
+    console.log('📊 Debug endpoint accessed');
+    
+    // Environment information (always available)
+    const envInfo = {
+      NODE_ENV: process.env.NODE_ENV || 'unknown',
+      SUPABASE_URL: process.env.SUPABASE_URL ? 'set' : 'missing',
+      SUPABASE_KEY: process.env.SUPABASE_KEY ? 'set' : 'missing',
+      JWT_SECRET: process.env.JWT_SECRET ? 'set' : 'missing',
+      DATABASE_URL: process.env.DATABASE_URL ? 'set' : 'missing'
+    };
+    
+    // Get Supabase status (wrapped in try/catch)
+    let supabaseStatus = 'not_initialized';
+    let databaseStatus = 'unknown';
+    let initError = null;
+    
+    try {
+      // Get Supabase client and status
+      const supabaseClient = require('./supabase');
+      const supabase = supabaseClient.get();
+      const supabaseClientStatus = supabaseClient.status();
+      
+      // Use status from the status function
+      supabaseStatus = supabaseClientStatus.status;
+      databaseStatus = supabaseClientStatus.status === 'connected' ? 'connected' : 'error';
+      initError = supabaseClientStatus.error;
+      
+      // If we have a client, add real-time connectivity check
+      if (supabase) {
+        // Try a basic query (only if we haven't confirmed connectivity yet)
+        if (supabaseStatus !== 'connected') {
+          try {
+            const { data, error } = await supabase
+              .from('admins')
+              .select('count')
+              .limit(1);
+              
+            if (error) {
+              console.warn('⚠️ Admin table query failed in debug endpoint:', error.message);
+              // Try another table to be sure
+              const { data: altData, error: altError } = await supabase
+                .from('teachers')
+                .select('count')
+                .limit(1);
+                
+              if (altError) {
+                supabaseStatus = 'error';
+                databaseStatus = 'error';
+                initError = error.message;
+              } else {
+                supabaseStatus = 'connected';
+                databaseStatus = 'connected';
+              }
+            } else {
+              supabaseStatus = 'connected';
+              databaseStatus = 'connected';
+            }
+          } catch (queryError) {
+            console.error('❌ Supabase query error in debug endpoint:', queryError.message);
+            supabaseStatus = 'query_error';
+            databaseStatus = 'error';
+            initError = queryError.message;
+          }
+        }
+      }
+    } catch (supabaseError) {
+      console.error('❌ Supabase module error in debug endpoint:', supabaseError);
+      supabaseStatus = 'module_error';
+      initError = supabaseError.message;
+    }
+    
+    // Return comprehensive debug information
+    return res.json({
+      status: 'debugging',
+      api_status: global.apiInitialized ? 'initialized' : 'failed',
+      timestamp: new Date().toISOString(),
+      environment: envInfo,
+      database: {
+        supabase_status: supabaseStatus,
+        database_status: databaseStatus,
+        error: initError
+      },
+      test_accounts: [
+        'admin@example.com / admin123',
+        'teacher@example.com / teacher123',
+        'student@example.com / student123',
+        'parent@example.com / parent123'
+      ],
+      note: 'This API will fall back to test accounts if Supabase connection fails.'
+    });
+  } catch (error) {
+    // Absolute last resort error handler
+    return res.status(500).json({
+      status: 'error',
+      message: 'Debug endpoint error',
+      error: error.message,
+      time: new Date().toISOString()
+    });
+  }
+});
+
+// Health check endpoint (always available)
 app.get('/api/health', (req, res) => {
-  res.status(200).json({
-    status: 'healthy',
+  res.json({
+    status: global.apiInitialized ? 'healthy' : 'degraded',
     mode: 'lightweight',
     timestamp: new Date().toISOString()
   });
 });
+
+// Initialize Supabase (wrapped in try/catch)
+let supabase = null;
+try {
+  const supabaseClient = require('./supabase');
+  supabase = supabaseClient.init();
+  
+  if (!supabase) {
+    console.warn('⚠️ Supabase initialization failed, continuing with limited functionality');
+  } else {
+    console.log('✅ Supabase initialized successfully');
+  }
+} catch (error) {
+  console.error('❌ Supabase initialization error:', error);
+}
 
 // Auth route with Supabase fallback
 app.post('/api/auth/login', async (req, res) => {
@@ -94,7 +209,6 @@ app.post('/api/auth/login', async (req, res) => {
     // HYBRID APPROACH: Try Supabase first, fall back to test accounts
     
     // Step 1: Check if we have Supabase connection
-    const supabase = supabaseClient.get();
     if (supabase) {
       console.log('🔍 Attempting Supabase authentication...');
       try {
@@ -298,90 +412,12 @@ app.get('/api', (req, res) => {
   res.redirect('/');
 });
 
-// Debug endpoint with database connection status
-app.get('/api/debug', async (req, res) => {
-  try {
-    // Check Supabase connection
-    const supabase = supabaseClient.get();
-    let supabaseStatus = 'not_initialized';
-    let databaseStatus = 'unknown';
-    
-    if (supabase) {
-      try {
-        // Basic query to test connection
-        const { data, error } = await supabase
-          .from('admins')
-          .select('count')
-          .limit(1);
-          
-        supabaseStatus = error ? 'error' : 'connected';
-        databaseStatus = error ? 'error' : 'connected';
-      } catch (supabaseError) {
-        supabaseStatus = 'error';
-        databaseStatus = 'error';
-      }
-    }
-    
-    // Check environment variables (mask sensitive parts)
-    const envVars = {};
-    
-    // Check DB connection string
-    if (process.env.DATABASE_URL) {
-      const dbUrl = process.env.DATABASE_URL;
-      // Mask password in connection string
-      const maskedUrl = dbUrl.replace(/\/\/([^:]+):([^@]+)@/, '//\\1:****@');
-      envVars.DATABASE_URL = maskedUrl;
-    }
-    
-    // Check Supabase credentials
-    if (process.env.SUPABASE_URL) {
-      envVars.SUPABASE_URL = process.env.SUPABASE_URL;
-    }
-    
-    if (process.env.SUPABASE_KEY) {
-      envVars.SUPABASE_KEY = process.env.SUPABASE_KEY.substring(0, 5) + '...' + process.env.SUPABASE_KEY.slice(-5);
-    }
-    
-    // Check JWT secret
-    if (process.env.JWT_SECRET) {
-      envVars.JWT_SECRET = process.env.JWT_SECRET ? '******** (set)' : 'not set';
-    }
-    
-    // Return debug information
-    res.json({
-      status: 'ok',
-      message: 'Lightweight API for Vercel deployment',
-      environment: process.env.NODE_ENV,
-      timestamp: new Date().toISOString(),
-      database: {
-        supabase_status: supabaseStatus,
-        database_status: databaseStatus
-      },
-      environment_variables: envVars,
-      test_accounts: [
-        'admin@example.com / admin123',
-        'teacher@example.com / teacher123',
-        'student@example.com / student123',
-        'parent@example.com / parent123'
-      ],
-      note: 'This is a hybrid API that tries to connect to Supabase and falls back to test accounts if needed.'
-    });
-  } catch (error) {
-    res.status(500).json({
-      status: 'error',
-      message: 'Error generating debug information',
-      error: error.message
-    });
-  }
-});
-
 // Fallback route with CORS headers
 app.use('/api/*', (req, res) => {
-  res.status(503).json({
-    status: 'service_unavailable',
-    message: 'This API endpoint is temporarily unavailable in the Vercel deployment',
-    error: 'Vercel serverless function size limit exceeded',
-    recommendation: 'Please use the test accounts: admin@example.com/admin123, teacher@example.com/teacher123, student@example.com/student123, or parent@example.com/parent123',
+  res.status(404).json({
+    status: 'not_found',
+    message: 'Endpoint not available in lightweight API',
+    error: 'Endpoint not implemented',
     timestamp: new Date().toISOString()
   });
 });
@@ -398,6 +434,10 @@ app.use((err, req, res, next) => {
     timestamp: new Date().toISOString()
   });
 });
+
+// Mark API as initialized
+global.apiInitialized = true;
+console.log('✅ API initialization complete');
 
 // Export the serverless handler with error trapping
 module.exports = (req, res) => {
