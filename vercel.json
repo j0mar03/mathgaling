@@ -1,0 +1,61 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "client/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "client/build",
+        "buildCommand": "cd client && npm run vercel-build"
+      }
+    },
+    {
+      "src": "client/api/serverless.js",
+      "use": "@vercel/node",
+      "config": {
+        "includeFiles": ["client/api/**", "client/server/**"],
+        "buildCommand": "cd client/api && npm install --production && cd ../server && npm install --production"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/client/api/serverless.js"
+    },
+    {
+      "src": "/static/(.*)",
+      "dest": "/client/build/static/$1"
+    },
+    {
+      "src": "/favicon.ico",
+      "dest": "/client/build/favicon.ico"
+    },
+    {
+      "src": "/manifest.json",
+      "dest": "/client/build/manifest.json"
+    },
+    {
+      "src": "/logo192.png",
+      "dest": "/client/build/logo192.png"
+    },
+    {
+      "src": "/logo512.png",
+      "dest": "/client/build/logo512.png"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/client/build/index.html"
+    }
+  ],
+  "env": {
+    "NODE_ENV": "production",
+    "JWT_SECRET": "@jwt_secret_key",
+    "DATABASE_URL": "@database_url",
+    "ALLOW_TEST_AUTH": "false"
+  },
+  "github": {
+    "enabled": true,
+    "silent": false
+  }
+}
