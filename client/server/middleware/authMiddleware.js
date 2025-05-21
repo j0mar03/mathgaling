@@ -17,8 +17,8 @@ try {
   }
 }
 
-// TODO: Move JWT secret to environment variables
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-for-development';
+// Set a secure JWT secret (for production, this should be an environment variable)
+const JWT_SECRET = process.env.JWT_SECRET || 'itsKidsSecureTokenDevKey2025NobodyWillGuessThis!';
 
 // Create middleware functions that match what's imported in index.js
 
