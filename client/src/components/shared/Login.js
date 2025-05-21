@@ -28,7 +28,24 @@ const Login = () => {
       const role = result?.role || 'student';
       navigate(`/${role}`);
     } catch (err) {
-      setError(err.response?.data?.error || 'Oops! Something went wrong. Please try again.');
+      console.log('Login error in component:', err);
+      // Handle different error formats that might come from the server
+      let errorMessage = 'Oops! Something went wrong. Please try again.';
+      
+      // Handle standardized error object from AuthContext
+      if (err && typeof err === 'object') {
+        if (err.message) {
+          errorMessage = err.message;
+        } else if (err.code && err.code === 500) {
+          errorMessage = 'Server error occurred. Please try again later.';
+        } else if (err.response?.data?.error) {
+          errorMessage = err.response.data.error;
+        }
+      } else if (typeof err === 'string') {
+        errorMessage = err;
+      }
+      
+      setError(errorMessage);
       setLoading(false);
     }
   };

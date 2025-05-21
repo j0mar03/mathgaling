@@ -111,59 +111,91 @@ export const AuthProvider = ({ children }) => {
     const login = async (email, password) => {
         try {
             const response = await axios.post('/api/auth/login', { email, password });
-            if (response.data && response.data.token) {
-                const token = response.data.token;
-                const user = response.data.user || {}; // Provide empty object as fallback
-                const role = response.data.role || 'student'; // Provide default role as fallback
-                
-                // Safely construct the user object with the role included
-                const userWithRole = { 
-                    id: user.id || 0, 
-                    auth_id: user.auth_id || email, 
-                    role: role 
-                };
-                
-                // Set token state first to enable authenticated requests
-                setToken(token);
-                
-                // If user is a teacher, fetch their classrooms
-                if (role === 'teacher' && user.id) {
-                    try {
-                        // Fetch classrooms for the teacher
-                        const classroomsResponse = await axios.get(`/api/teachers/${user.id}/classrooms`, {
-                            headers: { Authorization: `Bearer ${token}` }
-                        });
-                        
-                        if (classroomsResponse.data) {
-                            // Add classrooms to the user object
-                            userWithRole.classrooms = classroomsResponse.data;
-                            console.log('Teacher classrooms loaded during login:', classroomsResponse.data);
-                        }
-                    } catch (classroomsError) {
-                        console.error("Failed to fetch teacher's classrooms during login:", classroomsError);
-                        // Continue without classroom data if fetch fails
-                        userWithRole.classrooms = [];
-                    }
-                }
-                
-                // Set user state now with all data including potentially classrooms
-                setUser(userWithRole);
-                
-                // Return the complete user object with safe fallbacks
-                return { 
-                    user: userWithRole, 
-                    role: role, 
-                    token: token 
-                };
-            } else {
-                throw new Error('Login failed: No token received');
+            
+            // Check if response exists and has data
+            if (!response || !response.data) {
+                console.error("Login error: Empty response or missing data");
+                throw new Error('Login failed: Server returned an invalid response');
             }
+            
+            // Check if token exists
+            if (!response.data.token) {
+                console.error("Login error: No token in response", response.data);
+                throw new Error('Login failed: Authentication token missing');
+            }
+            
+            const token = response.data.token;
+            const user = response.data.user || {}; // Provide empty object as fallback
+            const role = response.data.role || 'student'; // Provide default role as fallback
+            
+            // Safely construct the user object with the role included
+            const userWithRole = { 
+                id: user.id || 0, 
+                auth_id: user.auth_id || email, 
+                role: role 
+            };
+            
+            // Set token state first to enable authenticated requests
+            setToken(token);
+            
+            // If user is a teacher, fetch their classrooms
+            if (role === 'teacher' && user.id) {
+                try {
+                    // Fetch classrooms for the teacher
+                    const classroomsResponse = await axios.get(`/api/teachers/${user.id}/classrooms`, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                    
+                    if (classroomsResponse && classroomsResponse.data) {
+                        // Add classrooms to the user object
+                        userWithRole.classrooms = classroomsResponse.data;
+                        console.log('Teacher classrooms loaded during login:', classroomsResponse.data);
+                    }
+                } catch (classroomsError) {
+                    console.error("Failed to fetch teacher's classrooms during login:", classroomsError);
+                    // Continue without classroom data if fetch fails
+                    userWithRole.classrooms = [];
+                }
+            }
+            
+            // Set user state now with all data including potentially classrooms
+            setUser(userWithRole);
+            
+            // Return the complete user object with safe fallbacks
+            return { 
+                user: userWithRole, 
+                role: role, 
+                token: token 
+            };
         } catch (error) {
-            console.error("Login error in AuthContext:", error.response?.data?.error || error.message);
             // Clear token/user state on login failure
             setToken(null);
             setUser(null);
-            throw error; // Re-throw error to be caught by the component
+            
+            // Enhanced error logging
+            if (error.response) {
+                // The request was made and the server responded with a status code
+                // that falls out of the range of 2xx
+                console.error("Login error (server response):", {
+                    status: error.response.status,
+                    data: error.response.data,
+                    headers: error.response.headers
+                });
+            } else if (error.request) {
+                // The request was made but no response was received
+                console.error("Login error (no response):", error.request);
+            } else {
+                // Something happened in setting up the request that triggered an Error
+                console.error("Login error:", error.message || error);
+            }
+            
+            // Create a standardized error object to return
+            const errorObj = {
+                message: error.response?.data?.error || error.message || 'Login failed',
+                code: error.response?.status || 500
+            };
+            
+            throw errorObj; // Throw a standardized error object
         }
     };
 
