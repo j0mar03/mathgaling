@@ -464,8 +464,10 @@ exports.handler = async (event, context) => {
         name: userData.name,
         email: userData.email,
         ...(role === 'student' && { grade_level: userData.grade_level || 3 }),
-        ...(role === 'teacher' && { subject: userData.subject_taught || 'Mathematics' })
+        ...(role === 'teacher' && { subject: userData.subject_taught || userData.subject || 'Mathematics' })
       };
+      
+      console.log('Creating DB record:', { tableName, dbRecord });
       
       const { data: dbData, error: dbError } = await supabase
         .from(tableName)
@@ -852,7 +854,10 @@ exports.handler = async (event, context) => {
       return {
         statusCode: 200,
         headers,
-        body: JSON.stringify(data || [])
+        body: JSON.stringify({
+          contentItems: data || [],
+          totalCount: data?.length || 0
+        })
       };
       
     } catch (error) {
