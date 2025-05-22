@@ -12,10 +12,10 @@
   # Node version
   NODE_VERSION = "18"
 
-# Redirect all API calls to functions
+# Redirect all API calls to single unified function
 [[redirects]]
   from = "/api/*"
-  to = "/.netlify/functions/:splat"
+  to = "/.netlify/functions/api"
   status = 200
 
 # SPA fallback - send all other routes to index.html
