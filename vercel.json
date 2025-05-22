@@ -8,17 +8,9 @@
         "distDir": "client/build",
         "buildCommand": "cd client && npm run vercel-build"
       }
-    },
-    {
-      "src": "client/api-vercel/simple.js",
-      "use": "@vercel/node"
     }
   ],
   "routes": [
-    {
-      "src": "/api/(.*)",
-      "dest": "/client/api-vercel/simple.js"
-    },
     {
       "src": "/static/(.*)",
       "dest": "/client/build/static/$1"
@@ -43,13 +35,5 @@
       "src": "/(.*)",
       "dest": "/client/build/index.html"
     }
-  ],
-  "env": {
-    "NODE_ENV": "production",
-    "ALLOW_TEST_AUTH": "false"
-  },
-  "github": {
-    "enabled": true,
-    "silent": false
-  }
+  ]
 }
