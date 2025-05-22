@@ -1,8 +1,17 @@
 // Lightweight serverless adapter for Vercel
 console.log('🔄 Initializing lightweight serverless adapter for Vercel');
 
-// Wrap entire initialization in try-catch
-try {
+// Load required dependencies first
+console.log('📦 Loading dependencies...');
+const express = require('express');
+console.log('✅ Express loaded');
+
+const jwt = require('jsonwebtoken');
+console.log('✅ JWT loaded');
+
+// Create Express app immediately
+const app = express();
+console.log('✅ Express app created');
 
 // Set initialization flag (default to false)
 global.apiInitialized = false;
@@ -16,9 +25,7 @@ console.log('- SUPABASE_URL:', process.env.SUPABASE_URL ? '✅ Set' : '❌ Missi
 console.log('- SUPABASE_KEY:', process.env.SUPABASE_KEY ? '✅ Set' : '❌ Missing');
 console.log('- JWT_SECRET:', process.env.JWT_SECRET ? '✅ Set' : '❌ Missing');
 
-// Create Express app FIRST to ensure it's always available
-const express = require('express');
-const app = express();
+// Express app already created above
 
 // CORS middleware (basic)
 app.use((req, res, next) => {
@@ -285,8 +292,7 @@ app.post('/api/auth/login', async (req, res) => {
             // Continue with default role
           }
           
-          // Create JWT token
-          const jwt = require('jsonwebtoken');
+          // Create JWT token (load JWT when needed)
           const token = jwt.sign(
             { id: userId, auth_id: email, role },
             process.env.JWT_SECRET || 'itsKidsSecureTokenDevKey2025NobodyWillGuessThis!',
@@ -308,8 +314,7 @@ app.post('/api/auth/login', async (req, res) => {
     // Step 2: Fallback to test accounts if Supabase failed
     console.log('🔄 Using fallback test accounts...');
     
-    // Use JWT to create real tokens for test accounts
-    const jwt = require('jsonwebtoken');
+    // Use JWT to create real tokens for test accounts (already loaded)
     const jwtSecret = process.env.JWT_SECRET || 'itsKidsSecureTokenDevKey2025NobodyWillGuessThis!';
     
     // Test user credentials
@@ -410,9 +415,15 @@ app.get('/api/students/:id/progress', (req, res) => {
   });
 });
 
-// Redirect to main app
+// Simple status endpoint
 app.get('/api', (req, res) => {
-  res.redirect('/');
+  res.json({
+    status: 'ok',
+    message: 'Lightweight API is running',
+    initialized: global.apiInitialized,
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'unknown'
+  });
 });
 
 // Fallback route with CORS headers
@@ -440,64 +451,48 @@ app.use((err, req, res, next) => {
 
 // Mark API as initialized
 global.apiInitialized = true;
-console.log('✅ API initialization complete');
-
 } catch (initError) {
   console.error('❌ CRITICAL: Serverless initialization failed:', initError);
+  global.apiInitialized = false;
   
-  // Create a minimal Express app for error responses
-  const express = require('express');
-  const errorApp = express();
-  
-  errorApp.use(express.json());
-  errorApp.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-    if (req.method === 'OPTIONS') return res.sendStatus(200);
-    next();
-  });
-  
-  errorApp.use('*', (req, res) => {
+  // Add error route to existing app
+  app.use('*', (req, res) => {
     res.status(500).json({
       error: 'API initialization failed',
       message: 'The API server encountered an error during startup. Please try again later.',
       details: initError.message,
+      stack: process.env.NODE_ENV === 'development' ? initError.stack : undefined,
       timestamp: new Date().toISOString()
     });
   });
-  
-  // Export the error handler
-  module.exports = (req, res) => errorApp(req, res);
 }
 
-// If initialization succeeded, export the normal handler
-if (global.apiInitialized !== false) {
-  console.log('✅ Exporting main serverless handler');
+console.log('🚀 Exporting serverless handler');
+
+// Export the serverless handler (always export, regardless of initialization status)
+module.exports = (req, res) => {
+  // Generate a unique request ID for tracking
+  const reqId = Math.random().toString(36).substring(2, 15);
   
-  // Export the serverless handler with error trapping
-  module.exports = (req, res) => {
-    // Generate a unique request ID for tracking
-    const reqId = Math.random().toString(36).substring(2, 15);
-    
-    // Log request details
-    console.log(`📡 Request ${reqId}: ${req.method} ${req.url}`);
-    
-    // Add request ID to req object for logging
-    req.id = reqId;
-    
-    // Add response logger
-    const originalEnd = res.end;
-    res.end = function() {
-      console.log(`📤 Response ${reqId}: ${res.statusCode} ${res.statusMessage || ''}`);
-      return originalEnd.apply(this, arguments);
-    };
-    
-    // Try/catch for any synchronous errors in the handler
-    try {
-      return app(req, res);
-    } catch (error) {
-      console.error(`❌ Unhandled error in request ${reqId}:`, error);
+  // Log request details
+  console.log(`📡 Request ${reqId}: ${req.method} ${req.url}`);
+  
+  // Add request ID to req object for logging
+  req.id = reqId;
+  
+  // Add response logger
+  const originalEnd = res.end;
+  res.end = function() {
+    console.log(`📤 Response ${reqId}: ${res.statusCode} ${res.statusMessage || ''}`);
+    return originalEnd.apply(this, arguments);
+  };
+  
+  // Try/catch for any synchronous errors in the handler
+  try {
+    return app(req, res);
+  } catch (error) {
+    console.error(`❌ Unhandled error in request ${reqId}:`, error);
+    if (!res.headersSent) {
       res.status(500).json({
         error: 'Unhandled server error',
         message: 'The server encountered an unexpected error processing your request',
@@ -505,5 +500,5 @@ if (global.apiInitialized !== false) {
         timestamp: new Date().toISOString()
       });
     }
-  };
-}
+  }
+};
