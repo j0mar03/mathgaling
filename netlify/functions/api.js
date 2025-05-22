@@ -134,7 +134,7 @@ exports.handler = async (event, context) => {
         
         if (role === 'admin') {
           const { data, error } = await supabase
-            .from('admins')
+            .from('Admins')
             .insert([{
               auth_id: userData.email,
               name: userData.name || 'New Admin',
@@ -270,7 +270,7 @@ exports.handler = async (event, context) => {
             
             // Check admin
             const { data: adminData, error: adminError } = await supabase
-              .from('admins')
+              .from('Admins')
               .select('id, auth_id')
               .eq('auth_id', email)
               .single();
