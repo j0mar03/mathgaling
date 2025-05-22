@@ -131,61 +131,72 @@ exports.handler = async (event, context) => {
       // Create database record based on role
       try {
         let dbResult;
+        let tableName = role === 'admin' ? 'Admins' : `${role}s`;
         
-        if (role === 'admin') {
-          const { data, error } = await supabase
-            .from('Admins')
-            .insert([{
-              auth_id: userData.email,
-              name: userData.name || 'New Admin',
-              email: userData.email
-            }])
-            .select()
-            .single();
+        // Check if user already exists in the role table
+        const { data: existingUser } = await supabase
+          .from(tableName)
+          .select('*')
+          .eq('auth_id', userData.email)
+          .single();
           
-          if (error) throw error;
-          dbResult = { admin: data };
-        } else if (role === 'teacher') {
-          const { data, error } = await supabase
-            .from('teachers')
-            .insert([{
-              auth_id: userData.email,
-              name: userData.name || 'New Teacher',
-              email: userData.email,
-              subject: userData.subject || 'Mathematics'
-            }])
-            .select()
-            .single();
-          
-          if (error) throw error;
-          dbResult = { teacher: data };
-        } else if (role === 'student') {
-          const { data, error } = await supabase
-            .from('students')
-            .insert([{
-              auth_id: userData.email,
-              name: userData.name || 'New Student',
-              email: userData.email,
-              grade_level: userData.grade_level || 3
-            }])
-            .select()
-            .single();
-          
-          if (error) throw error;
-          dbResult = { student: data };
-        } else if (role === 'parent') {
-          const { data, error } = await supabase
-            .from('parents')
-            .insert([{
-              auth_id: userData.email,
-              name: userData.name || 'New Parent',
-              email: userData.email
-            }])
-            .select()
-            .single();
-          
-          if (error) throw error;
-          dbResult = { parent: data };
+        if (existingUser) {
+          console.log('User already exists in database during signup:', existingUser);
+          dbResult = { [role]: existingUser };
+        } else {
+          // Create new user record
+          if (role === 'admin') {
+            const { data, error } = await supabase
+              .from('Admins')
+              .insert({
+                auth_id: userData.email,
+                name: userData.name || 'New Admin'
+              })
+              .select()
+              .single();
+            
+            if (error) throw error;
+            dbResult = { admin: data };
+          } else if (role === 'teacher') {
+            const { data, error } = await supabase
+              .from('teachers')
+              .insert({
+                auth_id: userData.email,
+                name: userData.name || 'New Teacher',
+                subject: userData.subject || 'Mathematics'
+              })
+              .select()
+              .single();
+            
+            if (error) throw error;
+            dbResult = { teacher: data };
+          } else if (role === 'student') {
+            const { data, error } = await supabase
+              .from('students')
+              .insert({
+                auth_id: userData.email,
+                name: userData.name || 'New Student',
+                password: userData.password || 'temp123',
+                grade_level: parseInt(userData.grade_level) || 3
+              })
+              .select()
+              .single();
+            
+            if (error) throw error;
+            dbResult = { student: data };
+          } else if (role === 'parent') {
+            const { data, error } = await supabase
+              .from('parents')
+              .insert({
+                auth_id: userData.email,
+                name: userData.name || 'New Parent'
+              })
+              .select()
+              .single();
+            
+            if (error) throw error;
+            dbResult = { parent: data };
+          }
         }
         
         return {
@@ -611,18 +622,41 @@ exports.handler = async (event, context) => {
       }
       
       // Create database record
+      // Make sure grade_level is a number, not a string
       const dbRecord = {
         auth_id: userData.email,
         name: userData.name,
-        ...(role === 'student' && { grade_level: userData.grade_level || 3 }),
+        password: userData.password || 'temp123', // Add password field
+        ...(role === 'student' && { grade_level: parseInt(userData.grade_level) || 3 }),
         ...(role === 'teacher' && { subject: userData.subject_taught || userData.subject || 'Mathematics' })
       };
       
       console.log('Creating DB record:', { tableName, dbRecord });
       
+      // First check if user already exists with this auth_id
+      const { data: existingUser } = await supabase
+        .from(tableName)
+        .select('*')
+        .eq('auth_id', userData.email)
+        .single();
+        
+      if (existingUser) {
+        console.log('User already exists in database:', existingUser);
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({
+            success: true,
+            message: 'User already exists',
+            user: { ...existingUser, role }
+          })
+        };
+      }
+      
+      // Insert without specifying ID to let database auto-generate it
       const { data: dbData, error: dbError } = await supabase
         .from(tableName)
-        .insert([dbRecord])
+        .insert(dbRecord) // Remove array wrapper, use single object
         .select()
         .single();
       
