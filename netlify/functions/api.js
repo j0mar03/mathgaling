@@ -551,6 +551,238 @@ exports.handler = async (event, context) => {
     }
   }
   
+  // DELETE /api/admin/users/:role/:id - Delete user
+  if (path.includes('/admin/users/') && httpMethod === 'DELETE') {
+    try {
+      const pathParts = path.split('/');
+      const role = pathParts[pathParts.length - 2];
+      const userId = pathParts[pathParts.length - 1];
+      
+      console.log('Deleting user:', { role, userId });
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // Determine table name
+      let tableName = role === 'admin' ? 'Admins' : `${role}s`;
+      
+      // Get user's auth_id before deletion for Supabase Auth cleanup
+      const { data: userData } = await supabase
+        .from(tableName)
+        .select('auth_id')
+        .eq('id', userId)
+        .single();
+      
+      // Delete from database table
+      const { error: dbError } = await supabase
+        .from(tableName)
+        .delete()
+        .eq('id', userId);
+      
+      if (dbError) {
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to delete user from database',
+            message: dbError.message
+          })
+        };
+      }
+      
+      // Optionally delete from Supabase Auth (commented out for safety)
+      // if (userData?.auth_id) {
+      //   try {
+      //     await supabase.auth.admin.deleteUser(userData.auth_id);
+      //   } catch (authError) {
+      //     console.warn('Could not delete from Supabase Auth:', authError);
+      //   }
+      // }
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          success: true,
+          message: `${role.charAt(0).toUpperCase() + role.slice(1)} deleted successfully`
+        })
+      };
+      
+    } catch (error) {
+      console.error('Delete user error:', error);
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
+  // POST /api/admin/knowledge-components - Create knowledge component
+  if (path.includes('/admin/knowledge-components') && httpMethod === 'POST') {
+    try {
+      const kcData = JSON.parse(event.body);
+      console.log('Creating KC:', kcData);
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      const { data, error } = await supabase
+        .from('knowledge_components')
+        .insert([{
+          name: kcData.name,
+          description: kcData.description,
+          grade_level: kcData.grade_level || 3,
+          subject: kcData.subject || 'Mathematics',
+          metadata: kcData.metadata || {}
+        }])
+        .select()
+        .single();
+      
+      if (error) {
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to create knowledge component',
+            message: error.message
+          })
+        };
+      }
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          success: true,
+          message: 'Knowledge component created successfully',
+          knowledgeComponent: data
+        })
+      };
+      
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
+  // PUT /api/admin/knowledge-components/:id - Update knowledge component
+  if (path.includes('/admin/knowledge-components/') && httpMethod === 'PUT') {
+    try {
+      const kcId = path.split('/').pop();
+      const kcData = JSON.parse(event.body);
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      const { data, error } = await supabase
+        .from('knowledge_components')
+        .update({
+          name: kcData.name,
+          description: kcData.description,
+          grade_level: kcData.grade_level,
+          subject: kcData.subject,
+          metadata: kcData.metadata
+        })
+        .eq('id', kcId)
+        .select()
+        .single();
+      
+      if (error) {
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to update knowledge component',
+            message: error.message
+          })
+        };
+      }
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          success: true,
+          message: 'Knowledge component updated successfully',
+          knowledgeComponent: data
+        })
+      };
+      
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
+  // DELETE /api/admin/knowledge-components/:id - Delete knowledge component
+  if (path.includes('/admin/knowledge-components/') && httpMethod === 'DELETE') {
+    try {
+      const kcId = path.split('/').pop();
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      const { error } = await supabase
+        .from('knowledge_components')
+        .delete()
+        .eq('id', kcId);
+      
+      if (error) {
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to delete knowledge component',
+            message: error.message
+          })
+        };
+      }
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          success: true,
+          message: 'Knowledge component deleted successfully'
+        })
+      };
+      
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
   // GET /api/admin/knowledge-components - List knowledge components
   if (path.includes('/admin/knowledge-components') && httpMethod === 'GET') {
     try {
