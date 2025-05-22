@@ -676,21 +676,32 @@ exports.handler = async (event, context) => {
         .from('knowledge_components')
         .insert([{
           name: kcData.name,
-          description: kcData.description,
+          description: kcData.description || '',
+          curriculum_code: kcData.curriculum_code || null,
           grade_level: kcData.grade_level || 3,
-          subject: kcData.subject || 'Mathematics',
-          metadata: kcData.metadata || {}
+          metadata: kcData.metadata || {
+            bktParams: {
+              pL0: 0.3,
+              pT: 0.09,
+              pS: 0.1,
+              pG: 0.2
+            }
+          },
+          status: 'approved',
+          suggestion_source: 'manual'
         }])
         .select()
         .single();
       
       if (error) {
+        console.error('KC creation error:', error);
         return {
           statusCode: 500,
           headers,
           body: JSON.stringify({
             error: 'Failed to create knowledge component',
-            message: error.message
+            message: error.message,
+            details: error
           })
         };
       }
@@ -733,8 +744,8 @@ exports.handler = async (event, context) => {
         .update({
           name: kcData.name,
           description: kcData.description,
+          curriculum_code: kcData.curriculum_code,
           grade_level: kcData.grade_level,
-          subject: kcData.subject,
           metadata: kcData.metadata
         })
         .eq('id', kcId)
