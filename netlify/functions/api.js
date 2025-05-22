@@ -464,32 +464,29 @@ exports.handler = async (event, context) => {
       
       const supabase = createClient(supabaseUrl, supabaseKey);
       
-      console.log('Creating Supabase auth user...');
+      // Skip Supabase Auth - just create database record like original Express server
+      const role = userData.role || 'student';
+      let tableName = role === 'admin' ? 'Admins' : `${role}s`;
       
-      // Create Supabase Auth user
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: userData.email,
-        password: userData.password
-      });
-      
-      console.log('Supabase auth result:', { authData, authError });
-      
-      if (authError) {
-        console.error('Auth creation failed:', authError);
+      // Check if user already exists
+      const { data: existingUser } = await supabase
+        .from(tableName)
+        .select('auth_id')
+        .eq('auth_id', userData.email)
+        .single();
+        
+      if (existingUser) {
         return {
           statusCode: 400,
           headers,
           body: JSON.stringify({
-            error: 'Auth creation failed',
-            message: authError.message
+            error: 'User already exists',
+            message: 'User with this email already exists'
           })
         };
       }
       
-      // Create database record
-      const role = userData.role || 'student';
-      let tableName = role === 'admin' ? 'Admins' : `${role}s`;
-      
+      // Create database record (no password hash needed for Supabase)
       const dbRecord = {
         auth_id: userData.email,
         name: userData.name,
@@ -922,6 +919,19 @@ exports.handler = async (event, context) => {
   // POST /api/admin/content-items - Create content item
   if (path.includes('/admin/content-items') && httpMethod === 'POST') {
     try {
+      console.log('Raw event body:', event.body);
+      console.log('Event body type:', typeof event.body);
+      
+      if (!event.body) {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({
+            error: 'No request body provided'
+          })
+        };
+      }
+      
       const contentData = JSON.parse(event.body);
       console.log('Creating content item:', contentData);
       
