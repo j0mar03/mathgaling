@@ -1489,6 +1489,102 @@ exports.handler = async (event, context) => {
     }
   }
   
+  // GET /api/students/kcs/sequence - Get sequence of quiz questions for KC
+  if (path.includes('/students/kcs/sequence') && httpMethod === 'GET') {
+    try {
+      const queryParams = new URLSearchParams(event.queryStringParameters || {});
+      const kcId = queryParams.get('kc_id');
+      const limit = parseInt(queryParams.get('limit')) || 8;
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkJXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      let query = supabase
+        .from('content_items')
+        .select(`
+          id,
+          content,
+          type,
+          knowledge_component_id,
+          difficulty,
+          metadata,
+          knowledge_components (
+            id,
+            name,
+            curriculum_code
+          )
+        `)
+        .eq('type', 'quiz')
+        .limit(limit);
+        
+      if (kcId) {
+        query = query.eq('knowledge_component_id', kcId);
+      }
+      
+      const { data: questions, error } = await query;
+      
+      if (error) {
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to fetch quiz sequence',
+            message: error.message
+          })
+        };
+      }
+      
+      if (!questions || questions.length === 0) {
+        return {
+          statusCode: 404,
+          headers,
+          body: JSON.stringify({
+            error: `No quiz questions found${kcId ? ` for knowledge component ${kcId}` : ''}`
+          })
+        };
+      }
+      
+      // Format the response to match what the frontend expects
+      const formattedQuestions = questions.map(q => ({
+        id: q.id,
+        content: q.content,
+        type: q.type,
+        kcId: q.knowledge_component_id,
+        difficulty: q.difficulty,
+        metadata: q.metadata,
+        curriculumCode: q.knowledge_components?.curriculum_code || null
+      }));
+      
+      // Shuffle questions for variety if getting from specific KC
+      if (kcId && formattedQuestions.length > limit) {
+        const shuffled = formattedQuestions.sort(() => Math.random() - 0.5);
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify(shuffled.slice(0, limit))
+        };
+      }
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify(formattedQuestions)
+      };
+      
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
   // GET /api/kcs/:id - Get knowledge component details
   if (path.match(/\/api\/kcs\/\d+$/) && httpMethod === 'GET') {
     try {
