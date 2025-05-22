@@ -29,8 +29,8 @@ app.get('/api', (req, res) => {
     timestamp: new Date().toISOString(),
     env: {
       NODE_ENV: process.env.NODE_ENV,
-      SUPABASE_URL: process.env.SUPABASE_URL ? 'set' : 'missing',
-      SUPABASE_KEY: process.env.SUPABASE_KEY ? 'set' : 'missing'
+      SUPABASE_URL: process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co',
+      SUPABASE_KEY: process.env.SUPABASE_KEY ? 'set' : 'hardcoded-fallback'
     }
   });
 });

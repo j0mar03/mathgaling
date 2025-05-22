@@ -1,9 +1,9 @@
 // Enhanced Supabase client with detailed logging and error handling
 console.log('🔄 Loading Supabase module...');
 
-// Add fallback environment variables for testing
-const FALLBACK_SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
-const FALLBACK_SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || process.env.SUPABASE_ANON_KEY;
+// Hardcoded credentials for testing (TEMPORARY)
+const FALLBACK_SUPABASE_URL = process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+const FALLBACK_SUPABASE_KEY = process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
 
 console.log('🔍 Environment variable check:');
 console.log('- SUPABASE_URL:', process.env.SUPABASE_URL ? '✅ Set' : '❌ Missing');
