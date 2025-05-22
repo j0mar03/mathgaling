@@ -425,6 +425,49 @@ exports.handler = async (event, context) => {
     }
   }
   
+  // Admin endpoints - /api/admin/*
+  if (path.includes('/admin/users') && httpMethod === 'GET') {
+    try {
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // Get all users from all tables
+      const [adminsRes, teachersRes, studentsRes, parentsRes] = await Promise.all([
+        supabase.from('Admins').select('id, name, auth_id, email').limit(50),
+        supabase.from('Teachers').select('id, name, auth_id, email, subject').limit(50),
+        supabase.from('Students').select('id, name, auth_id, email, grade_level').limit(50),
+        supabase.from('Parents').select('id, name, auth_id, email').limit(50)
+      ]);
+      
+      // Combine and format users
+      const allUsers = [
+        ...(adminsRes.data || []).map(u => ({ ...u, role: 'admin' })),
+        ...(teachersRes.data || []).map(u => ({ ...u, role: 'teacher' })),
+        ...(studentsRes.data || []).map(u => ({ ...u, role: 'student' })),
+        ...(parentsRes.data || []).map(u => ({ ...u, role: 'parent' }))
+      ];
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify(allUsers)
+      };
+      
+    } catch (error) {
+      console.error('Admin users fetch error:', error);
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Failed to fetch users',
+          message: error.message
+        })
+      };
+    }
+  }
+  
   // Default response
   return {
     statusCode: 404,
@@ -433,7 +476,7 @@ exports.handler = async (event, context) => {
       error: 'Not found',
       path: path,
       method: httpMethod,
-      availableEndpoints: ['/api/hello', '/api/auth/login']
+      availableEndpoints: ['/api/hello', '/api/auth/login', '/api/admin/users']
     })
   };
 };
