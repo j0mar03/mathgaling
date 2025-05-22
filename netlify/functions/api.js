@@ -36,6 +36,52 @@ exports.handler = async (event, context) => {
     };
   }
   
+  // Test endpoint to check Supabase connection - /api/test-supabase
+  if (path.includes('/test-supabase')) {
+    try {
+      const supabaseUrl = process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // Test database connection
+      const { data, error, count } = await supabase
+        .from('students')
+        .select('id, name, email', { count: 'exact' })
+        .limit(3);
+        
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          message: 'Supabase connection test',
+          config: {
+            url: supabaseUrl,
+            keyPrefix: supabaseKey.substring(0, 20) + '...',
+            envUrl: process.env.SUPABASE_URL ? 'from env' : 'from fallback',
+            envKey: process.env.SUPABASE_KEY ? 'from env' : 'from fallback'
+          },
+          database: {
+            error: error?.message || null,
+            studentsCount: count,
+            sampleStudents: data || []
+          },
+          timestamp: new Date().toISOString()
+        })
+      };
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Supabase test failed',
+          message: error.message,
+          timestamp: new Date().toISOString()
+        })
+      };
+    }
+  }
+  
   // Auth signup/register endpoint - /api/auth/register/{role}
   if (path.includes('/auth/register') && httpMethod === 'POST') {
     try {
@@ -173,13 +219,23 @@ exports.handler = async (event, context) => {
   if (path.includes('/auth/login') && httpMethod === 'POST') {
     try {
       const { email, password } = JSON.parse(event.body);
-      console.log('Login attempt for:', email);
+      console.log('🔐 Login attempt for:', email);
       
-      // Initialize Supabase client
+      // Initialize Supabase client with debugging
       const supabaseUrl = process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
       const supabaseKey = process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
       
+      console.log('🔧 Supabase config:', {
+        url: supabaseUrl,
+        keyPrefix: supabaseKey.substring(0, 20) + '...',
+        envUrl: process.env.SUPABASE_URL ? 'from env' : 'from fallback',
+        envKey: process.env.SUPABASE_KEY ? 'from env' : 'from fallback'
+      });
+      
       const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // First, let's check if there are any users in Supabase Auth
+      console.log('🔍 Checking Supabase connection...');
       
       // Try Supabase authentication first
       try {
