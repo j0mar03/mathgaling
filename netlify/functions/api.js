@@ -464,33 +464,40 @@ exports.handler = async (event, context) => {
       
       const supabase = createClient(supabaseUrl, supabaseKey);
       
-      // Skip Supabase Auth - just create database record like original Express server
+      // Create Supabase Auth user (required for login to work)
       const role = userData.role || 'student';
       let tableName = role === 'admin' ? 'Admins' : `${role}s`;
       
-      // Check if user already exists
-      const { data: existingUser } = await supabase
-        .from(tableName)
-        .select('auth_id')
-        .eq('auth_id', userData.email)
-        .single();
-        
-      if (existingUser) {
+      console.log('Creating Supabase Auth user...');
+      
+      // Try creating Supabase Auth user with email confirmation disabled
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: userData.email,
+        password: userData.password,
+        options: {
+          emailRedirectTo: undefined // Disable email confirmation
+        }
+      });
+      
+      console.log('Supabase auth result:', { authData, authError });
+      
+      if (authError) {
+        console.error('Auth creation failed:', authError);
         return {
           statusCode: 400,
           headers,
           body: JSON.stringify({
-            error: 'User already exists',
-            message: 'User with this email already exists'
+            error: 'Auth creation failed',
+            message: authError.message,
+            details: 'Check Supabase Auth settings - email confirmation might be required'
           })
         };
       }
       
-      // Create database record (no password hash needed for Supabase)
+      // Create database record
       const dbRecord = {
         auth_id: userData.email,
         name: userData.name,
-        email: userData.email,
         ...(role === 'student' && { grade_level: userData.grade_level || 3 }),
         ...(role === 'teacher' && { subject: userData.subject_taught || userData.subject || 'Mathematics' })
       };
@@ -553,10 +560,10 @@ exports.handler = async (event, context) => {
       
       // Get all users from all tables
       const [adminsRes, teachersRes, studentsRes, parentsRes] = await Promise.all([
-        supabase.from('Admins').select('id, name, auth_id, email').limit(50),
-        supabase.from('teachers').select('id, name, auth_id, email, subject').limit(50),
-        supabase.from('students').select('id, name, auth_id, email, grade_level').limit(50),
-        supabase.from('parents').select('id, name, auth_id, email').limit(50)
+        supabase.from('Admins').select('id, name, auth_id').limit(50),
+        supabase.from('teachers').select('id, name, auth_id, subject').limit(50),
+        supabase.from('students').select('id, name, auth_id, grade_level').limit(50),
+        supabase.from('parents').select('id, name, auth_id').limit(50)
       ]);
       
       // Combine and format users
