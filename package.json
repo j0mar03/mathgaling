@@ -28,7 +28,8 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "sequelize": "^6.37.7",
-    "sqlite3": "^5.1.7"
+    "sqlite3": "^5.1.7",
+    "@supabase/supabase-js": "^2.1.0"
   },
   "devDependencies": {
     "concurrently": "^9.1.2",
