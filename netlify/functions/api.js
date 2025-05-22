@@ -317,12 +317,23 @@ exports.handler = async (event, context) => {
             console.warn('Error fetching user profile:', profileError.message);
           }
           
+          // Create a simple JWT-like token with user data
+          const tokenPayload = {
+            id: userId,
+            auth_id: email,
+            role: role,
+            exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24) // 24 hours
+          };
+          
+          // Simple base64 encoding (for development - in production use proper JWT signing)
+          const token = `netlify.${btoa(JSON.stringify(tokenPayload))}.signature`;
+          
           return {
             statusCode: 200,
             headers,
             body: JSON.stringify({
               success: true,
-              token: data.session?.access_token || 'netlify-supabase-token',
+              token: token,
               user: { id: userId, auth_id: email },
               role
             })

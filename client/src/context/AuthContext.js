@@ -20,8 +20,17 @@ export const AuthProvider = ({ children }) => {
                 // axios.defaults.headers.common['Authorization'] = `Bearer ${token}`; // Handled by interceptor now
                 localStorage.setItem('authToken', token);
                 try {
-                    const payloadBase64 = token.split('.')[1];
-                    const decodedPayload = JSON.parse(atob(payloadBase64));
+                    // Handle both JWT tokens and our custom netlify tokens
+                    let decodedPayload;
+                    if (token.startsWith('netlify.')) {
+                        // Custom netlify token format: netlify.{base64payload}.signature
+                        const payloadBase64 = token.split('.')[1];
+                        decodedPayload = JSON.parse(atob(payloadBase64));
+                    } else {
+                        // Standard JWT token
+                        const payloadBase64 = token.split('.')[1];
+                        decodedPayload = JSON.parse(atob(payloadBase64));
+                    }
                     
                     // Create the basic user object
                     const baseUser = {
