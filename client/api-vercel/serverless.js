@@ -1,17 +1,34 @@
 // Lightweight serverless adapter for Vercel
 console.log('🔄 Initializing lightweight serverless adapter for Vercel');
 
-// Load required dependencies first
+// Load required dependencies first with detailed error handling
 console.log('📦 Loading dependencies...');
-const express = require('express');
-console.log('✅ Express loaded');
 
-const jwt = require('jsonwebtoken');
-console.log('✅ JWT loaded');
+let express, jwt, app;
 
-// Create Express app immediately
-const app = express();
-console.log('✅ Express app created');
+try {
+  express = require('express');
+  console.log('✅ Express loaded successfully');
+} catch (expressError) {
+  console.error('❌ Failed to load Express:', expressError);
+  throw expressError;
+}
+
+try {
+  jwt = require('jsonwebtoken');
+  console.log('✅ JWT loaded successfully');
+} catch (jwtError) {
+  console.error('❌ Failed to load JWT:', jwtError);
+  throw jwtError;
+}
+
+try {
+  app = express();
+  console.log('✅ Express app created successfully');
+} catch (appError) {
+  console.error('❌ Failed to create Express app:', appError);
+  throw appError;
+}
 
 // Set initialization flag (default to false)
 global.apiInitialized = false;
@@ -28,29 +45,43 @@ console.log('- JWT_SECRET:', process.env.JWT_SECRET ? '✅ Set' : '❌ Missing (
 // Express app already created above
 
 // CORS middleware (basic)
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
-  }
-  next();
-});
+console.log('🔧 Setting up CORS middleware...');
+try {
+  app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    
+    if (req.method === 'OPTIONS') {
+      return res.sendStatus(200);
+    }
+    next();
+  });
+  console.log('✅ CORS middleware configured');
+} catch (corsError) {
+  console.error('❌ Failed to setup CORS:', corsError);
+  throw corsError;
+}
 
 // Basic JSON parsing (with error handling)
-app.use(express.json({
-  limit: '1mb',
-  verify: (req, res, buf) => {
-    try {
-      // Store raw body for debugging
-      req.rawBody = buf.toString();
-    } catch (e) {
-      // Ignore errors
+console.log('🔧 Setting up JSON parsing...');
+try {
+  app.use(express.json({
+    limit: '1mb',
+    verify: (req, res, buf) => {
+      try {
+        // Store raw body for debugging
+        req.rawBody = buf.toString();
+      } catch (e) {
+        // Ignore errors
+      }
     }
-  }
-}));
+  }));
+  console.log('✅ JSON parsing configured');
+} catch (jsonError) {
+  console.error('❌ Failed to setup JSON parsing:', jsonError);
+  throw jsonError;
+}
 
 // Catch JSON parsing errors
 app.use((err, req, res, next) => {
@@ -170,6 +201,7 @@ app.get('/api/debug', async (req, res) => {
 
 // Health check endpoint (always available)
 app.get('/api/health', (req, res) => {
+  console.log('📡 Health check endpoint accessed');
   res.json({
     status: global.apiInitialized ? 'healthy' : 'degraded',
     mode: 'lightweight',
@@ -177,19 +209,58 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Isolated test login (no Supabase)
+app.post('/api/test-login', (req, res) => {
+  console.log('📡 Test login endpoint accessed');
+  try {
+    const { email, password } = req.body || {};
+    console.log('📥 Test login request for:', email);
+    
+    if (email === 'admin@example.com' && password === 'admin123') {
+      console.log('✅ Test admin login successful');
+      return res.json({
+        success: true,
+        token: 'test-admin-token',
+        user: { id: 999, auth_id: email },
+        role: 'admin',
+        message: 'Test login successful (no database)'
+      });
+    }
+    
+    console.log('❌ Test login failed - invalid credentials');
+    return res.status(401).json({
+      error: 'Invalid test credentials',
+      message: 'Use admin@example.com / admin123 for testing'
+    });
+  } catch (error) {
+    console.error('❌ Test login error:', error);
+    return res.status(500).json({
+      error: 'Test login error',
+      message: error.message
+    });
+  }
+});
+
 // Initialize Supabase (wrapped in try/catch)
+console.log('🔧 Initializing Supabase...');
 let supabase = null;
 try {
+  console.log('📦 Loading Supabase module...');
   const supabaseClient = require('./supabase');
+  console.log('✅ Supabase module loaded');
+  
+  console.log('🔧 Calling supabaseClient.init()...');
   supabase = supabaseClient.init();
+  console.log('✅ supabaseClient.init() completed');
   
   if (!supabase) {
-    console.warn('⚠️ Supabase initialization failed, continuing with limited functionality');
+    console.warn('⚠️ Supabase initialization returned null, continuing with limited functionality');
   } else {
-    console.log('✅ Supabase initialized successfully');
+    console.log('✅ Supabase initialized successfully with client object');
   }
 } catch (error) {
   console.error('❌ Supabase initialization error:', error);
+  console.error('❌ Supabase error stack:', error.stack);
 }
 
 // Auth route with Supabase fallback
@@ -450,7 +521,10 @@ app.use((err, req, res, next) => {
 });
 
 // Mark API as initialized
+console.log('🔧 Setting API initialization flag...');
 global.apiInitialized = true;
+console.log('✅ API initialization flag set to true');
+console.log('🎉 API initialization completed successfully!');
 } catch (initError) {
   console.error('❌ CRITICAL: Serverless initialization failed:', initError);
   global.apiInitialized = false;
