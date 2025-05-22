@@ -10,22 +10,14 @@
       }
     },
     {
-      "src": "api/hello.js",
-      "use": "@vercel/node"
-    },
-    {
-      "src": "api/auth/login.js",
+      "src": "api/index.js",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
-      "src": "/api/hello",
-      "dest": "/api/hello.js"
-    },
-    {
-      "src": "/api/auth/login",
-      "dest": "/api/auth/login.js"
+      "src": "/api/(.*)",
+      "dest": "/api/index.js"
     },
     {
       "src": "/static/(.*)",
