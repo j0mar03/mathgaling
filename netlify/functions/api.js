@@ -287,33 +287,33 @@ exports.handler = async (event, context) => {
                 .from('teachers')
                 .select('id, auth_id')
                 .eq('auth_id', email)
-                .single();
+                .limit(1);
                 
-              if (teacherData) {
+              if (teacherData && teacherData.length > 0) {
                 role = 'teacher';
-                userId = teacherData.id;
+                userId = teacherData[0].id;
               } else {
                 // Check student
                 const { data: studentData } = await supabase
                   .from('students')
                   .select('id, auth_id')
                   .eq('auth_id', email)
-                  .single();
+                  .limit(1);
                   
-                if (studentData) {
+                if (studentData && studentData.length > 0) {
                   role = 'student';
-                  userId = studentData.id;
+                  userId = studentData[0].id;
                 } else {
                   // Check parent
                   const { data: parentData } = await supabase
                     .from('parents')
                     .select('id, auth_id')
                     .eq('auth_id', email)
-                    .single();
+                    .limit(1);
                     
-                  if (parentData) {
+                  if (parentData && parentData.length > 0) {
                     role = 'parent';
-                    userId = parentData.id;
+                    userId = parentData[0].id;
                   }
                 }
               }
@@ -436,9 +436,9 @@ exports.handler = async (event, context) => {
       // Get all users from all tables
       const [adminsRes, teachersRes, studentsRes, parentsRes] = await Promise.all([
         supabase.from('Admins').select('id, name, auth_id, email').limit(50),
-        supabase.from('Teachers').select('id, name, auth_id, email, subject').limit(50),
-        supabase.from('Students').select('id, name, auth_id, email, grade_level').limit(50),
-        supabase.from('Parents').select('id, name, auth_id, email').limit(50)
+        supabase.from('teachers').select('id, name, auth_id, email, subject').limit(50),
+        supabase.from('students').select('id, name, auth_id, email, grade_level').limit(50),
+        supabase.from('parents').select('id, name, auth_id, email').limit(50)
       ]);
       
       // Combine and format users
