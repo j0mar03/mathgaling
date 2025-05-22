@@ -1,0 +1,25 @@
+[build]
+  # Build command
+  command = "cd client && npm install && npm run build"
+  
+  # Directory to publish
+  publish = "client/build"
+  
+  # Functions directory
+  functions = "netlify/functions"
+
+[build.environment]
+  # Node version
+  NODE_VERSION = "18"
+
+# Redirect all API calls to functions
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+# SPA fallback - send all other routes to index.html
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
