@@ -8,6 +8,8 @@
     "start": "concurrently \"npm run server\" \"npm run client\"",
     "server": "cross-env NODE_ENV=development nodemon client/server/index.js",
     "client": "cd client && npm start",
+    "netlify-dev": "NETLIFY_DEV=true netlify dev",
+    "client-netlify": "cd client && REACT_APP_NETLIFY_DEV=true npm start",
     "build": "cd client && npm run build",
     "vercel-build": "cd client && npm install && npm run build",
     "install-all": "npm install && cd client && npm install",

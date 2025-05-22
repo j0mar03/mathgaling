@@ -22,6 +22,14 @@ exports.handler = async (event, context) => {
   
   const { path, httpMethod } = event;
   
+  // Log the request for debugging
+  console.log('Netlify Function Request:', {
+    path: event.path,
+    httpMethod: event.httpMethod,
+    rawUrl: event.rawUrl,
+    queryStringParameters: event.queryStringParameters
+  });
+  
   // Hello endpoint - /api/hello
   if (path.includes('/hello') || path === '/api' || path === '/api/') {
     return {
@@ -1245,6 +1253,104 @@ exports.handler = async (event, context) => {
   
   // Student endpoints
   
+  // GET /api/students/kcs/sequence - Get sequence of quiz questions for KC
+  // This endpoint MUST come before the generic /api/students/:id endpoints
+  if ((path.includes('/students/kcs/sequence') || path.includes('kcs/sequence')) && httpMethod === 'GET') {
+    console.log('[DEBUG] Handling /students/kcs/sequence request');
+    try {
+      const queryParams = new URLSearchParams(event.queryStringParameters || {});
+      const kcId = queryParams.get('kc_id');
+      const limit = parseInt(queryParams.get('limit')) || 8;
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkJXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      let query = supabase
+        .from('content_items')
+        .select(`
+          id,
+          content,
+          type,
+          knowledge_component_id,
+          difficulty,
+          metadata,
+          knowledge_components (
+            id,
+            name,
+            curriculum_code
+          )
+        `)
+        .eq('type', 'quiz')
+        .limit(limit);
+        
+      if (kcId) {
+        query = query.eq('knowledge_component_id', kcId);
+      }
+      
+      const { data: questions, error } = await query;
+      
+      if (error) {
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to fetch quiz sequence',
+            message: error.message
+          })
+        };
+      }
+      
+      if (!questions || questions.length === 0) {
+        return {
+          statusCode: 404,
+          headers,
+          body: JSON.stringify({
+            error: `No quiz questions found${kcId ? ` for knowledge component ${kcId}` : ''}`
+          })
+        };
+      }
+      
+      // Format the response to match what the frontend expects
+      const formattedQuestions = questions.map(q => ({
+        id: q.id,
+        content: q.content,
+        type: q.type,
+        kcId: q.knowledge_component_id,
+        difficulty: q.difficulty,
+        metadata: q.metadata,
+        curriculumCode: q.knowledge_components?.curriculum_code || null
+      }));
+      
+      // Shuffle questions for variety if getting from specific KC
+      if (kcId && formattedQuestions.length > limit) {
+        const shuffled = formattedQuestions.sort(() => Math.random() - 0.5);
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify(shuffled.slice(0, limit))
+        };
+      }
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify(formattedQuestions)
+      };
+      
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
   // GET /api/students/:id - Get student details
   if (path.match(/\/api\/students\/\d+$/) && httpMethod === 'GET') {
     try {
@@ -1489,8 +1595,12 @@ exports.handler = async (event, context) => {
     }
   }
   
+  // NOTE: This endpoint has been moved before the generic student endpoints
+  // to prevent path matching conflicts
+  /*
   // GET /api/students/kcs/sequence - Get sequence of quiz questions for KC
-  if (path.includes('/students/kcs/sequence') && httpMethod === 'GET') {
+  if ((path.includes('/students/kcs/sequence') || path.includes('kcs/sequence')) && httpMethod === 'GET') {
+    console.log('[DEBUG] Handling /students/kcs/sequence request');
     try {
       const queryParams = new URLSearchParams(event.queryStringParameters || {});
       const kcId = queryParams.get('kc_id');
@@ -1584,6 +1694,7 @@ exports.handler = async (event, context) => {
       };
     }
   }
+  */
   
   // GET /api/kcs/:id - Get knowledge component details
   if (path.match(/\/api\/kcs\/\d+$/) && httpMethod === 'GET') {
@@ -3112,7 +3223,18 @@ exports.handler = async (event, context) => {
       error: 'Not found',
       path: path,
       method: httpMethod,
-      availableEndpoints: ['/api/hello', '/api/auth/login', '/api/admin/users', '/api/students/:id', '/api/teachers/:id', '/api/parents/:id', '/api/classrooms/:id']
+      rawUrl: event.rawUrl,
+      queryStringParameters: event.queryStringParameters,
+      availableEndpoints: [
+        '/api/hello', 
+        '/api/auth/login', 
+        '/api/admin/users', 
+        '/api/students/:id', 
+        '/api/students/kcs/sequence',
+        '/api/teachers/:id', 
+        '/api/parents/:id', 
+        '/api/classrooms/:id'
+      ]
     })
   };
 };
