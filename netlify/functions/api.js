@@ -432,11 +432,14 @@ exports.handler = async (event, context) => {
     try {
       const userData = JSON.parse(event.body);
       console.log('Admin creating user:', userData.email, userData.role);
+      console.log('Full userData:', userData);
       
       const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
       const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
       
       const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      console.log('Creating Supabase auth user...');
       
       // Create Supabase Auth user
       const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -444,7 +447,10 @@ exports.handler = async (event, context) => {
         password: userData.password
       });
       
+      console.log('Supabase auth result:', { authData, authError });
+      
       if (authError) {
+        console.error('Auth creation failed:', authError);
         return {
           statusCode: 400,
           headers,
@@ -477,12 +483,15 @@ exports.handler = async (event, context) => {
       
       if (dbError) {
         console.error('DB insert error:', dbError);
+        console.error('Failed DB record:', dbRecord);
+        console.error('Table name:', tableName);
         return {
           statusCode: 500,
           headers,
           body: JSON.stringify({
             error: 'Database error',
-            message: dbError.message
+            message: dbError.message,
+            details: dbError
           })
         };
       }
@@ -499,12 +508,14 @@ exports.handler = async (event, context) => {
       
     } catch (error) {
       console.error('Create user error:', error);
+      console.error('Error stack:', error.stack);
       return {
         statusCode: 500,
         headers,
         body: JSON.stringify({
           error: 'Server error',
-          message: error.message
+          message: error.message,
+          stack: error.stack
         })
       };
     }
