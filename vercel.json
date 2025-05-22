@@ -10,20 +10,14 @@
       }
     },
     {
-      "src": "client/api-vercel/serverless.js",
-      "use": "@vercel/node",
-      "config": {
-        "includeFiles": [
-          "client/api-vercel/**"
-        ],
-        "buildCommand": "cd client/api-vercel && npm install --production"
-      }
+      "src": "client/api-vercel/simple.js",
+      "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "/client/api-vercel/serverless.js"
+      "dest": "/client/api-vercel/simple.js"
     },
     {
       "src": "/static/(.*)",
