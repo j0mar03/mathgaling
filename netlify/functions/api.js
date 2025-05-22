@@ -653,12 +653,38 @@ exports.handler = async (event, context) => {
         };
       }
       
-      // Insert without specifying ID to let database auto-generate it
-      const { data: dbData, error: dbError } = await supabase
+      // Try to insert without ID first (let Supabase handle auto-increment)
+      let { data: insertData, error: dbError } = await supabase
         .from(tableName)
-        .insert(dbRecord) // Remove array wrapper, use single object
-        .select()
-        .single();
+        .insert([dbRecord])
+        .select();
+      
+      // If we get a duplicate key error, try with a calculated ID
+      if (dbError && dbError.code === '23505') {
+        console.log('Auto-increment failed, calculating next ID manually');
+        
+        // Get the max ID
+        const { data: maxIdData } = await supabase
+          .from(tableName)
+          .select('id')
+          .order('id', { ascending: false })
+          .limit(1);
+        
+        const nextId = maxIdData && maxIdData.length > 0 ? maxIdData[0].id + 1 : 1;
+        console.log('Using calculated ID:', nextId);
+        
+        // Retry with explicit ID
+        const recordWithId = { ...dbRecord, id: nextId };
+        const retryResult = await supabase
+          .from(tableName)
+          .insert([recordWithId])
+          .select();
+          
+        insertData = retryResult.data;
+        dbError = retryResult.error;
+      }
+        
+      const dbData = insertData && insertData.length > 0 ? insertData[0] : null;
       
       if (dbError) {
         console.error('DB insert error:', dbError);
@@ -737,6 +763,66 @@ exports.handler = async (event, context) => {
         headers,
         body: JSON.stringify({
           error: 'Failed to fetch users',
+          message: error.message
+        })
+      };
+    }
+  }
+  
+  // PUT /api/admin/users/:role/:id - Update user
+  if (path.includes('/admin/users/') && httpMethod === 'PUT') {
+    try {
+      const pathParts = path.split('/');
+      const role = pathParts[pathParts.length - 2];
+      const userId = pathParts[pathParts.length - 1];
+      const updateData = JSON.parse(event.body);
+      
+      console.log('Updating user:', { role, userId, updateData });
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // Determine table name
+      let tableName = role === 'admin' ? 'Admins' : `${role}s`;
+      
+      // Update user in database
+      const { data, error } = await supabase
+        .from(tableName)
+        .update(updateData)
+        .eq('id', userId)
+        .select()
+        .single();
+      
+      if (error) {
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to update user',
+            message: error.message
+          })
+        };
+      }
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          success: true,
+          message: 'User updated successfully',
+          user: data
+        })
+      };
+      
+    } catch (error) {
+      console.error('Update user error:', error);
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
           message: error.message
         })
       };

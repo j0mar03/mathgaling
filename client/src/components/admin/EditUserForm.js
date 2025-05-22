@@ -7,8 +7,8 @@ const EditUserForm = ({ userToEdit, onUserUpdated, onCancel }) => {
         name: '',
         grade_level: '',
         subject_taught: '',
-        phone_number: ''
-        // Exclude role, email, password as they are not editable here
+        phone_number: '',
+        password: '' // Add password field
     });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
@@ -20,7 +20,8 @@ const EditUserForm = ({ userToEdit, onUserUpdated, onCancel }) => {
                 name: userToEdit.name || '',
                 grade_level: userToEdit.grade_level || '',
                 subject_taught: userToEdit.subject_taught || '', // This field might not exist
-                phone_number: userToEdit.phone_number || '' // This field might not exist
+                phone_number: userToEdit.phone_number || '', // This field might not exist
+                password: '' // Don't pre-fill password for security
             });
         }
     }, [userToEdit]);
@@ -44,6 +45,8 @@ const EditUserForm = ({ userToEdit, onUserUpdated, onCancel }) => {
         const { role, id } = userToEdit;
         const payload = {
             name: formData.name,
+            // Include password only if it's provided (not empty)
+            ...(formData.password && { password: formData.password }),
             // Include role-specific fields only if they are relevant and have values
             ...(role === 'student' && formData.grade_level && { grade_level: formData.grade_level }),
             // subject_taught and phone_number might not exist in DB, handle gracefully or add them
@@ -80,6 +83,11 @@ const EditUserForm = ({ userToEdit, onUserUpdated, onCancel }) => {
                 <div className="form-group">
                     <label htmlFor="edit-name">Name:</label>
                     <input type="text" id="edit-name" name="name" value={formData.name} onChange={handleInputChange} disabled={loading} required />
+                </div>
+
+                <div className="form-group">
+                    <label htmlFor="edit-password">Password (leave blank to keep current):</label>
+                    <input type="password" id="edit-password" name="password" value={formData.password} onChange={handleInputChange} disabled={loading} placeholder="Enter new password" />
                 </div>
 
                 {/* Role-specific fields */}
