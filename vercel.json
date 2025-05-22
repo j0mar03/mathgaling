@@ -10,11 +10,23 @@
       }
     },
     {
-      "src": "api/**/*.js",
+      "src": "api/hello.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "api/auth/login.js",
       "use": "@vercel/node"
     }
   ],
   "routes": [
+    {
+      "src": "/api/hello",
+      "dest": "/api/hello.js"
+    },
+    {
+      "src": "/api/auth/login",
+      "dest": "/api/auth/login.js"
+    },
     {
       "src": "/static/(.*)",
       "dest": "/client/build/static/$1"
@@ -36,7 +48,7 @@
       "dest": "/client/build/logo512.png"
     },
     {
-      "src": "/(?!api).*",
+      "src": "/(.*)",
       "dest": "/client/build/index.html"
     }
   ]
