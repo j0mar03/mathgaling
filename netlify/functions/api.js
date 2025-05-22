@@ -36,6 +36,139 @@ exports.handler = async (event, context) => {
     };
   }
   
+  // Auth signup/register endpoint - /api/auth/register/{role}
+  if (path.includes('/auth/register') && httpMethod === 'POST') {
+    try {
+      const userData = JSON.parse(event.body);
+      console.log('Signup attempt for:', userData.email);
+      
+      // Initialize Supabase client
+      const supabaseUrl = process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // Create auth user in Supabase
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: userData.email,
+        password: userData.password
+      });
+      
+      if (authError) {
+        console.error('Supabase signup error:', authError);
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({
+            error: 'Signup failed',
+            message: authError.message
+          })
+        };
+      }
+      
+      // Determine role from path
+      let role = 'student';
+      if (path.includes('/register/admin')) role = 'admin';
+      else if (path.includes('/register/teacher')) role = 'teacher';
+      else if (path.includes('/register/parent')) role = 'parent';
+      else if (path.includes('/register/student')) role = 'student';
+      
+      // Create database record based on role
+      try {
+        let dbResult;
+        
+        if (role === 'admin') {
+          const { data, error } = await supabase
+            .from('admins')
+            .insert([{
+              auth_id: userData.email,
+              name: userData.name || 'New Admin',
+              email: userData.email
+            }])
+            .select()
+            .single();
+          
+          if (error) throw error;
+          dbResult = { admin: data };
+        } else if (role === 'teacher') {
+          const { data, error } = await supabase
+            .from('teachers')
+            .insert([{
+              auth_id: userData.email,
+              name: userData.name || 'New Teacher',
+              email: userData.email,
+              subject: userData.subject || 'Mathematics'
+            }])
+            .select()
+            .single();
+          
+          if (error) throw error;
+          dbResult = { teacher: data };
+        } else if (role === 'student') {
+          const { data, error } = await supabase
+            .from('students')
+            .insert([{
+              auth_id: userData.email,
+              name: userData.name || 'New Student',
+              email: userData.email,
+              grade_level: userData.grade_level || 3
+            }])
+            .select()
+            .single();
+          
+          if (error) throw error;
+          dbResult = { student: data };
+        } else if (role === 'parent') {
+          const { data, error } = await supabase
+            .from('parents')
+            .insert([{
+              auth_id: userData.email,
+              name: userData.name || 'New Parent',
+              email: userData.email
+            }])
+            .select()
+            .single();
+          
+          if (error) throw error;
+          dbResult = { parent: data };
+        }
+        
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({
+            success: true,
+            message: 'Account created successfully',
+            user: authData.user,
+            ...dbResult
+          })
+        };
+        
+      } catch (dbError) {
+        console.error('Database insert error:', dbError);
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Database error',
+            message: 'User created but database record failed: ' + dbError.message
+          })
+        };
+      }
+      
+    } catch (error) {
+      console.error('Signup error:', error);
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
   // Auth login endpoint - /api/auth/login
   if (path.includes('/auth/login') && httpMethod === 'POST') {
     try {
@@ -57,6 +190,7 @@ exports.handler = async (event, context) => {
         
         if (error) {
           console.warn('Supabase auth failed:', error.message);
+          console.warn('Error details:', error);
           // Continue to test accounts
         } else if (data && data.user) {
           console.log('✅ Supabase login successful');
