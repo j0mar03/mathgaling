@@ -266,14 +266,19 @@ exports.handler = async (event, context) => {
           
           // Get user role from database
           try {
+            console.log('🔍 Looking for user with email:', email);
+            
             // Check admin
-            const { data: adminData } = await supabase
+            const { data: adminData, error: adminError } = await supabase
               .from('admins')
               .select('id, auth_id')
               .eq('auth_id', email)
               .single();
               
+            console.log('🔍 Admin query result:', { adminData, adminError });
+              
             if (adminData) {
+              console.log('✅ Found admin user:', adminData);
               role = 'admin';
               userId = adminData.id;
             } else {
