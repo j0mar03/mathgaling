@@ -1,4 +1,17 @@
 // Enhanced Supabase client with detailed logging and error handling
+console.log('🔄 Loading Supabase module...');
+
+// Add fallback environment variables for testing
+const FALLBACK_SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+const FALLBACK_SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || process.env.SUPABASE_ANON_KEY;
+
+console.log('🔍 Environment variable check:');
+console.log('- SUPABASE_URL:', process.env.SUPABASE_URL ? '✅ Set' : '❌ Missing');
+console.log('- NEXT_PUBLIC_SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL ? '✅ Set' : '❌ Missing');
+console.log('- SUPABASE_KEY:', process.env.SUPABASE_KEY ? '✅ Set' : '❌ Missing');
+console.log('- SUPABASE_ANON_KEY:', process.env.SUPABASE_ANON_KEY ? '✅ Set' : '❌ Missing');
+console.log('- NEXT_PUBLIC_SUPABASE_ANON_KEY:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? '✅ Set' : '❌ Missing');
+
 const { createClient } = require('@supabase/supabase-js');
 
 let supabase = null;
@@ -10,9 +23,9 @@ function initSupabase() {
   try {
     console.log('🔄 Initializing Supabase client...');
     
-    // Check for environment variables
-    const supabaseUrl = process.env.SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_KEY || process.env.SUPABASE_ANON_KEY;
+    // Check for environment variables with fallbacks
+    const supabaseUrl = FALLBACK_SUPABASE_URL;
+    const supabaseKey = FALLBACK_SUPABASE_KEY;
     
     if (!supabaseUrl) {
       console.error('❌ Missing SUPABASE_URL environment variable');

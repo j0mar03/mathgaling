@@ -1,6 +1,9 @@
 // Lightweight serverless adapter for Vercel
 console.log('🔄 Initializing lightweight serverless adapter for Vercel');
 
+// Wrap entire initialization in try-catch
+try {
+
 // Set initialization flag (default to false)
 global.apiInitialized = false;
 
@@ -439,34 +442,68 @@ app.use((err, req, res, next) => {
 global.apiInitialized = true;
 console.log('✅ API initialization complete');
 
-// Export the serverless handler with error trapping
-module.exports = (req, res) => {
-  // Generate a unique request ID for tracking
-  const reqId = Math.random().toString(36).substring(2, 15);
+} catch (initError) {
+  console.error('❌ CRITICAL: Serverless initialization failed:', initError);
   
-  // Log request details
-  console.log(`📡 Request ${reqId}: ${req.method} ${req.url}`);
+  // Create a minimal Express app for error responses
+  const express = require('express');
+  const errorApp = express();
   
-  // Add request ID to req object for logging
-  req.id = reqId;
+  errorApp.use(express.json());
+  errorApp.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+    if (req.method === 'OPTIONS') return res.sendStatus(200);
+    next();
+  });
   
-  // Add response logger
-  const originalEnd = res.end;
-  res.end = function() {
-    console.log(`📤 Response ${reqId}: ${res.statusCode} ${res.statusMessage || ''}`);
-    return originalEnd.apply(this, arguments);
-  };
-  
-  // Try/catch for any synchronous errors in the handler
-  try {
-    return app(req, res);
-  } catch (error) {
-    console.error(`❌ Unhandled error in request ${reqId}:`, error);
+  errorApp.use('*', (req, res) => {
     res.status(500).json({
-      error: 'Unhandled server error',
-      message: 'The server encountered an unexpected error processing your request',
-      requestId: reqId,
+      error: 'API initialization failed',
+      message: 'The API server encountered an error during startup. Please try again later.',
+      details: initError.message,
       timestamp: new Date().toISOString()
     });
-  }
-};
+  });
+  
+  // Export the error handler
+  module.exports = (req, res) => errorApp(req, res);
+}
+
+// If initialization succeeded, export the normal handler
+if (global.apiInitialized !== false) {
+  console.log('✅ Exporting main serverless handler');
+  
+  // Export the serverless handler with error trapping
+  module.exports = (req, res) => {
+    // Generate a unique request ID for tracking
+    const reqId = Math.random().toString(36).substring(2, 15);
+    
+    // Log request details
+    console.log(`📡 Request ${reqId}: ${req.method} ${req.url}`);
+    
+    // Add request ID to req object for logging
+    req.id = reqId;
+    
+    // Add response logger
+    const originalEnd = res.end;
+    res.end = function() {
+      console.log(`📤 Response ${reqId}: ${res.statusCode} ${res.statusMessage || ''}`);
+      return originalEnd.apply(this, arguments);
+    };
+    
+    // Try/catch for any synchronous errors in the handler
+    try {
+      return app(req, res);
+    } catch (error) {
+      console.error(`❌ Unhandled error in request ${reqId}:`, error);
+      res.status(500).json({
+        error: 'Unhandled server error',
+        message: 'The server encountered an unexpected error processing your request',
+        requestId: reqId,
+        timestamp: new Date().toISOString()
+      });
+    }
+  };
+}
