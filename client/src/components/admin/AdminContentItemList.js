@@ -308,8 +308,8 @@ function AdminContentItemList() {
                         {item.content?.length > 50 ? '...' : ''}
                       </td>
                       <td>
-                        {item.KnowledgeComponent ? 
-                          `${item.KnowledgeComponent.name} (Grade ${item.KnowledgeComponent.grade_level})` : 
+                        {item.knowledge_components ? 
+                          `${item.knowledge_components.name} (Grade ${item.knowledge_components.grade_level})` : 
                           'N/A'}
                       </td>
                       <td>{item.difficulty || '-'}</td>

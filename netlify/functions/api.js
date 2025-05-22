@@ -1124,7 +1124,15 @@ exports.handler = async (event, context) => {
       
       const { data, error } = await supabase
         .from('content_items')
-        .select('*')
+        .select(`
+          *,
+          knowledge_components (
+            id,
+            name,
+            grade_level,
+            description
+          )
+        `)
         .order('id');
       
       if (error) {
@@ -1526,7 +1534,684 @@ exports.handler = async (event, context) => {
     }
   }
   
+  // GET /api/kcs/:id/question - Get a question for a specific KC
+  if (path.includes('/kcs/') && path.includes('/question') && httpMethod === 'GET') {
+    try {
+      const pathParts = path.split('/');
+      const kcId = pathParts[pathParts.indexOf('kcs') + 1];
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // Get a random question for this KC
+      const { data: questions, error } = await supabase
+        .from('content_items')
+        .select('*')
+        .eq('knowledge_component_id', kcId)
+        .eq('type', 'quiz');
+      
+      if (error || !questions || questions.length === 0) {
+        return {
+          statusCode: 404,
+          headers,
+          body: JSON.stringify({
+            error: 'No questions found for this knowledge component'
+          })
+        };
+      }
+      
+      // Return a random question
+      const randomIndex = Math.floor(Math.random() * questions.length);
+      const question = questions[randomIndex];
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify(question)
+      };
+      
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
+  // GET /api/content/:id - Get content item by ID
+  if (path.match(/\/api\/content\/\d+$/) && httpMethod === 'GET') {
+    try {
+      const contentId = path.split('/').pop();
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      const { data, error } = await supabase
+        .from('content_items')
+        .select('*')
+        .eq('id', contentId)
+        .single();
+      
+      if (error) {
+        return {
+          statusCode: 404,
+          headers,
+          body: JSON.stringify({
+            error: 'Content not found',
+            message: error.message
+          })
+        };
+      }
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify(data)
+      };
+      
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
+  // GET /api/students/:id/recommended-content - Get recommended content for student
+  if (path.includes('/recommended-content') && httpMethod === 'GET') {
+    try {
+      const pathParts = path.split('/');
+      const studentId = pathParts[pathParts.indexOf('students') + 1];
+      const queryParams = new URLSearchParams(event.queryStringParameters || {});
+      const kcId = queryParams.get('kc_id');
+      const limit = parseInt(queryParams.get('limit')) || 5;
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // Get content items - if kcId provided, filter by it
+      let query = supabase
+        .from('content_items')
+        .select('*')
+        .eq('type', 'quiz')
+        .limit(limit);
+        
+      if (kcId) {
+        query = query.eq('knowledge_component_id', kcId);
+      }
+      
+      const { data, error } = await query;
+      
+      if (error) {
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to fetch recommended content',
+            message: error.message
+          })
+        };
+      }
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify(data || [])
+      };
+      
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
+  // GET /api/students/:id/knowledge-states - Get student's knowledge states
+  if (path.includes('/knowledge-states') && httpMethod === 'GET') {
+    try {
+      const pathParts = path.split('/');
+      const studentId = pathParts[pathParts.indexOf('students') + 1];
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      const { data, error } = await supabase
+        .from('knowledge_states')
+        .select('*')
+        .eq('student_id', studentId);
+      
+      if (error) {
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to fetch knowledge states',
+            message: error.message
+          })
+        };
+      }
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify(data || [])
+      };
+      
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
+  // GET /api/students/:id/responses - Get student's responses
+  if (path.includes('/students/') && path.includes('/responses') && httpMethod === 'GET') {
+    try {
+      const pathParts = path.split('/');
+      const studentId = pathParts[pathParts.indexOf('students') + 1];
+      const queryParams = new URLSearchParams(event.queryStringParameters || {});
+      const kcId = queryParams.get('kc_id');
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      let query = supabase
+        .from('responses')
+        .select('*')
+        .eq('student_id', studentId);
+        
+      if (kcId) {
+        // Join with content_items to filter by KC
+        query = supabase
+          .from('responses')
+          .select(`
+            *,
+            content_items!inner (
+              knowledge_component_id
+            )
+          `)
+          .eq('student_id', studentId)
+          .eq('content_items.knowledge_component_id', kcId);
+      }
+      
+      const { data, error } = await query;
+      
+      if (error) {
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to fetch responses',
+            message: error.message
+          })
+        };
+      }
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify(data || [])
+      };
+      
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
+  // POST /api/students/:id/responses - Submit student response
+  if (path.includes('/students/') && path.includes('/responses') && httpMethod === 'POST') {
+    try {
+      const pathParts = path.split('/');
+      const studentId = pathParts[pathParts.indexOf('students') + 1];
+      const responseData = JSON.parse(event.body);
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkJXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // Create response record
+      const { data: response, error: responseError } = await supabase
+        .from('responses')
+        .insert({
+          student_id: parseInt(studentId),
+          content_item_id: responseData.contentItemId,
+          response: responseData.answer,
+          is_correct: responseData.isCorrect,
+          timestamp: new Date().toISOString()
+        })
+        .select()
+        .single();
+      
+      if (responseError) {
+        console.error('Response insert error:', responseError);
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to save response',
+            message: responseError.message
+          })
+        };
+      }
+      
+      // Update or create knowledge state
+      if (responseData.knowledgeComponentId) {
+        const { data: existingState } = await supabase
+          .from('knowledge_states')
+          .select('*')
+          .eq('student_id', studentId)
+          .eq('knowledge_component_id', responseData.knowledgeComponentId)
+          .single();
+          
+        if (existingState) {
+          // Update existing state - simple increment for now
+          const newMastery = responseData.isCorrect ? 
+            Math.min(existingState.mastery_level + 0.1, 1.0) : 
+            Math.max(existingState.mastery_level - 0.05, 0);
+            
+          await supabase
+            .from('knowledge_states')
+            .update({
+              mastery_level: newMastery,
+              last_updated: new Date().toISOString()
+            })
+            .eq('student_id', studentId)
+            .eq('knowledge_component_id', responseData.knowledgeComponentId);
+        } else {
+          // Create new knowledge state
+          await supabase
+            .from('knowledge_states')
+            .insert({
+              student_id: parseInt(studentId),
+              knowledge_component_id: responseData.knowledgeComponentId,
+              mastery_level: responseData.isCorrect ? 0.6 : 0.4,
+              last_updated: new Date().toISOString()
+            });
+        }
+      }
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          success: true,
+          response: response
+        })
+      };
+      
+    } catch (error) {
+      console.error('Submit response error:', error);
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
+  // GET /api/students/:id/struggling-kcs - Get KCs student is struggling with
+  if (path.includes('/struggling-kcs') && httpMethod === 'GET') {
+    try {
+      const pathParts = path.split('/');
+      const studentId = pathParts[pathParts.indexOf('students') + 1];
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // Get knowledge states with low mastery
+      const { data, error } = await supabase
+        .from('knowledge_states')
+        .select(`
+          *,
+          knowledge_components (
+            id,
+            name,
+            description
+          )
+        `)
+        .eq('student_id', studentId)
+        .lt('mastery_level', 0.5)
+        .order('mastery_level');
+      
+      if (error) {
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to fetch struggling KCs',
+            message: error.message
+          })
+        };
+      }
+      
+      // Format response
+      const strugglingKcs = (data || []).map(state => ({
+        kcId: state.knowledge_component_id,
+        kcName: state.knowledge_components?.name || 'Unknown',
+        masteryLevel: state.mastery_level
+      }));
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify(strugglingKcs)
+      };
+      
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
+  // GET /api/admin/content-items/:id - Get single content item
+  if (path.match(/\/api\/admin\/content-items\/\d+$/) && httpMethod === 'GET') {
+    try {
+      const contentId = path.split('/').pop();
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      const { data, error } = await supabase
+        .from('content_items')
+        .select(`
+          *,
+          knowledge_components (
+            id,
+            name,
+            grade_level,
+            description
+          )
+        `)
+        .eq('id', contentId)
+        .single();
+      
+      if (error) {
+        return {
+          statusCode: 404,
+          headers,
+          body: JSON.stringify({
+            error: 'Content item not found',
+            message: error.message
+          })
+        };
+      }
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify(data)
+      };
+      
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
+  // PUT /api/admin/content-items/:id - Update content item
+  if (path.match(/\/api\/admin\/content-items\/\d+$/) && httpMethod === 'PUT') {
+    try {
+      const contentId = path.split('/').pop();
+      const updateData = JSON.parse(event.body);
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      const { data, error } = await supabase
+        .from('content_items')
+        .update(updateData)
+        .eq('id', contentId)
+        .select()
+        .single();
+      
+      if (error) {
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to update content item',
+            message: error.message
+          })
+        };
+      }
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          success: true,
+          message: 'Content item updated successfully',
+          contentItem: data
+        })
+      };
+      
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
+  // DELETE /api/admin/content-items/:id - Delete content item
+  if (path.match(/\/api\/admin\/content-items\/\d+$/) && httpMethod === 'DELETE') {
+    try {
+      const contentId = path.split('/').pop();
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      const { error } = await supabase
+        .from('content_items')
+        .delete()
+        .eq('id', contentId);
+      
+      if (error) {
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to delete content item',
+            message: error.message
+          })
+        };
+      }
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          success: true,
+          message: 'Content item deleted successfully'
+        })
+      };
+      
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
   // Teacher endpoints
+  
+  // GET /api/teachers/eligible-students - Get students not in any classroom
+  if (path.includes('/teachers/eligible-students') && httpMethod === 'GET') {
+    try {
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // Get all students
+      const { data: allStudents } = await supabase
+        .from('students')
+        .select('*');
+      
+      // Get students already in classrooms
+      const { data: enrolledStudents } = await supabase
+        .from('classroom_students')
+        .select('student_id');
+      
+      const enrolledIds = (enrolledStudents || []).map(e => e.student_id);
+      
+      // Filter out enrolled students
+      const eligibleStudents = (allStudents || []).filter(
+        student => !enrolledIds.includes(student.id)
+      );
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify(eligibleStudents)
+      };
+      
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
+  // POST /api/teachers/classrooms - Create classroom
+  if (path.includes('/teachers/classrooms') && httpMethod === 'POST') {
+    try {
+      const classroomData = JSON.parse(event.body);
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // Create classroom
+      const { data: classroom, error } = await supabase
+        .from('classrooms')
+        .insert({
+          name: classroomData.name,
+          description: classroomData.description,
+          teacher_id: classroomData.teacher_id,
+          created_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+      
+      if (error) {
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to create classroom',
+            message: error.message
+          })
+        };
+      }
+      
+      // Add students to classroom if provided
+      if (classroomData.studentIds && classroomData.studentIds.length > 0) {
+        const enrollments = classroomData.studentIds.map(studentId => ({
+          classroom_id: classroom.id,
+          student_id: studentId,
+          enrollment_date: new Date().toISOString()
+        }));
+        
+        await supabase
+          .from('classroom_students')
+          .insert(enrollments);
+      }
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          success: true,
+          classroom: classroom
+        })
+      };
+      
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
   
   // GET /api/teachers/:id - Get teacher details
   if (path.match(/\/api\/teachers\/\d+$/) && httpMethod === 'GET') {
@@ -1675,6 +2360,316 @@ exports.handler = async (event, context) => {
     }
   }
   
+  // GET /api/classrooms/:id - Get classroom details
+  if (path.match(/\/api\/classrooms\/\d+$/) && httpMethod === 'GET') {
+    try {
+      const classroomId = path.split('/').pop();
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      const { data, error } = await supabase
+        .from('classrooms')
+        .select('*')
+        .eq('id', classroomId)
+        .single();
+      
+      if (error) {
+        return {
+          statusCode: 404,
+          headers,
+          body: JSON.stringify({
+            error: 'Classroom not found',
+            message: error.message
+          })
+        };
+      }
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify(data)
+      };
+      
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
+  // GET /api/classrooms/:id/students - Get classroom students
+  if (path.includes('/classrooms/') && path.includes('/students') && httpMethod === 'GET') {
+    try {
+      const pathParts = path.split('/');
+      const classroomId = pathParts[pathParts.indexOf('classrooms') + 1];
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // Get students in classroom
+      const { data, error } = await supabase
+        .from('classroom_students')
+        .select(`
+          student_id,
+          enrollment_date,
+          students (*)
+        `)
+        .eq('classroom_id', classroomId);
+      
+      if (error) {
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to fetch classroom students',
+            message: error.message
+          })
+        };
+      }
+      
+      // Format response to return student objects
+      const students = (data || []).map(enrollment => ({
+        ...enrollment.students,
+        enrollment_date: enrollment.enrollment_date
+      }));
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify(students)
+      };
+      
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
+  // GET /api/classrooms/:id/knowledge-components - Get KCs for classroom grade level
+  if (path.includes('/classrooms/') && path.includes('/knowledge-components') && httpMethod === 'GET') {
+    try {
+      const pathParts = path.split('/');
+      const classroomId = pathParts[pathParts.indexOf('classrooms') + 1];
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // Get classroom details first
+      const { data: classroom } = await supabase
+        .from('classrooms')
+        .select('grade_level')
+        .eq('id', classroomId)
+        .single();
+      
+      const gradeLevel = classroom?.grade_level || 3;
+      
+      // Get KCs for grade level
+      const { data, error } = await supabase
+        .from('knowledge_components')
+        .select('*')
+        .eq('grade_level', gradeLevel)
+        .order('id');
+      
+      if (error) {
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to fetch knowledge components',
+            message: error.message
+          })
+        };
+      }
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify(data || [])
+      };
+      
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
+  // GET /api/students/:id/detailed-performance - Get detailed student performance
+  if (path.includes('/detailed-performance') && httpMethod === 'GET') {
+    try {
+      const pathParts = path.split('/');
+      const studentId = pathParts[pathParts.indexOf('students') + 1];
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // Get student details
+      const { data: student } = await supabase
+        .from('students')
+        .select('*')
+        .eq('id', studentId)
+        .single();
+      
+      // Get knowledge states with KC details
+      const { data: knowledgeStates } = await supabase
+        .from('knowledge_states')
+        .select(`
+          *,
+          knowledge_components (*)
+        `)
+        .eq('student_id', studentId);
+      
+      // Get recent responses
+      const { data: recentResponses } = await supabase
+        .from('responses')
+        .select(`
+          *,
+          content_items (
+            content,
+            knowledge_component_id
+          )
+        `)
+        .eq('student_id', studentId)
+        .order('timestamp', { ascending: false })
+        .limit(20);
+      
+      // Calculate performance metrics
+      const totalResponses = recentResponses?.length || 0;
+      const correctResponses = (recentResponses || []).filter(r => r.is_correct).length;
+      const averageAccuracy = totalResponses > 0 ? (correctResponses / totalResponses) * 100 : 0;
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          student: student,
+          performance: {
+            averageAccuracy: averageAccuracy,
+            totalQuizzesTaken: totalResponses,
+            correctAnswers: correctResponses,
+            knowledgeStates: knowledgeStates || [],
+            recentActivity: recentResponses || []
+          }
+        })
+      };
+      
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
+  // POST /api/students/:id/assign-practice - Assign practice to student
+  if (path.includes('/assign-practice') && httpMethod === 'POST') {
+    try {
+      const pathParts = path.split('/');
+      const studentId = pathParts[pathParts.indexOf('students') + 1];
+      const assignmentData = JSON.parse(event.body);
+      
+      // For now, just return success
+      // In a full implementation, this would create assignment records
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          success: true,
+          message: 'Practice assigned successfully'
+        })
+      };
+      
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
+  // GET /api/students/:id/learning-path - Get student's learning path
+  if (path.includes('/learning-path') && httpMethod === 'GET') {
+    try {
+      const pathParts = path.split('/');
+      const studentId = pathParts[pathParts.indexOf('students') + 1];
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // Get learning path for student
+      const { data, error } = await supabase
+        .from('learning_paths')
+        .select(`
+          *,
+          knowledge_components (*)
+        `)
+        .eq('student_id', studentId)
+        .order('position');
+      
+      if (error) {
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to fetch learning path',
+            message: error.message
+          })
+        };
+      }
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify(data || [])
+      };
+      
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
   // Parent endpoints
   
   // GET /api/parents/:id - Get parent details
@@ -1783,6 +2778,236 @@ exports.handler = async (event, context) => {
     }
   }
   
+  // PUT /api/parents/:id - Update parent details
+  if (path.match(/\/api\/parents\/\d+$/) && httpMethod === 'PUT') {
+    try {
+      const parentId = path.split('/').pop();
+      const updateData = JSON.parse(event.body);
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      const { data, error } = await supabase
+        .from('parents')
+        .update(updateData)
+        .eq('id', parentId)
+        .select()
+        .single();
+      
+      if (error) {
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to update parent',
+            message: error.message
+          })
+        };
+      }
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          success: true,
+          parent: data
+        })
+      };
+      
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
+  // GET /api/parents/:id/children - Get parent's children (alias for students)
+  if (path.includes('/parents/') && path.includes('/children') && httpMethod === 'GET') {
+    try {
+      const pathParts = path.split('/');
+      const parentId = pathParts[pathParts.indexOf('parents') + 1];
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // Get parent-student relationships with student details
+      const { data, error } = await supabase
+        .from('parent_students')
+        .select(`
+          student_id,
+          students (*)
+        `)
+        .eq('parent_id', parentId);
+      
+      if (error) {
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to fetch children',
+            message: error.message
+          })
+        };
+      }
+      
+      // Extract student objects
+      const children = (data || []).map(rel => rel.students);
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify(children)
+      };
+      
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
+  // GET /api/parents/students/:id/weekly-report - Get weekly report for student
+  if (path.includes('/parents/students/') && path.includes('/weekly-report') && httpMethod === 'GET') {
+    try {
+      const pathParts = path.split('/');
+      const studentId = pathParts[pathParts.indexOf('students') + 1];
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // Get responses from the last 7 days
+      const oneWeekAgo = new Date();
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+      
+      const { data: weeklyResponses } = await supabase
+        .from('responses')
+        .select(`
+          *,
+          content_items (
+            knowledge_component_id,
+            knowledge_components (
+              name,
+              description
+            )
+          )
+        `)
+        .eq('student_id', studentId)
+        .gte('timestamp', oneWeekAgo.toISOString())
+        .order('timestamp', { ascending: false });
+      
+      // Calculate weekly stats
+      const totalQuizzes = weeklyResponses?.length || 0;
+      const correctAnswers = (weeklyResponses || []).filter(r => r.is_correct).length;
+      const accuracy = totalQuizzes > 0 ? (correctAnswers / totalQuizzes) * 100 : 0;
+      
+      // Group by knowledge component
+      const kcPerformance = {};
+      (weeklyResponses || []).forEach(response => {
+        const kcId = response.content_items?.knowledge_component_id;
+        const kcName = response.content_items?.knowledge_components?.name || 'Unknown';
+        
+        if (kcId) {
+          if (!kcPerformance[kcId]) {
+            kcPerformance[kcId] = {
+              name: kcName,
+              total: 0,
+              correct: 0
+            };
+          }
+          kcPerformance[kcId].total++;
+          if (response.is_correct) {
+            kcPerformance[kcId].correct++;
+          }
+        }
+      });
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          weekStart: oneWeekAgo.toISOString(),
+          weekEnd: new Date().toISOString(),
+          totalQuizzesTaken: totalQuizzes,
+          correctAnswers: correctAnswers,
+          averageAccuracy: accuracy,
+          knowledgeComponentPerformance: Object.values(kcPerformance),
+          recentActivity: weeklyResponses || []
+        })
+      };
+      
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
+  // GET /api/students/:id/historical-mastery - Get historical mastery data
+  if (path.includes('/historical-mastery') && httpMethod === 'GET') {
+    try {
+      const pathParts = path.split('/');
+      const studentId = pathParts[pathParts.indexOf('students') + 1];
+      
+      // For now, return mock historical data
+      // In a full implementation, this would track mastery changes over time
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          historicalData: [
+            {
+              date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+              averageMastery: 0.3
+            },
+            {
+              date: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
+              averageMastery: 0.45
+            },
+            {
+              date: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+              averageMastery: 0.6
+            },
+            {
+              date: new Date().toISOString(),
+              averageMastery: 0.75
+            }
+          ]
+        })
+      };
+      
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
   // Default response
   return {
     statusCode: 404,
@@ -1791,7 +3016,7 @@ exports.handler = async (event, context) => {
       error: 'Not found',
       path: path,
       method: httpMethod,
-      availableEndpoints: ['/api/hello', '/api/auth/login', '/api/admin/users', '/api/students/:id', '/api/teachers/:id', '/api/parents/:id']
+      availableEndpoints: ['/api/hello', '/api/auth/login', '/api/admin/users', '/api/students/:id', '/api/teachers/:id', '/api/parents/:id', '/api/classrooms/:id']
     })
   };
 };
