@@ -1,5 +1,5 @@
-// Vercel standard API function
-export default function handler(req, res) {
+// Vercel API function (CommonJS format)
+module.exports = (req, res) => {
   console.log(`API request: ${req.method} ${req.url}`);
   
   res.status(200).json({
@@ -8,4 +8,4 @@ export default function handler(req, res) {
     url: req.url,
     timestamp: new Date().toISOString()
   });
-}
+};

@@ -8,6 +8,10 @@
         "distDir": "client/build",
         "buildCommand": "cd client && npm run vercel-build"
       }
+    },
+    {
+      "src": "api/**/*.js",
+      "use": "@vercel/node"
     }
   ],
   "routes": [

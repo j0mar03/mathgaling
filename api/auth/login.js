@@ -1,5 +1,5 @@
-// Vercel standard login API function
-export default function handler(req, res) {
+// Vercel login API function (CommonJS format)
+module.exports = (req, res) => {
   console.log(`Login request: ${req.method}`);
   
   // CORS headers
@@ -42,4 +42,4 @@ export default function handler(req, res) {
       message: error.message
     });
   }
-}
+};
