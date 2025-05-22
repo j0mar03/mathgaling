@@ -919,6 +919,69 @@ exports.handler = async (event, context) => {
     }
   }
   
+  // POST /api/admin/content-items - Create content item
+  if (path.includes('/admin/content-items') && httpMethod === 'POST') {
+    try {
+      const contentData = JSON.parse(event.body);
+      console.log('Creating content item:', contentData);
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      const { data, error } = await supabase
+        .from('content_items')
+        .insert([{
+          type: contentData.type || 'quiz',
+          content: contentData.content || contentData.question || '',
+          knowledge_component_id: contentData.knowledge_component_id || contentData.kcId,
+          difficulty_level: contentData.difficulty_level || contentData.difficulty || 'medium',
+          language: contentData.language || 'English',
+          status: 'approved',
+          suggestion_source: 'manual',
+          options: contentData.options || null,
+          correct_answer: contentData.correct_answer || contentData.correctAnswer || ''
+        }])
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Content item creation error:', error);
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to create content item',
+            message: error.message,
+            details: error
+          })
+        };
+      }
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          success: true,
+          message: 'Content item created successfully',
+          contentItem: data
+        })
+      };
+      
+    } catch (error) {
+      console.error('Content item creation error:', error);
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
   // Default response
   return {
     statusCode: 404,
