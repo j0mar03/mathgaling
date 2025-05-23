@@ -1404,6 +1404,72 @@ exports.handler = async (event, context) => {
     }
   }
   
+  // GET /api/admin/knowledge-components/:id - Get individual knowledge component
+  if (path.includes('/admin/knowledge-components/') && httpMethod === 'GET') {
+    try {
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // Extract KC ID from path
+      const kcId = path.split('/admin/knowledge-components/')[1];
+      
+      if (!kcId) {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({
+            error: 'KC ID is required'
+          })
+        };
+      }
+      
+      const { data, error } = await supabase
+        .from('knowledge_components')
+        .select('*')
+        .eq('id', parseInt(kcId))
+        .single();
+      
+      if (error) {
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to fetch knowledge component',
+            message: error.message
+          })
+        };
+      }
+      
+      if (!data) {
+        return {
+          statusCode: 404,
+          headers,
+          body: JSON.stringify({
+            error: 'Knowledge component not found'
+          })
+        };
+      }
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify(data)
+      };
+      
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
   // GET /api/admin/knowledge-components - List knowledge components
   if (path.includes('/admin/knowledge-components') && httpMethod === 'GET') {
     try {
