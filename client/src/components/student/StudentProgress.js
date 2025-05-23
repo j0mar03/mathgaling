@@ -27,6 +27,7 @@ ChartJS.register(
 );
 
 const StudentProgress = () => {
+  console.log('🟢 [StudentProgress] STUDENT PROGRESS COMPONENT LOADING - This should be the student view');
   const [loading, setLoading] = useState(true);
   const [student, setStudent] = useState(null);
   const [knowledgeStates, setKnowledgeStates] = useState([]);
@@ -42,13 +43,16 @@ const StudentProgress = () => {
   
   // Add refresh logic for URL parameters (similar to other components)
   useEffect(() => {
+    console.log('[StudentProgress] Component mounted - URL:', window.location.pathname);
+    console.log('[StudentProgress] User role:', user?.role, 'User ID:', user?.id);
+    
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('refresh')) {
       console.log('[StudentProgress] Refresh triggered by URL parameter');
       // Clear the refresh param from URL
       window.history.replaceState({}, '', window.location.pathname);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     const fetchData = async () => {

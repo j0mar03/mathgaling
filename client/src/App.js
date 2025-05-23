@@ -62,7 +62,9 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   if (allowedRoles && !roles.includes(user.role)) {
     // Redirect to their own dashboard if role doesn't match
     // Or show an 'Access Denied' page
-    console.warn(`Access denied: User role '${user.role}' not in allowed roles '${roles.join(', ')}'`);
+    console.warn(`[ProtectedRoute] Access denied: User role '${user.role}' not in allowed roles '${roles.join(', ')}'`);
+    console.warn(`[ProtectedRoute] Current URL: ${window.location.pathname}`);
+    console.warn(`[ProtectedRoute] Redirecting to: /${user.role}`);
     return <Navigate to={`/${user.role}`} replace />; // Redirect to their default dashboard
   }
 

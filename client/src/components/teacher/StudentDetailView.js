@@ -18,6 +18,7 @@ ChartJS.register({
 });
 
 const StudentDetailView = () => {
+  console.log('🔴 [StudentDetailView] TEACHER STUDENT DETAIL VIEW LOADING - This should only be accessed by teachers');
   const { id } = useParams();
   const [loading, setLoading] = useState(true);
   const [student, setStudent] = useState(null);
@@ -31,12 +32,16 @@ const StudentDetailView = () => {
   
   // Add refresh logic for URL parameters  
   useEffect(() => {
+    console.log('[StudentDetailView] Component mounted - URL:', window.location.pathname);
+    console.log('[StudentDetailView] Viewing student ID:', id);
+    console.log('[StudentDetailView] This is the TEACHER view component');
+    
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('refresh')) {
       console.log('[StudentDetailView] Refresh triggered by URL parameter');
       window.history.replaceState({}, '', window.location.pathname);
     }
-  }, []);
+  }, [id]);
 
   useEffect(() => {
     const fetchData = async () => {
