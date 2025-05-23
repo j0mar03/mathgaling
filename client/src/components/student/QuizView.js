@@ -382,6 +382,13 @@ const QuizView = () => {
         kc_id: currentQuestion.knowledge_component?.id,
         kc_name: currentQuestion.knowledge_component?.name
       });
+      console.log('[QuizView] Submission payload:', {
+        content_item_id: currentQuestion.id,
+        answer: currentQuestion.type === 'fill_in_blank' ? fillInAnswer : selectedOption,
+        correct: isCorrect,
+        practice_mode: false,
+        time_spent: timeSpent
+      });
       
       const response = await axios.post(`/api/students/${user.id}/responses`, {
         content_item_id: currentQuestion.id,
@@ -404,6 +411,19 @@ const QuizView = () => {
       
       console.log('[QuizView] Response submitted successfully:', response.data);
       console.log('[QuizView] Full response data structure:', JSON.stringify(response.data, null, 2));
+      
+      // Also log to a global variable for debugging
+      window.__LAST_QUIZ_RESPONSE__ = {
+        timestamp: new Date().toISOString(),
+        request: {
+          content_item_id: currentQuestion.id,
+          kc_id: currentQuestion.knowledge_component?.id,
+          correct: isCorrect,
+          practice_mode: false
+        },
+        response: response.data
+      };
+      console.log('[QuizView] Debug info saved to window.__LAST_QUIZ_RESPONSE__');
       
       // Log if mastery was updated and track actual mastery
       if (response.data?.knowledgeState) {

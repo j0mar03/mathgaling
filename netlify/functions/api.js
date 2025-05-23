@@ -2601,6 +2601,7 @@ exports.handler = async (event, context) => {
     console.log(`[Netlify] 🎯 QUIZ RESPONSE SUBMISSION STARTED`);
     console.log(`[Netlify] Request path: ${path}`);
     console.log(`[Netlify] Full event body:`, event.body);
+    console.log(`[Netlify] Headers:`, JSON.stringify(event.headers, null, 2));
     
     try {
       const pathParts = path.split('/');
@@ -4362,6 +4363,102 @@ exports.handler = async (event, context) => {
         headers,
         body: JSON.stringify({
           error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
+  // Debug endpoint for mastery updates
+  if (path.includes('/debug/mastery') && httpMethod === 'GET') {
+    try {
+      const queryParams = new URLSearchParams(event.queryStringParameters || {});
+      const studentId = queryParams.get('student_id');
+      const kcId = queryParams.get('kc_id');
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      let debugInfo = {
+        timestamp: new Date().toISOString(),
+        studentId,
+        kcId,
+        checks: {}
+      };
+      
+      // Check if student exists
+      if (studentId) {
+        const { data: student, error: studentError } = await supabase
+          .from('students')
+          .select('id, name, email, grade_level')
+          .eq('id', studentId)
+          .single();
+          
+        debugInfo.checks.studentExists = !!student;
+        debugInfo.checks.studentError = studentError?.message;
+        debugInfo.student = student;
+      }
+      
+      // Check knowledge state
+      if (studentId && kcId) {
+        const { data: knowledgeState, error: ksError } = await supabase
+          .from('knowledge_states')
+          .select('*')
+          .eq('student_id', studentId)
+          .eq('knowledge_component_id', kcId)
+          .single();
+          
+        debugInfo.checks.knowledgeStateExists = !!knowledgeState;
+        debugInfo.checks.knowledgeStateError = ksError?.message;
+        debugInfo.knowledgeState = knowledgeState;
+      }
+      
+      // Check recent responses
+      if (studentId) {
+        const { data: recentResponses, error: respError } = await supabase
+          .from('responses')
+          .select('*')
+          .eq('student_id', studentId)
+          .order('created_at', { ascending: false })
+          .limit(5);
+          
+        debugInfo.recentResponses = recentResponses;
+        debugInfo.checks.responsesError = respError?.message;
+      }
+      
+      // Check all knowledge states for student
+      if (studentId) {
+        const { data: allStates, error: allStatesError } = await supabase
+          .from('knowledge_states')
+          .select(`
+            *,
+            knowledge_components (
+              id,
+              name,
+              curriculum_code
+            )
+          `)
+          .eq('student_id', studentId)
+          .order('updatedAt', { ascending: false });
+          
+        debugInfo.allKnowledgeStates = allStates;
+        debugInfo.checks.allStatesError = allStatesError?.message;
+      }
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify(debugInfo, null, 2)
+      };
+      
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Debug endpoint error',
           message: error.message
         })
       };

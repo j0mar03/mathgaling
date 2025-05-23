@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mastery Update Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, button {
+            padding: 8px 12px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        input {
+            width: 100%;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .debug-button {
+            background-color: #28a745;
+        }
+        .debug-button:hover {
+            background-color: #218838;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            border: 1px solid #dee2e6;
+        }
+        .error {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        .success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Mastery Update Test</h1>
+        <p>Use this page to test and debug mastery updates</p>
+        
+        <div class="form-group">
+            <label for="studentId">Student ID:</label>
+            <input type="number" id="studentId" placeholder="Enter student ID" value="">
+        </div>
+        
+        <div class="form-group">
+            <label for="kcId">Knowledge Component ID:</label>
+            <input type="number" id="kcId" placeholder="Enter KC ID" value="">
+        </div>
+        
+        <div class="form-group">
+            <button onclick="checkMastery()">Check Current Mastery</button>
+            <button onclick="testSubmitResponse(true)" class="debug-button">Submit Correct Answer</button>
+            <button onclick="testSubmitResponse(false)" class="debug-button">Submit Wrong Answer</button>
+        </div>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const BASE_URL = window.location.origin;
+        
+        function showResult(content, isError = false) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.className = 'result ' + (isError ? 'error' : 'success');
+            resultDiv.innerHTML = content;
+        }
+        
+        async function checkMastery() {
+            const studentId = document.getElementById('studentId').value;
+            const kcId = document.getElementById('kcId').value;
+            
+            if (!studentId || !kcId) {
+                showResult('Please enter both Student ID and KC ID', true);
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${BASE_URL}/api/debug/mastery?student_id=${studentId}&kc_id=${kcId}`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    let html = '<h3>Mastery Check Results:</h3>';
+                    html += '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                    
+                    if (data.knowledgeState) {
+                        html += `<h4>Current Mastery: ${(data.knowledgeState.p_mastery * 100).toFixed(1)}%</h4>`;
+                    } else {
+                        html += '<h4>No mastery record found for this KC</h4>';
+                    }
+                    
+                    showResult(html);
+                } else {
+                    showResult(`Error: ${data.error || 'Unknown error'}`, true);
+                }
+            } catch (error) {
+                showResult(`Network error: ${error.message}`, true);
+            }
+        }
+        
+        async function testSubmitResponse(isCorrect) {
+            const studentId = document.getElementById('studentId').value;
+            const kcId = document.getElementById('kcId').value;
+            
+            if (!studentId || !kcId) {
+                showResult('Please enter both Student ID and KC ID', true);
+                return;
+            }
+            
+            // First, get a content item for this KC
+            try {
+                // For testing, we'll create a dummy content item ID
+                const dummyContentItemId = 1; // You may need to use a real content item ID
+                
+                const payload = {
+                    content_item_id: dummyContentItemId,
+                    answer: isCorrect ? 'correct answer' : 'wrong answer',
+                    correct: isCorrect,
+                    time_spent: 60,
+                    practice_mode: false, // Important: must be false to update mastery
+                    interaction_data: {
+                        test: true,
+                        timestamp: new Date().toISOString()
+                    }
+                };
+                
+                showResult(`<h3>Submitting ${isCorrect ? 'correct' : 'incorrect'} response...</h3><pre>${JSON.stringify(payload, null, 2)}</pre>`);
+                
+                const response = await fetch(`${BASE_URL}/api/students/${studentId}/responses`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer test' // You may need a real token
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    let html = '<h3>Response Submission Results:</h3>';
+                    html += '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                    
+                    if (data.newMastery !== null && data.newMastery !== undefined) {
+                        html += `<h4>New Mastery: ${(data.newMastery * 100).toFixed(1)}%</h4>`;
+                    }
+                    
+                    showResult(html);
+                    
+                    // Check mastery again after 2 seconds
+                    setTimeout(() => {
+                        console.log('Checking mastery after submission...');
+                        checkMastery();
+                    }, 2000);
+                } else {
+                    showResult(`Error: ${JSON.stringify(data, null, 2)}`, true);
+                }
+            } catch (error) {
+                showResult(`Network error: ${error.message}`, true);
+            }
+        }
+        
+        // Auto-fill from URL parameters if present
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('student_id')) {
+            document.getElementById('studentId').value = urlParams.get('student_id');
+        }
+        if (urlParams.get('kc_id')) {
+            document.getElementById('kcId').value = urlParams.get('kc_id');
+        }
+    </script>
+</body>
+</html>
