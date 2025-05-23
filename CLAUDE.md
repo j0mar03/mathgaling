@@ -72,3 +72,6 @@ Key issues resolved in the quiz system:
 
 ### Quiz Navigation Pattern:
 Maintain this URL structure: `/student/quiz/{id}?kc_id={kc_id}&mode=sequential&qnum={num}&correct={count}`
+
+## Git Push Preparation
+- Add memory because of upcoming git push

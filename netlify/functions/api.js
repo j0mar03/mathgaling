@@ -3987,6 +3987,56 @@ exports.handler = async (event, context) => {
     }
   }
   
+  // GET /api/debug/tables - Check what tables exist
+  if (path.includes('/debug/tables') && httpMethod === 'GET') {
+    try {
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // Check if tables exist and have data
+      const results = {};
+      
+      // Check students table
+      const { data: students, error: studentsError } = await supabase
+        .from('students')
+        .select('*')
+        .limit(5);
+      results.students = { data: students || [], error: studentsError };
+      
+      // Check responses table
+      const { data: responses, error: responsesError } = await supabase
+        .from('responses')
+        .select('*')
+        .limit(5);
+      results.responses = { data: responses || [], error: responsesError };
+      
+      // Check knowledge_states table
+      const { data: kcStates, error: kcStatesError } = await supabase
+        .from('knowledge_states')
+        .select('*')
+        .limit(5);
+      results.knowledge_states = { data: kcStates || [], error: kcStatesError };
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          tables: results,
+          timestamp: new Date().toISOString()
+        })
+      };
+      
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({ error: error.message })
+      };
+    }
+  }
+  
   // GET /api/debug/mastery/:studentId - Simple mastery check
   if (path.includes('/debug/mastery/') && httpMethod === 'GET') {
     try {
