@@ -186,6 +186,63 @@ exports.handler = async (event, context) => {
     }
   }
   
+  // GET /api/images/:filename - Serve uploaded images
+  if (path.includes('/images/') && httpMethod === 'GET') {
+    try {
+      const filename = path.split('/images/')[1];
+      const fs = require('fs');
+      const pathModule = require('path');
+      
+      // Construct the path to the image file
+      const imagePath = pathModule.join(process.cwd(), 'client', 'server', 'uploads', 'images', filename);
+      
+      console.log('[DEBUG] Attempting to serve image:', imagePath);
+      
+      // Check if file exists
+      if (!fs.existsSync(imagePath)) {
+        return {
+          statusCode: 404,
+          headers,
+          body: JSON.stringify({
+            error: 'Image not found',
+            filename: filename
+          })
+        };
+      }
+      
+      // Read and serve the image
+      const imageBuffer = fs.readFileSync(imagePath);
+      const ext = pathModule.extname(filename).toLowerCase();
+      
+      let contentType = 'image/jpeg'; // default
+      if (ext === '.png') contentType = 'image/png';
+      if (ext === '.jpg' || ext === '.jpeg') contentType = 'image/jpeg';
+      if (ext === '.gif') contentType = 'image/gif';
+      
+      return {
+        statusCode: 200,
+        headers: {
+          ...headers,
+          'Content-Type': contentType,
+          'Cache-Control': 'public, max-age=31536000' // Cache for 1 year
+        },
+        body: imageBuffer.toString('base64'),
+        isBase64Encoded: true
+      };
+      
+    } catch (error) {
+      console.error('Image serving error:', error);
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Failed to serve image',
+          message: error.message
+        })
+      };
+    }
+  }
+  
   // Hello endpoint - /api/hello
   if (path.includes('/hello') || path === '/api' || path === '/api/') {
     return {
@@ -1655,7 +1712,7 @@ exports.handler = async (event, context) => {
       // Get student's knowledge states to calculate completed topics
       const { data: knowledgeStates, error: ksError } = await supabase
         .from('knowledge_states')
-        .select('knowledge_component_id, mastery')
+        .select('knowledge_component_id, p_mastery')
         .eq('student_id', studentId);
       
       if (ksError) {
@@ -1663,7 +1720,7 @@ exports.handler = async (event, context) => {
       }
       
       // Count topics with mastery >= 0.8 as completed
-      const topicsCompleted = knowledgeStates?.filter(ks => ks.mastery >= 0.8).length || 0;
+      const topicsCompleted = knowledgeStates?.filter(ks => ks.p_mastery >= 0.8).length || 0;
       
       // Calculate learning streak (simplified - days with activity)
       const { data: recentResponses, error: responseError } = await supabase
@@ -2287,14 +2344,14 @@ exports.handler = async (event, context) => {
           // Update existing state - simple increment for now
           const isCorrect = responseData.correct || responseData.isCorrect;
           const newMastery = isCorrect ? 
-            Math.min(existingState.mastery_level + 0.1, 1.0) : 
-            Math.max(existingState.mastery_level - 0.05, 0);
+            Math.min(existingState.p_mastery + 0.1, 1.0) : 
+            Math.max(existingState.p_mastery - 0.05, 0);
             
           await supabase
             .from('knowledge_states')
             .update({
-              mastery_level: newMastery,
-              last_updated: new Date().toISOString()
+              p_mastery: newMastery,
+              updatedAt: new Date().toISOString()
             })
             .eq('student_id', studentId)
             .eq('knowledge_component_id', kcId);
@@ -2305,8 +2362,9 @@ exports.handler = async (event, context) => {
             .insert({
               student_id: parseInt(studentId),
               knowledge_component_id: kcId,
-              mastery_level: isCorrect ? 0.6 : 0.4,
-              last_updated: new Date().toISOString()
+              p_mastery: isCorrect ? 0.6 : 0.4,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString()
             });
         }
       }

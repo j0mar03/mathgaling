@@ -216,8 +216,9 @@ const QuizView = () => {
       console.log('[QuizView] Triggering loadSequentialIds with KC ID:', kcIdFromQuery);
       loadSequentialIds(kcIdFromQuery);
     } else if (isSequentialMode && !id && hasLoadedSequentialIds && sequentialIds.length === 0) {
-      // If we've loaded but found no questions, set loading to false
-      console.log('[QuizView] No sequential IDs found, setting loading to false');
+      // If we've loaded but found no questions, show error instead of just setting loading to false
+      console.log('[QuizView] No sequential IDs found, setting error');
+      setError('No quiz questions available for this topic. Please try another topic or contact support.');
       setLoading(false);
     }
   }, [isSequentialMode, id, token, studentId, hasLoadedSequentialIds, isLoadingSequentialIds, location.search, navigate, sequentialIds.length]); // Added location.search and navigate
@@ -274,9 +275,13 @@ const QuizView = () => {
         id
       });
       
-      if (!token || !isSequentialMode || !studentId || isNavigating || !hasLoadedSequentialIds) {
-        console.log('[QuizView] Exiting loadSequentialQuiz early, setting loading to false');
-        setLoading(false);
+      if (!token || !isSequentialMode || !studentId || isNavigating) {
+        console.log('[QuizView] Exiting loadSequentialQuiz early - missing requirements');
+        return;
+      }
+      
+      if (!hasLoadedSequentialIds) {
+        console.log('[QuizView] Waiting for sequential IDs to load...');
         return;
       }
 
@@ -881,6 +886,8 @@ const QuizView = () => {
       if (nextIndex < sequentialIds.length) {
         console.log(`Navigating to next sequential question. Index: ${nextIndex}, QNum: ${nextQNum}, Correct Count: ${currentCorrectCount}`);
         setCurrentSequentialIndex(nextIndex);
+        setLoading(true); // Set loading during navigation
+        setContent(null); // Clear content to prevent stale data
         // Pass updated counts in URL
         navigate(`/student/quiz/${sequentialIds[nextIndex].id}?mode=sequential&qnum=${nextQNum}&correct=${currentCorrectCount}`, { replace: true });
       } else {
@@ -905,6 +912,8 @@ const QuizView = () => {
         console.log(`Navigating to next non-sequential question. QNum: ${nextQNum}, Correct Count: ${currentCorrectCount}`);
         setQuestionNumber(nextQNum); // Update question number state
         if (nextContentItemId) {
+          setLoading(true); // Set loading during navigation
+          setContent(null); // Clear content to prevent stale data
           // Pass updated counts in URL
           navigate(`/student/quiz/${nextContentItemId}?qnum=${nextQNum}&correct=${currentCorrectCount}`, { replace: true });
         } else {
@@ -1016,11 +1025,29 @@ const QuizView = () => {
     );
   }
 
+  // Debug the error condition
   if (!content && !loading && !isLoadingSequentialIds) {
+      console.log('[QuizView] ERROR CONDITION - Could not load quiz content:', {
+        content: !!content,
+        loading,
+        isLoadingSequentialIds,
+        hasLoadedSequentialIds,
+        sequentialIdsLength: sequentialIds.length,
+        id,
+        error,
+        isSequentialMode,
+        currentSequentialIndex,
+        path: location.pathname,
+        search: location.search
+      });
+      
       return (
           <div className="error-container">
               <h2>Error</h2>
               <p>Could not load the quiz content.</p>
+              <div style={{ fontSize: '12px', color: '#666', marginTop: '10px' }}>
+                Debug: loading={loading.toString()}, hasSeqIds={hasLoadedSequentialIds.toString()}, seqIds={sequentialIds.length}, id={id || 'none'}
+              </div>
               <button onClick={() => navigate('/student')}>Back to Dashboard</button>
           </div>
       );
@@ -1213,15 +1240,40 @@ const QuizView = () => {
         <h3>{content?.content || 'Question text not available.'}</h3>
         
         {/* Display question image if available */}
-        {content?.metadata?.imageUrl && (
-          <div className="quiz-image-container">
-            <img
-              src={content.metadata.imageUrl}
-              alt="Question visual"
-              className="quiz-image"
-            />
-          </div>
-        )}
+        {(() => {
+          // Debug image data
+          console.log('[QuizView] Content metadata:', content?.metadata);
+          console.log('[QuizView] Looking for image in:', {
+            imageUrl: content?.metadata?.imageUrl,
+            image: content?.metadata?.image,
+            image_url: content?.image_url
+          });
+          
+          const imageUrl = content?.metadata?.imageUrl || content?.metadata?.image || content?.image_url;
+          
+          if (imageUrl) {
+            console.log('[QuizView] Found image URL:', imageUrl);
+            return (
+              <div className="quiz-image-container">
+                <img
+                  src={imageUrl}
+                  alt="Question visual"
+                  className="quiz-image"
+                  onError={(e) => {
+                    console.log('Image failed to load:', e.target.src);
+                    e.target.style.display = 'none';
+                  }}
+                  onLoad={(e) => {
+                    console.log('Image loaded successfully:', e.target.src);
+                  }}
+                />
+              </div>
+            );
+          } else {
+            console.log('[QuizView] No image URL found for this question');
+            return null;
+          }
+        })()}
       </div>
       
       <div className="quiz-options">
