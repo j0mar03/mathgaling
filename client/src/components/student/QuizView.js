@@ -28,7 +28,6 @@ const QuizView = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  // Recreate queryParams whenever location.search changes to ensure we get the latest URL parameters
   const queryParams = new URLSearchParams(location.search);
   const isSequentialMode = queryParams.get('mode') === 'sequential';
   const startFromKC = queryParams.get('start') === '1';
@@ -77,7 +76,7 @@ const QuizView = () => {
   
   // Add state to track loading status
   const [isLoadingSequentialIds, setIsLoadingSequentialIds] = useState(false);
-  const [hasLoadedSequentialIds, setHasLoadedSequentialIds] = useState(false);\n  \n  // Store KC ID in state to ensure it persists throughout the quiz\n  const [currentKcId, setCurrentKcId] = useState(null);
+  const [hasLoadedSequentialIds, setHasLoadedSequentialIds] = useState(false);
 
   // Add debug state
   const [debugInfo, setDebugInfo] = useState({
@@ -921,10 +920,8 @@ const QuizView = () => {
         setIsNavigating(true); // Set navigating state
         setLoading(true); // Set loading during navigation
         setContent(null); // Clear content to prevent stale data
-        // Pass updated counts in URL and preserve KC ID
-        const kcIdFromQuery = queryParams.get('kc_id');\n        console.log(`[handleNextQuestion] Current URL search: ${location.search}`);\n        console.log(`[handleNextQuestion] Extracted KC ID: ${kcIdFromQuery}`);
-        const urlParams = `mode=sequential&qnum=${nextQNum}&correct=${currentCorrectCount}${kcIdFromQuery ? `&kc_id=${kcIdFromQuery}` : ''}`;
-        navigate(`/student/quiz/${sequentialIds[nextIndex].id}?${urlParams}`, { replace: true });
+        // Pass updated counts in URL
+        navigate(`/student/quiz/${sequentialIds[nextIndex].id}?mode=sequential&qnum=${nextQNum}&correct=${currentCorrectCount}`, { replace: true });
       } else {
         console.log(`Quiz completed. Final Correct Count: ${currentCorrectCount}`);
         // Quiz completed
@@ -950,10 +947,8 @@ const QuizView = () => {
           setIsNavigating(true); // Set navigating state
           setLoading(true); // Set loading during navigation
           setContent(null); // Clear content to prevent stale data
-          // Pass updated counts in URL and preserve KC ID
-          const kcIdFromQuery = queryParams.get('kc_id');\n        console.log(`[handleNextQuestion] Current URL search: ${location.search}`);\n        console.log(`[handleNextQuestion] Extracted KC ID: ${kcIdFromQuery}`);
-          const urlParams = `qnum=${nextQNum}&correct=${currentCorrectCount}${kcIdFromQuery ? `&kc_id=${kcIdFromQuery}` : ''}`;
-          navigate(`/student/quiz/${nextContentItemId}?${urlParams}`, { replace: true });
+          // Pass updated counts in URL
+          navigate(`/student/quiz/${nextContentItemId}?qnum=${nextQNum}&correct=${currentCorrectCount}`, { replace: true });
         } else {
             console.warn("handleNextQuestion: nextContentItemId is missing in non-sequential mode.");
             // Potentially end quiz or show error if no next item ID
@@ -1027,7 +1022,7 @@ const QuizView = () => {
                 setLoading(true);
                 // Force a reload of the current content
                 if (id) {
-                  const kcIdFromQuery = queryParams.get('kc_id');\n        console.log(`[handleNextQuestion] Current URL search: ${location.search}`);\n        console.log(`[handleNextQuestion] Extracted KC ID: ${kcIdFromQuery}`);\n                  const urlParams = `mode=sequential${kcIdFromQuery ? `&kc_id=${kcIdFromQuery}` : ''}`;\n                  navigate(`/student/quiz/${id}?${urlParams}`, { replace: true });
+                  navigate(`/student/quiz/${id}?mode=sequential`, { replace: true });
                 }
               }} 
               className="retry-button"
