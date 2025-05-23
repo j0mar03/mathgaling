@@ -3261,6 +3261,140 @@ exports.handler = async (event, context) => {
     }
   }
   
+  // GET /api/students/:id/knowledge-states - Get student's knowledge states
+  if (path.includes('/knowledge-states') && httpMethod === 'GET') {
+    try {
+      const pathParts = path.split('/');
+      const studentId = pathParts[pathParts.indexOf('students') + 1];
+      
+      if (!studentId || isNaN(parseInt(studentId))) {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({ error: 'Invalid Student ID' })
+        };
+      }
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // Fetch knowledge states for the student
+      const { data: knowledgeStates, error } = await supabase
+        .from('knowledge_states')
+        .select(`
+          id,
+          student_id,
+          knowledge_component_id,
+          p_mastery,
+          p_transit,
+          p_guess,
+          p_slip,
+          created_at,
+          updated_at,
+          knowledge_components (
+            id,
+            name,
+            curriculum_code
+          )
+        `)
+        .eq('student_id', studentId);
+      
+      if (error) {
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({ error: 'Failed to fetch knowledge states', details: error.message })
+        };
+      }
+      
+      // Transform the data to match the expected format
+      const formattedStates = knowledgeStates.map(state => ({
+        ...state,
+        KnowledgeComponent: state.knowledge_components
+      }));
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify(formattedStates)
+      };
+      
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({ error: 'Failed to fetch knowledge states', message: error.message })
+      };
+    }
+  }
+  
+  // GET /api/students/:id/grade-knowledge-components - Get knowledge components for student's grade
+  if (path.includes('/grade-knowledge-components') && httpMethod === 'GET') {
+    try {
+      const pathParts = path.split('/');
+      const studentId = pathParts[pathParts.indexOf('students') + 1];
+      
+      if (!studentId || isNaN(parseInt(studentId))) {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({ error: 'Invalid Student ID' })
+        };
+      }
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // First get the student's grade level
+      const { data: student, error: studentError } = await supabase
+        .from('students')
+        .select('grade_level')
+        .eq('id', studentId)
+        .single();
+      
+      if (studentError || !student) {
+        return {
+          statusCode: 404,
+          headers,
+          body: JSON.stringify({ error: 'Student not found' })
+        };
+      }
+      
+      // Get knowledge components for this grade level
+      const { data: knowledgeComponents, error: kcError } = await supabase
+        .from('knowledge_components')
+        .select('*')
+        .eq('grade_level', student.grade_level)
+        .order('curriculum_code', { ascending: true })
+        .order('name', { ascending: true });
+      
+      if (kcError) {
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({ error: 'Failed to fetch knowledge components', details: kcError.message })
+        };
+      }
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify(knowledgeComponents || [])
+      };
+      
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({ error: 'Failed to fetch knowledge components', message: error.message })
+      };
+    }
+  }
+  
   // GET /api/students/:id/detailed-performance - Get detailed student performance
   if (path.includes('/detailed-performance') && httpMethod === 'GET') {
     try {

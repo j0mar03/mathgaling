@@ -311,6 +311,7 @@ const QuizView = () => {
               setContent(contentResponse.data);
               setLastQuizId(id);
               setIsInitialLoad(false);
+              setIsNavigating(false); // Reset navigation state when content loads
               setLoading(false);
               return;
             } else {
@@ -468,6 +469,7 @@ const QuizView = () => {
     setAttempts(1);
     setTimeSpent(0); // Reset timer
     setError(null);
+    setIsNavigating(true); // Set navigating state during retry
     setLoading(true); // Show loading while potentially re-navigating/fetching
     setHasLoadedSequentialIds(false); // Force reload of sequential IDs if needed
 
@@ -514,6 +516,7 @@ const QuizView = () => {
     setAttempts(1);
     setTimeSpent(0);
     setError(null);
+    setIsNavigating(true); // Set navigating state during topic change
     setLoading(true);
     setHasLoadedSequentialIds(false); // Force reload of sequence for the new KC
     setNextKcIdForContinuation(null); // Clear the stored next ID
@@ -581,6 +584,7 @@ const QuizView = () => {
         }
 
         setContent(fetchedContent);
+        setIsNavigating(false); // Reset navigation state when content loads
         setLoading(false);
       } catch (err) {
         if (!isMounted) return;
@@ -605,6 +609,7 @@ const QuizView = () => {
             if (kcResponse.data) {
               console.log('[QuizView] Content found via KC endpoint:', kcResponse.data);
               setContent(kcResponse.data);
+              setIsNavigating(false); // Reset navigation state when content loads
               setLoading(false);
               return;
             }
@@ -912,6 +917,7 @@ const QuizView = () => {
       if (nextIndex < sequentialIds.length) {
         console.log(`Navigating to next sequential question. Index: ${nextIndex}, QNum: ${nextQNum}, Correct Count: ${currentCorrectCount}`);
         setCurrentSequentialIndex(nextIndex);
+        setIsNavigating(true); // Set navigating state
         setLoading(true); // Set loading during navigation
         setContent(null); // Clear content to prevent stale data
         // Pass updated counts in URL
@@ -938,6 +944,7 @@ const QuizView = () => {
         console.log(`Navigating to next non-sequential question. QNum: ${nextQNum}, Correct Count: ${currentCorrectCount}`);
         setQuestionNumber(nextQNum); // Update question number state
         if (nextContentItemId) {
+          setIsNavigating(true); // Set navigating state
           setLoading(true); // Set loading during navigation
           setContent(null); // Clear content to prevent stale data
           // Pass updated counts in URL
@@ -1051,32 +1058,47 @@ const QuizView = () => {
     );
   }
 
-  // Debug the error condition
-  if (!content && !loading && !isLoadingSequentialIds) {
-      console.log('[QuizView] ERROR CONDITION - Could not load quiz content:', {
-        content: !!content,
-        loading,
-        isLoadingSequentialIds,
-        hasLoadedSequentialIds,
-        sequentialIdsLength: sequentialIds.length,
-        id,
-        error,
-        isSequentialMode,
-        currentSequentialIndex,
-        path: location.pathname,
-        search: location.search
-      });
+  // Only show error condition if we've actually attempted to load content and failed
+  // Don't show error during normal navigation transitions or when quiz is completed
+  if (!content && !loading && !isLoadingSequentialIds && !quizCompleted && !isNavigating && id) {
+      // Additional checks to prevent false errors during normal operation:
+      // 1. Must have an ID (we're trying to load something specific)
+      // 2. Must not be navigating between questions  
+      // 3. Must have attempted to load sequential IDs if in sequential mode
+      // 4. Must not be in a quiz completion state
       
-      return (
-          <div className="error-container">
-              <h2>Error</h2>
-              <p>Could not load the quiz content.</p>
-              <div style={{ fontSize: '12px', color: '#666', marginTop: '10px' }}>
-                Debug: loading={loading.toString()}, hasSeqIds={hasLoadedSequentialIds.toString()}, seqIds={sequentialIds.length}, id={id || 'none'}
-              </div>
-              <button onClick={() => navigate('/student')}>Back to Dashboard</button>
-          </div>
-      );
+      const shouldShowError = isSequentialMode 
+        ? hasLoadedSequentialIds && sequentialIds.length === 0 // Sequential mode with no questions found
+        : true; // Non-sequential mode with content load failure
+      
+      if (shouldShowError) {
+        console.log('[QuizView] ERROR CONDITION - Could not load quiz content:', {
+          content: !!content,
+          loading,
+          isLoadingSequentialIds,
+          hasLoadedSequentialIds,
+          sequentialIdsLength: sequentialIds.length,
+          id,
+          error,
+          isSequentialMode,
+          currentSequentialIndex,
+          quizCompleted,
+          isNavigating,
+          path: location.pathname,
+          search: location.search
+        });
+        
+        return (
+            <div className="error-container">
+                <h2>Error</h2>
+                <p>Could not load the quiz content.</p>
+                <div style={{ fontSize: '12px', color: '#666', marginTop: '10px' }}>
+                  Debug: loading={loading.toString()}, hasSeqIds={hasLoadedSequentialIds.toString()}, seqIds={sequentialIds.length}, id={id || 'none'}
+                </div>
+                <button onClick={() => navigate('/student')}>Back to Dashboard</button>
+            </div>
+        );
+      }
   }
   
   const formatTime = (seconds) => {
