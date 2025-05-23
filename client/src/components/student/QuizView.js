@@ -358,16 +358,19 @@ const QuizView = () => {
       });
       
       console.log('[QuizView] Response submitted successfully:', response.data);
+      console.log('[QuizView] Full response data structure:', JSON.stringify(response.data, null, 2));
       
       // Log if mastery was updated and track actual mastery
       if (response.data?.knowledgeState) {
         const newActualMastery = response.data.knowledgeState.p_mastery;
-        console.log(`[QuizView] Knowledge state updated - new mastery: ${(newActualMastery * 100).toFixed(1)}%`);
+        console.log(`[QuizView] ✅ Knowledge state updated via knowledgeState - new mastery: ${(newActualMastery * 100).toFixed(1)}%`);
         setActualKcMastery(newActualMastery);
       } else if (response.data?.newMastery !== null && response.data?.newMastery !== undefined) {
         const newActualMastery = response.data.newMastery;
-        console.log(`[QuizView] Mastery updated - new mastery: ${(newActualMastery * 100).toFixed(1)}%`);
+        console.log(`[QuizView] ✅ Mastery updated via newMastery - new mastery: ${(newActualMastery * 100).toFixed(1)}%`);
         setActualKcMastery(newActualMastery);
+      } else {
+        console.log(`[QuizView] ❌ No mastery update found in response. knowledgeState: ${response.data?.knowledgeState}, newMastery: ${response.data?.newMastery}`);
       }
       
     } catch (err) {

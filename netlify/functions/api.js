@@ -3958,6 +3958,64 @@ exports.handler = async (event, context) => {
     }
   }
   
+  // GET /api/debug/student/:id/mastery - Debug student mastery levels
+  if (path.includes('/debug/student/') && path.includes('/mastery') && httpMethod === 'GET') {
+    try {
+      const pathParts = path.split('/');
+      const studentId = pathParts[pathParts.indexOf('student') + 1];
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      console.log(`[Debug] Getting all KC mastery for student ${studentId}`);
+      
+      // Get all knowledge states with KC details
+      const { data: knowledgeStates, error } = await supabase
+        .from('knowledge_states')
+        .select(`
+          *,
+          knowledge_components (
+            id,
+            name,
+            curriculum_code
+          )
+        `)
+        .eq('student_id', studentId)
+        .order('knowledge_component_id');
+      
+      // Get recent responses
+      const { data: recentResponses } = await supabase
+        .from('responses')
+        .select('*')
+        .eq('student_id', studentId)
+        .order('created_at', { ascending: false })
+        .limit(10);
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          studentId: studentId,
+          knowledgeStates: knowledgeStates || [],
+          recentResponses: recentResponses || [],
+          timestamp: new Date().toISOString()
+        })
+      };
+      
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Debug endpoint error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
   // GET /api/students/:id/knowledge-states - Get student's knowledge states
   if (path.includes('/students/') && path.includes('/knowledge-states') && httpMethod === 'GET') {
     try {
