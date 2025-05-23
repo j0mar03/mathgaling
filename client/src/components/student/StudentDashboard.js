@@ -81,11 +81,16 @@ const StudentDashboard = () => {
           const messagesResponse = await axios.get('/api/messages/inbox', {
             headers: { Authorization: `Bearer ${token}` }
           });
-          const unreadCount = messagesResponse.data.filter(msg => !msg.read).length;
+          // Handle both array format and object format responses
+          const messages = Array.isArray(messagesResponse.data) ? 
+            messagesResponse.data : 
+            (messagesResponse.data.messages || []);
+          const unreadCount = messages.filter(msg => !msg.read).length;
           setUnreadMessages(unreadCount);
         } catch (msgErr) {
           console.error('Error fetching messages:', msgErr);
           // Don't set an error for the whole page if just message fetching fails
+          setUnreadMessages(0); // Set to 0 as fallback
         }
 
         // Fetch kid-friendly next activity recommendation
