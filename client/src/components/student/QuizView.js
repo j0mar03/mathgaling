@@ -238,20 +238,24 @@ const QuizView = () => {
       const kcIdFromQuery = queryParams.get('kc_id');
       console.log('[QuizView] Triggering loadSequentialIds with KC ID:', kcIdFromQuery);
       loadSequentialIds(kcIdFromQuery);
-    } else if (isSequentialMode && hasLoadedSequentialIds && id && sequentialIds.length > 0) {
-      // Update sequential index if we have loaded sequence and current ID
-      const currentIndex = sequentialIds.findIndex(item => item.id.toString() === id.toString());
-      if (currentIndex !== -1 && currentIndex !== currentSequentialIndex) {
-        console.log(`[QuizView] Updating sequential index to ${currentIndex} for question ID ${id}`);
-        setCurrentSequentialIndex(currentIndex);
-      }
     } else if (isSequentialMode && !id && hasLoadedSequentialIds && sequentialIds.length === 0) {
       // If we've loaded but found no questions, show error instead of just setting loading to false
       console.log('[QuizView] No sequential IDs found, setting error');
       setError('No quiz questions available for this topic. Please try another topic or contact support.');
       setLoading(false);
     }
-  }, [isSequentialMode, id, token, studentId, hasLoadedSequentialIds, isLoadingSequentialIds, location.search, navigate, sequentialIds.length, sequentialIds, currentSequentialIndex]); // Added location.search and navigate
+  }, [isSequentialMode, id, token, studentId, hasLoadedSequentialIds, isLoadingSequentialIds, location.search]); // Removed potentially problematic dependencies
+
+  // Separate effect to update sequential index when sequence loads or ID changes
+  useEffect(() => {
+    if (isSequentialMode && hasLoadedSequentialIds && id && sequentialIds.length > 0) {
+      const currentIndex = sequentialIds.findIndex(item => item.id.toString() === id.toString());
+      if (currentIndex !== -1 && currentIndex !== currentSequentialIndex) {
+        console.log(`[QuizView] Updating sequential index to ${currentIndex} for question ID ${id}`);
+        setCurrentSequentialIndex(currentIndex);
+      }
+    }
+  }, [id, sequentialIds, hasLoadedSequentialIds, isSequentialMode, currentSequentialIndex]);
 
   // Fetch student name
   useEffect(() => {
@@ -941,10 +945,17 @@ const QuizView = () => {
     // Keep timeSpent accumulating, reset happens elsewhere if needed
 
     if (isSequentialMode && sequentialIds.length > 0) {
-      const nextIndex = currentSequentialIndex + 1;
+      // Calculate current index based on the current question number from URL (more reliable)
+      const currentQNum = parseInt(queryParams.get('qnum'), 10) || 1;
+      const currentIndex = currentQNum - 1; // Convert qnum to 0-based index
+      const nextIndex = currentIndex + 1;
       const nextQNum = nextIndex + 1; // Question number is index + 1
+      
+      console.log(`[handleNextQuestion] Current qnum: ${currentQNum}, current index: ${currentIndex}, next index: ${nextIndex}, next qnum: ${nextQNum}`);
+      console.log(`[handleNextQuestion] Sequential IDs:`, sequentialIds.map(item => item.id));
+      console.log(`[handleNextQuestion] Next question ID will be:`, sequentialIds[nextIndex]?.id);
 
-      if (nextIndex < sequentialIds.length) {
+      if (nextIndex < sequentialIds.length && sequentialIds[nextIndex]) {
         console.log(`Navigating to next sequential question. Index: ${nextIndex}, QNum: ${nextQNum}, Correct Count: ${currentCorrectCount}`);
         setCurrentSequentialIndex(nextIndex);
         setIsNavigating(true); // Set navigating state
