@@ -2638,7 +2638,7 @@ exports.handler = async (event, context) => {
               .from('knowledge_states')
               .update({
                 p_mastery: newMastery,
-                updated_at: new Date().toISOString()
+                updatedAt: new Date().toISOString()
               })
               .eq('student_id', studentId)
               .eq('knowledge_component_id', kcId);
@@ -2657,8 +2657,8 @@ exports.handler = async (event, context) => {
                 student_id: parseInt(studentId),
                 knowledge_component_id: kcId,
                 p_mastery: newMastery,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
               });
               
             if (insertError) {
