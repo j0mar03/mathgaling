@@ -124,6 +124,62 @@ const MasteryLevelDashboard = () => {
     fetchData();
   }, [user?.id, token]);
 
+  // Add window focus listener to refresh data when user returns from quiz
+  useEffect(() => {
+    const handleFocus = () => {
+      console.log("[MasteryDashboard] Window focused, refreshing data...");
+      if (token && user?.id) {
+        setLoading(true);
+        // Re-fetch data when window gains focus (user returns from quiz)
+        const fetchDataOnFocus = async () => {
+          try {
+            const kcResponse = await axios.get(`/api/students/${user.id}/grade-knowledge-components`, {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+
+            const statesResponse = await axios.get(`/api/students/${user.id}/knowledge-states`, {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+
+            if (statesResponse.data && Array.isArray(statesResponse.data)) {
+              const statesMap = new Map(
+                statesResponse.data.map(state => [state.knowledge_component_id, state])
+              );
+
+              const combinedData = kcResponse.data.map(kc => {
+                const state = statesMap.get(kc.id);
+                return {
+                  id: kc.id,
+                  KnowledgeComponent: kc,
+                  p_mastery: state?.p_mastery || 0,
+                  p_transit: state?.p_transit || 0.1,
+                  p_guess: state?.p_guess || 0.2,
+                  p_slip: state?.p_slip || 0.1
+                };
+              });
+
+              const sortedStates = combinedData.sort((a, b) => (b.p_mastery || 0) - (a.p_mastery || 0));
+              setKnowledgeStates(sortedStates);
+              
+              const totalMastery = sortedStates.reduce((sum, state) => sum + (state.p_mastery || 0), 0);
+              const averageMastery = totalMastery / sortedStates.length;
+              setOverallMastery(averageMastery * 100);
+            }
+          } catch (error) {
+            console.error("[MasteryDashboard] Error refreshing data:", error);
+          } finally {
+            setLoading(false);
+          }
+        };
+        
+        fetchDataOnFocus();
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, [user?.id, token]);
+
   const getMasteryColor = (mastery) => {
     if (mastery >= 80) return '#2ecc71'; // Green
     if (mastery >= 60) return '#f1c40f'; // Yellow
@@ -199,7 +255,28 @@ const MasteryLevelDashboard = () => {
   return (
     <div className="mastery-dashboard">
       <div className="dashboard-header">
-        <h1>{translations.title}</h1>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+          <h1>{translations.title}</h1>
+          <button 
+            onClick={() => {
+              console.log("[MasteryDashboard] Manual refresh requested");
+              setLoading(true);
+              setTimeout(() => window.location.reload(), 100); // Simple refresh
+            }}
+            style={{
+              background: '#4CAF50',
+              color: 'white',
+              border: 'none',
+              borderRadius: '5px',
+              padding: '8px 16px',
+              cursor: 'pointer',
+              fontSize: '14px'
+            }}
+            disabled={loading}
+          >
+            {loading ? '🔄' : '🔄 Refresh'}
+          </button>
+        </div>
         <div className="stats-container">
           <div className="stat-item">
             <span className="stat-label">{translations.currentStreak}</span>
