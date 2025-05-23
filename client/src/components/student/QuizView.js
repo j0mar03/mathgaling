@@ -136,6 +136,9 @@ const QuizView = () => {
         const response = await axios.get(apiUrl, {
           headers: { Authorization: `Bearer ${token}` }
         });
+        console.log('[QuizView] API Response:', response);
+        console.log('[QuizView] Response data:', response.data);
+        console.log('[QuizView] Response data type:', typeof response.data);
         const fetchedSequence = response.data;
 
         if (!Array.isArray(fetchedSequence) || fetchedSequence.length === 0) {
@@ -159,7 +162,12 @@ const QuizView = () => {
         // This ensures that if a user lands on /student/quiz?mode=sequential (no ID), it loads the first question.
         // Or if they land with a kc_id, it loads the first question of *that* KC's sequence.
         if (fetchedSequence.length > 0) {
+            console.log('[QuizView] fetchedSequence[0]:', fetchedSequence[0]);
             const firstQuestionIdInSequence = fetchedSequence[0].id;
+            console.log('[QuizView] First question ID:', firstQuestionIdInSequence);
+            console.log('[QuizView] Current id from params:', id);
+            console.log('[QuizView] Current kc_id from query:', queryParams.get('kc_id'));
+            
             // Only navigate if the current 'id' (from URL params) is not already the first in sequence
             // or if 'id' is not present (e.g. initial load via kc_id or just mode=sequential)
             // Also, if currentKcId is provided and differs from the one in queryParams, it means we are starting a new KC sequence.
@@ -177,6 +185,8 @@ const QuizView = () => {
                  // If already on the correct ID, ensure content is loaded for it.
                  // This might be handled by the loadSequentialQuiz effect.
             }
+        } else {
+            console.log('[QuizView] No questions in fetchedSequence');
         }
       } catch (error) {
         console.error("Error loading sequential IDs:", error);
@@ -196,15 +206,21 @@ const QuizView = () => {
         setSequentialIds([]);
         setHasLoadedSequentialIds(true); // Mark as loaded to prevent retries if it's a content issue
       } finally {
+        console.log('[QuizView] Setting isLoadingSequentialIds to false');
         setIsLoadingSequentialIds(false);
       }
     };
     
     if (isSequentialMode && !hasLoadedSequentialIds && !isLoadingSequentialIds) {
       const kcIdFromQuery = queryParams.get('kc_id');
+      console.log('[QuizView] Triggering loadSequentialIds with KC ID:', kcIdFromQuery);
       loadSequentialIds(kcIdFromQuery);
+    } else if (isSequentialMode && !id && hasLoadedSequentialIds && sequentialIds.length === 0) {
+      // If we've loaded but found no questions, set loading to false
+      console.log('[QuizView] No sequential IDs found, setting loading to false');
+      setLoading(false);
     }
-  }, [isSequentialMode, id, token, studentId, hasLoadedSequentialIds, isLoadingSequentialIds, location.search, navigate]); // Added location.search and navigate
+  }, [isSequentialMode, id, token, studentId, hasLoadedSequentialIds, isLoadingSequentialIds, location.search, navigate, sequentialIds.length]); // Added location.search and navigate
 
   // Fetch student name
   useEffect(() => {
@@ -249,7 +265,17 @@ const QuizView = () => {
     let isMounted = true;
 
     const loadSequentialQuiz = async () => {
+      console.log('[QuizView] loadSequentialQuiz called with:', {
+        token: !!token,
+        isSequentialMode,
+        studentId,
+        isNavigating,
+        hasLoadedSequentialIds,
+        id
+      });
+      
       if (!token || !isSequentialMode || !studentId || isNavigating || !hasLoadedSequentialIds) {
+        console.log('[QuizView] Exiting loadSequentialQuiz early, setting loading to false');
         setLoading(false);
         return;
       }
@@ -302,13 +328,21 @@ const QuizView = () => {
     };
 
     if (isSequentialMode && hasLoadedSequentialIds) {
-      loadSequentialQuiz();
+      if (id) {
+        // We have an ID, load the quiz
+        loadSequentialQuiz();
+      } else if (sequentialIds.length === 0) {
+        // No sequential IDs and no ID, set loading to false
+        console.log('[QuizView] No ID and no sequential IDs, setting loading to false');
+        setLoading(false);
+      }
+      // If we have sequential IDs but no ID yet, navigation should happen in the other effect
     }
 
     return () => {
       isMounted = false;
     };
-  }, [isSequentialMode, token, id, studentId, isNavigating, hasLoadedSequentialIds]);
+  }, [isSequentialMode, token, id, studentId, isNavigating, hasLoadedSequentialIds, sequentialIds.length]);
 
   // Fetch necessary data upon quiz completion (struggling KCs OR next topic ID)
   useEffect(() => {
@@ -465,7 +499,14 @@ const QuizView = () => {
     let isMounted = true;
 
     const fetchContent = async () => {
+      console.log('[QuizView] fetchContent called with:', {
+        id,
+        token: !!token,
+        isSequentialMode
+      });
+      
       if (!id || !token || isSequentialMode) {
+        console.log('[QuizView] Exiting fetchContent early');
         setLoading(false);
         return;
       }
@@ -919,6 +960,13 @@ const QuizView = () => {
   }, [location]);
 
   if (loading) {
+    console.log('[QuizView] Rendering loading state with:', {
+      isSequentialMode,
+      hasLoadedSequentialIds,
+      sequentialIdsLength: sequentialIds.length,
+      id,
+      error
+    });
     return (
       <div className="loading">
         <h2>Loading quiz...</h2>

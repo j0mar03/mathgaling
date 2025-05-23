@@ -20,15 +20,127 @@ exports.handler = async (event, context) => {
     };
   }
   
-  const { path, httpMethod } = event;
+  // Get the actual path from the request
+  let path = event.path;
+  const { httpMethod } = event;
+  
+  // In Netlify, the path might be /.netlify/functions/api
+  // We need to extract the actual API path from the rawUrl or headers
+  if (event.headers && event.headers['x-original-path']) {
+    path = event.headers['x-original-path'];
+  } else if (event.rawUrl) {
+    // Extract path from rawUrl
+    const url = new URL(event.rawUrl);
+    path = url.pathname;
+  }
   
   // Log the request for debugging
   console.log('Netlify Function Request:', {
-    path: event.path,
+    path: path,
+    originalPath: event.path,
     httpMethod: event.httpMethod,
     rawUrl: event.rawUrl,
+    headers: event.headers,
     queryStringParameters: event.queryStringParameters
   });
+  
+  // Early catch for students/kcs/sequence endpoint
+  if (path.includes('students/kcs/sequence') || (event.rawUrl && event.rawUrl.includes('students/kcs/sequence'))) {
+    console.log('[EARLY DEBUG] Caught sequence endpoint request');
+    console.log('[EARLY DEBUG] Path:', path);
+    console.log('[EARLY DEBUG] RawUrl:', event.rawUrl);
+    
+    // Handle the sequence endpoint immediately
+    try {
+      const queryParams = new URLSearchParams(event.queryStringParameters || {});
+      const kcId = queryParams.get('kc_id');
+      const limit = parseInt(queryParams.get('limit')) || 8;
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      let query = supabase
+        .from('content_items')
+        .select(`
+          id,
+          content,
+          type,
+          knowledge_component_id,
+          difficulty,
+          metadata,
+          knowledge_components (
+            id,
+            name,
+            curriculum_code
+          )
+        `)
+        .eq('type', 'quiz')
+        .limit(limit);
+        
+      if (kcId) {
+        query = query.eq('knowledge_component_id', kcId);
+      }
+      
+      const { data: questions, error } = await query;
+      
+      if (error) {
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to fetch quiz sequence',
+            message: error.message
+          })
+        };
+      }
+      
+      if (!questions || questions.length === 0) {
+        return {
+          statusCode: 404,
+          headers,
+          body: JSON.stringify({
+            error: `No quiz questions found${kcId ? ` for knowledge component ${kcId}` : ''}`
+          })
+        };
+      }
+      
+      // Format the response to match what the frontend expects
+      const formattedQuestions = questions.map(q => ({
+        id: q.id,
+        content: q.content,
+        type: q.type,
+        kcId: q.knowledge_component_id,
+        difficulty: q.difficulty,
+        metadata: q.metadata,
+        curriculumCode: q.knowledge_components?.curriculum_code || null
+      }));
+      
+      // Shuffle questions for variety
+      const shuffled = formattedQuestions.sort(() => Math.random() - 0.5);
+      const selectedQuestions = shuffled.slice(0, limit);
+      
+      console.log('[EARLY DEBUG] Returning', selectedQuestions.length, 'questions');
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify(selectedQuestions)
+      };
+      
+    } catch (error) {
+      console.error('[EARLY DEBUG] Error:', error);
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
   
   // Hello endpoint - /api/hello
   if (path.includes('/hello') || path === '/api' || path === '/api/') {
@@ -1257,6 +1369,8 @@ exports.handler = async (event, context) => {
   // This endpoint MUST come before the generic /api/students/:id endpoints
   if ((path.includes('/students/kcs/sequence') || path.includes('kcs/sequence')) && httpMethod === 'GET') {
     console.log('[DEBUG] Handling /students/kcs/sequence request');
+    console.log('[DEBUG] Full path:', path);
+    console.log('[DEBUG] Query params:', event.queryStringParameters);
     try {
       const queryParams = new URLSearchParams(event.queryStringParameters || {});
       const kcId = queryParams.get('kc_id');
