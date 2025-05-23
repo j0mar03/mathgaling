@@ -28,6 +28,8 @@ const QuizView = () => {
   const [actualKcMastery, setActualKcMastery] = useState(0); // Track actual BKT mastery from backend
   const [showHint, setShowHint] = useState(false);
   const [hintRequests, setHintRequests] = useState(0);
+  const [searchingNextTopic, setSearchingNextTopic] = useState(false); // Loading state for next topic search
+  const [nextTopicSearchComplete, setNextTopicSearchComplete] = useState(false); // Track if search is done
 
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
@@ -412,12 +414,15 @@ const QuizView = () => {
       
       // If student performed well (75%+ score) or achieved high mastery, find next topic
       if (finalScore >= 0.75 || actualKcMastery >= 0.8) {
+        console.log('[QuizView] Student performed well, searching for next topic...');
+        setSearchingNextTopic(true); // Start loading state
+        
         try {
-          console.log('[QuizView] Student performed well, finding next topic...');
-          
           // Get current KC ID from the first question
           const currentKcId = questions[0]?.knowledge_component?.id;
           if (currentKcId) {
+            console.log('[QuizView] Current KC ID:', currentKcId);
+            
             // Fetch all grade-level KCs to find the next one
             const response = await axios.get(`/api/students/${user.id}/grade-knowledge-components?_t=${Date.now()}`, {
               headers: { Authorization: `Bearer ${token}` }
@@ -432,20 +437,38 @@ const QuizView = () => {
                 return 0;
               });
               
+              console.log('[QuizView] All KCs:', sortedKCs.map(kc => `${kc.curriculum_code}: ${kc.name} (ID: ${kc.id})`));
+              
               // Find current KC index and get next one
               const currentIndex = sortedKCs.findIndex(kc => kc.id === currentKcId);
+              console.log('[QuizView] Current KC index:', currentIndex, 'out of', sortedKCs.length);
+              
               if (currentIndex !== -1 && currentIndex < sortedKCs.length - 1) {
                 const nextKC = sortedKCs[currentIndex + 1];
-                console.log(`[QuizView] Found next topic: ${nextKC.name} (ID: ${nextKC.id})`);
+                console.log(`[QuizView] ✅ Found next topic: ${nextKC.name} (ID: ${nextKC.id})`);
                 setNextKcIdForContinuation(nextKC.id);
               } else {
-                console.log('[QuizView] No next topic found - student may have completed all topics');
+                console.log('[QuizView] ❌ No next topic found - student may have completed all topics');
+                setNextKcIdForContinuation(null);
               }
+            } else {
+              console.log('[QuizView] ❌ No KC data received from API');
+              setNextKcIdForContinuation(null);
             }
+          } else {
+            console.log('[QuizView] ❌ No current KC ID found');
+            setNextKcIdForContinuation(null);
           }
         } catch (error) {
-          console.error('[QuizView] Error finding next topic:', error);
+          console.error('[QuizView] ❌ Error finding next topic:', error);
+          setNextKcIdForContinuation(null);
+        } finally {
+          setSearchingNextTopic(false); // End loading state
+          setNextTopicSearchComplete(true); // Mark search as complete
         }
+      } else {
+        console.log('[QuizView] Student did not perform well enough for next topic');
+        setNextTopicSearchComplete(true); // Mark search as complete (skipped)
       }
     }
   };
@@ -476,6 +499,9 @@ const QuizView = () => {
     setStrugglingKCs([]);
     setNextKcIdForContinuation(null);
     setTimeSpent(0);
+    setSearchingNextTopic(false); // Reset loading states
+    setNextTopicSearchComplete(false);
+    setActualKcMastery(0); // Reset mastery tracking
     
     // Reload the current quiz
     window.location.reload();
@@ -585,16 +611,35 @@ const QuizView = () => {
           </div>
 
           <div className="action-buttons">
-            {/* Show Continue button if performance is 75% or higher AND a next topic is available */}
-            {(actualPerformance >= 0.75 || scorePercentage >= 0.75) && nextKcIdForContinuation ? ( 
-              <button onClick={handleContinueToNextTopic} className="retry-button" style={{ backgroundColor: '#2ecc71' }}>
-                🚀 Continue to Next Topic!
-              </button>
-            ) : (
-              <button onClick={handleRetryQuiz} className="retry-button">
-                🔁 Retry Quiz
-              </button>
-            )}
+            {/* Show different buttons based on performance and next topic search status */}
+            {(() => {
+              const performedWell = (actualPerformance >= 0.75 || scorePercentage >= 0.75);
+              
+              // If still searching for next topic, show loading button
+              if (performedWell && searchingNextTopic) {
+                return (
+                  <button disabled className="retry-button" style={{ backgroundColor: '#f39c12', opacity: 0.7 }}>
+                    🔍 Finding Next Topic...
+                  </button>
+                );
+              }
+              
+              // If performed well and search is complete with next topic found
+              if (performedWell && nextTopicSearchComplete && nextKcIdForContinuation) {
+                return (
+                  <button onClick={handleContinueToNextTopic} className="retry-button" style={{ backgroundColor: '#2ecc71' }}>
+                    🚀 Continue to Next Topic!
+                  </button>
+                );
+              }
+              
+              // Default: show retry button
+              return (
+                <button onClick={handleRetryQuiz} className="retry-button">
+                  🔁 Retry Quiz
+                </button>
+              );
+            })()}
             <button onClick={handleBackToDashboard} className="back-button">
               🏠 Back to Dashboard
             </button>
