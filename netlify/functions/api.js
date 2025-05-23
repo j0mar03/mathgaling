@@ -2619,7 +2619,7 @@ exports.handler = async (event, context) => {
           
           if (existingState) {
             // Update existing state
-            await supabase
+            const { error: updateError } = await supabase
               .from('knowledge_states')
               .update({
                 p_mastery: newMastery,
@@ -2627,9 +2627,16 @@ exports.handler = async (event, context) => {
               })
               .eq('student_id', studentId)
               .eq('knowledge_component_id', kcId);
+              
+            if (updateError) {
+              console.error('[Netlify] KC mastery UPDATE failed:', updateError);
+              // Don't throw error, but log it
+            } else {
+              console.log(`[Netlify] ✅ KC mastery UPDATED successfully for KC ${kcId}`);
+            }
           } else {
             // Create new knowledge state
-            await supabase
+            const { error: insertError } = await supabase
               .from('knowledge_states')
               .insert({
                 student_id: parseInt(studentId),
@@ -2638,6 +2645,13 @@ exports.handler = async (event, context) => {
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString()
               });
+              
+            if (insertError) {
+              console.error('[Netlify] KC mastery INSERT failed:', insertError);
+              // Don't throw error, but log it
+            } else {
+              console.log(`[Netlify] ✅ KC mastery CREATED successfully for KC ${kcId}`);
+            }
           }
         }
       } else {

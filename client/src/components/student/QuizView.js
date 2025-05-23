@@ -146,7 +146,13 @@ const QuizView = () => {
           const calculatedMasteryLevel = questions.length > 0 ? score / questions.length : 0;
           
           // Use actual KC mastery if available, otherwise fall back to quiz score
+          // For Math Mastery quizzes, if KC mastery update fails, use quiz score if it's good
           const effectiveMastery = actualKcMastery > 0 ? actualKcMastery : calculatedMasteryLevel;
+          
+          // If quiz score is perfect but KC mastery seems low, trust the quiz score
+          if (calculatedMasteryLevel >= 0.9 && actualKcMastery < 0.5) {
+            console.log(`[Completion Effect] ⚠️ Quiz score perfect (${(calculatedMasteryLevel * 100).toFixed(1)}%) but KC mastery low (${(actualKcMastery * 100).toFixed(1)}%). Using quiz score.`);
+          }
           
           // Set masteryLevel to the effective mastery for UI display
           setMasteryLevel(effectiveMastery);
