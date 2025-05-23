@@ -2571,51 +2571,89 @@ exports.handler = async (event, context) => {
         };
       }
       
-      // Update or create knowledge state  
-      const kcId = responseData.knowledge_component_id || responseData.knowledgeComponentId;
-      if (kcId) {
-        const { data: existingState } = await supabase
-          .from('knowledge_states')
-          .select('*')
-          .eq('student_id', studentId)
-          .eq('knowledge_component_id', kcId)
+      // Update KC mastery only if NOT practice mode
+      const practiceMode = responseData.practice_mode || false;
+      let newMastery = null;
+      
+      console.log(`[Netlify] practice_mode: ${practiceMode}, processing KC update: ${!practiceMode}`);
+      
+      if (!practiceMode) {
+        // Get KC ID from content item (since frontend doesn't send it directly)
+        const contentItemId = responseData.content_item_id || responseData.contentItemId;
+        console.log(`[Netlify] Looking up KC for content item: ${contentItemId}`);
+        
+        const { data: contentItem, error: contentError } = await supabase
+          .from('content_items')
+          .select('knowledge_component_id, knowledge_components(id, name, curriculum_code)')
+          .eq('id', contentItemId)
           .single();
           
-        if (existingState) {
-          // Update existing state - simple increment for now
-          const isCorrect = responseData.correct || responseData.isCorrect;
-          const newMastery = isCorrect ? 
-            Math.min(existingState.p_mastery + 0.1, 1.0) : 
-            Math.max(existingState.p_mastery - 0.05, 0);
-            
-          await supabase
-            .from('knowledge_states')
-            .update({
-              p_mastery: newMastery,
-              updatedAt: new Date().toISOString()
-            })
-            .eq('student_id', studentId)
-            .eq('knowledge_component_id', kcId);
+        if (contentError || !contentItem?.knowledge_component_id) {
+          console.error('[Netlify] Content item KC lookup failed:', contentError);
         } else {
-          // Create new knowledge state
-          await supabase
+          const kcId = contentItem.knowledge_component_id;
+          const kcName = contentItem.knowledge_components?.name || 'Unknown KC';
+          console.log(`[Netlify] Content item ${contentItemId} belongs to KC ${kcId} (${kcName})`);
+          
+          // Get or create knowledge state
+          const { data: existingState } = await supabase
             .from('knowledge_states')
-            .insert({
-              student_id: parseInt(studentId),
-              knowledge_component_id: kcId,
-              p_mastery: isCorrect ? 0.6 : 0.4,
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString()
-            });
+            .select('*')
+            .eq('student_id', studentId)
+            .eq('knowledge_component_id', kcId)
+            .single();
+            
+          const isCorrect = responseData.correct || responseData.isCorrect;
+          const currentMastery = existingState?.p_mastery || 0.3;
+          
+          // Improved BKT-style mastery calculation
+          if (isCorrect) {
+            // Correct answer: increase mastery more significantly
+            newMastery = Math.min(currentMastery + (0.15 * (1 - currentMastery)), 1.0);
+          } else {
+            // Incorrect answer: decrease mastery but not as drastically
+            newMastery = Math.max(currentMastery - (0.1 * currentMastery), 0.1);
+          }
+          
+          console.log(`[Netlify] KC ${kcId} mastery update: ${(currentMastery * 100).toFixed(1)}% → ${(newMastery * 100).toFixed(1)}%`);
+          
+          if (existingState) {
+            // Update existing state
+            await supabase
+              .from('knowledge_states')
+              .update({
+                p_mastery: newMastery,
+                updated_at: new Date().toISOString()
+              })
+              .eq('student_id', studentId)
+              .eq('knowledge_component_id', kcId);
+          } else {
+            // Create new knowledge state
+            await supabase
+              .from('knowledge_states')
+              .insert({
+                student_id: parseInt(studentId),
+                knowledge_component_id: kcId,
+                p_mastery: newMastery,
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              });
+          }
         }
+      } else {
+        console.log('[Netlify] Practice mode - skipping KC mastery update');
       }
       
       return {
         statusCode: 200,
         headers,
         body: JSON.stringify({
-          success: true,
-          response: response
+          message: practiceMode ? 'Practice response recorded' : 'Response processed successfully',
+          responseId: response.id,
+          correct: responseData.correct || responseData.isCorrect,
+          newMastery: practiceMode ? null : newMastery,
+          knowledgeState: practiceMode ? null : { p_mastery: newMastery },
+          practice_mode: practiceMode || false
         })
       };
       
