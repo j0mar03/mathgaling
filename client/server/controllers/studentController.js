@@ -188,14 +188,34 @@ exports.processResponse = async (req, res) => {
     if (isNaN(parseInt(content_item_id, 10))) return res.status(400).json({ error: 'Invalid Content Item ID' });
     if (typeof correct !== 'boolean') return res.status(400).json({ error: 'Missing or invalid "correct" field' });
 
+    // Verify student exists
+    const student = await db.Student.findByPk(studentId, {
+      attributes: ['id', 'name', 'grade_level']
+    });
+    if (!student) {
+      console.error(`[processResponse] ❌ Student ${studentId} not found`);
+      return res.status(404).json({ error: 'Student not found' });
+    }
+    
+    console.log(`[processResponse] Processing response for student ${studentId} (${student.name}, Grade ${student.grade_level})`);
+
     // 1. Find the content item to get the associated knowledge component ID
     const contentItem = await db.ContentItem.findByPk(content_item_id, {
-      attributes: ['knowledge_component_id']
+      attributes: ['knowledge_component_id', 'type', 'content'],
+      include: [{
+        model: db.KnowledgeComponent,
+        attributes: ['id', 'name', 'curriculum_code']
+      }]
     });
     if (!contentItem || !contentItem.knowledge_component_id) {
+      console.error(`[processResponse] ❌ Content item ${content_item_id} not found or has no KC association`);
       return res.status(404).json({ error: 'Content item or associated knowledge component not found' });
     }
     const kcId = contentItem.knowledge_component_id;
+    
+    console.log(`[processResponse] Content item ${content_item_id} belongs to KC ${kcId} (${contentItem.KnowledgeComponent?.name || 'Unknown KC'})`);
+    console.log(`[processResponse] KC curriculum_code: ${contentItem.KnowledgeComponent?.curriculum_code || 'Unknown'}`);
+    
 
     // 4. Create the response record
     const responseRecord = await db.Response.create({
@@ -214,22 +234,37 @@ exports.processResponse = async (req, res) => {
     let newMastery = 0;
     let knowledgeState = null;
     
+    console.log(`[processResponse] Processing response for student ${studentId}, KC ${kcId}, practice_mode: ${practice_mode}, correct: ${correct}`);
+    
     if (!practice_mode) {
+      console.log(`[processResponse] NOT practice mode - updating KC mastery via BKT`);
+      
       // 2. Find or create the student's knowledge state for this component
       knowledgeState = await db.KnowledgeState.findOne({
         where: { student_id: studentId, knowledge_component_id: kcId }
       });
 
       if (!knowledgeState) {
+        console.log(`[processResponse] Creating new knowledge state for student ${studentId}, KC ${kcId}`);
         knowledgeState = await db.KnowledgeState.create({
           student_id: studentId,
           knowledge_component_id: kcId
         });
+      } else {
+        console.log(`[processResponse] Found existing knowledge state: current mastery = ${(knowledgeState.p_mastery * 100).toFixed(1)}%`);
       }
 
       // 3. Update knowledge state using BKT
-      const updateResult = await updateKnowledgeState(studentId, content_item_id, correct, time_spent, interaction_data);
-      newMastery = updateResult.newMastery;
+      try {
+        const updateResult = await updateKnowledgeState(studentId, content_item_id, correct, time_spent, interaction_data);
+        newMastery = updateResult.newMastery;
+        console.log(`[processResponse] ✅ BKT update successful: ${(updateResult.previousMastery * 100).toFixed(1)}% → ${(newMastery * 100).toFixed(1)}%`);
+      } catch (bktError) {
+        console.error(`[processResponse] ❌ BKT update failed:`, bktError);
+        throw bktError;
+      }
+    } else {
+      console.log(`[processResponse] Practice mode - skipping KC mastery update`);
     }
 
     // 5. Get the next content item ID for sequential mode

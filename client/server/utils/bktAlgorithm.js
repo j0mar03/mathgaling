@@ -256,13 +256,9 @@ const updateKnowledgeState = async (studentId, contentItemId, correct, timeSpent
       last_update: new Date()
     });
     
-    // Record this response
-    await db.Response.create({
-      student_id: studentId,
-      content_item_id: contentItemId,
-      correct: correct,
-      time_spent: timeSpent
-    });
+    console.log(`[BKT] Updated KC ${kcId} mastery: ${(currentMastery * 100).toFixed(1)}% → ${(newMastery * 100).toFixed(1)}%`);
+    
+    // Note: Response record is created by the controller, not here
     
     return {
       studentId,
