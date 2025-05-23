@@ -294,23 +294,38 @@ const QuizView = () => {
         if (id) {
           try {
             console.log(`[QuizView] Loading specific content for ID: ${id}`);
+            console.log(`[QuizView] Making request to: /api/content/${id}`);
+            console.log(`[QuizView] With token:`, token ? 'Present' : 'Missing');
+            
             const contentResponse = await axios.get(`/api/content/${id}`, {
               headers: { Authorization: `Bearer ${token}` }
             });
 
+            console.log(`[QuizView] Content response status:`, contentResponse.status);
+            console.log(`[QuizView] Content response data:`, contentResponse.data);
+
             if (!isMounted) return;
 
             if (contentResponse.data) {
-              console.log('[QuizView] Content loaded successfully');
+              console.log('[QuizView] Content loaded successfully, setting content state');
               setContent(contentResponse.data);
               setLastQuizId(id);
               setIsInitialLoad(false);
               setLoading(false);
               return;
+            } else {
+              console.log('[QuizView] Content response data is empty');
+              setError('Quiz content is empty. Please try again.');
+              setLoading(false);
             }
           } catch (contentErr) {
-            console.log('[QuizView] Could not load specific content:', contentErr);
-            setError('Failed to load quiz content. Please try again.');
+            console.error('[QuizView] Error loading specific content:', {
+              error: contentErr,
+              status: contentErr.response?.status,
+              data: contentErr.response?.data,
+              url: `/api/content/${id}`
+            });
+            setError(`Failed to load quiz content (${contentErr.response?.status || 'Unknown error'}). Please try again.`);
             setLoading(false);
           }
         }
@@ -1201,11 +1216,20 @@ const QuizView = () => {
         <h2>Math Mastery Quiz</h2>
         
         {/* Knowledge Component Information */}
-        {content?.KnowledgeComponent && (
+        {(content?.knowledge_components || content?.KnowledgeComponent) && (
           <div className="kc-info">
-            <h3 className="kc-title">{content.KnowledgeComponent.name}</h3>
-            {content.KnowledgeComponent.curriculum_code && (
-              <span className="kc-code">{content.KnowledgeComponent.curriculum_code}</span>
+            <h3 className="kc-title">
+              📚 Topic: {content?.knowledge_components?.name || content?.KnowledgeComponent?.name}
+            </h3>
+            {(content?.knowledge_components?.curriculum_code || content?.KnowledgeComponent?.curriculum_code) && (
+              <span className="kc-code">
+                Code: {content?.knowledge_components?.curriculum_code || content?.KnowledgeComponent?.curriculum_code}
+              </span>
+            )}
+            {content?.kcId && (
+              <div className="mastery-info" style={{ fontSize: '0.9em', color: '#666', marginTop: '5px' }}>
+                🎯 Practice quiz to improve your mastery of this topic
+              </div>
             )}
           </div>
         )}

@@ -165,6 +165,8 @@ exports.handler = async (event, context) => {
       const selectedQuestions = shuffled.slice(0, limit);
       
       console.log('[EARLY DEBUG] Found', formattedQuestions.length, 'total questions');
+      console.log('[EARLY DEBUG] Question IDs being returned:', selectedQuestions.map(q => q.id));
+      console.log('[EARLY DEBUG] First question preview:', selectedQuestions[0] ? { id: selectedQuestions[0].id, content: selectedQuestions[0].content?.substring(0, 50) } : 'None');
       console.log('[EARLY DEBUG] Returning', selectedQuestions.length, 'selected questions');
       
       return {
@@ -1647,6 +1649,132 @@ exports.handler = async (event, context) => {
     }
   }
   
+  // GET /api/kcs/:id - Get knowledge component details
+  if (path.match(/\/api\/kcs\/\d+$/) && httpMethod === 'GET') {
+    try {
+      const kcId = path.split('/').pop();
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      const { data, error } = await supabase
+        .from('knowledge_components')
+        .select('*')
+        .eq('id', kcId)
+        .single();
+      
+      if (error) {
+        return {
+          statusCode: 404,
+          headers,
+          body: JSON.stringify({
+            error: 'Knowledge component not found',
+            message: error.message
+          })
+        };
+      }
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify(data)
+      };
+      
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
+  // GET /api/students/:id/kcs/:kcId/mastery - Get student's mastery level for specific KC
+  if (path.includes('/students/') && path.includes('/kcs/') && path.includes('/mastery') && httpMethod === 'GET') {
+    try {
+      const pathParts = path.split('/');
+      const studentId = pathParts[pathParts.indexOf('students') + 1];
+      const kcId = pathParts[pathParts.indexOf('kcs') + 1];
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // Get knowledge state for this student and KC
+      const { data: knowledgeState, error: ksError } = await supabase
+        .from('knowledge_states')
+        .select(`
+          p_mastery,
+          p_transit,
+          p_guess,
+          p_slip,
+          knowledge_components (
+            id,
+            name,
+            curriculum_code,
+            description
+          )
+        `)
+        .eq('student_id', studentId)
+        .eq('knowledge_component_id', kcId)
+        .single();
+      
+      if (ksError && ksError.code !== 'PGRST116') { // PGRST116 = no rows found
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to fetch mastery data',
+            message: ksError.message
+          })
+        };
+      }
+      
+      // If no knowledge state exists, return default values
+      const masteryData = knowledgeState || {
+        p_mastery: 0.3, // Default starting mastery
+        p_transit: 0.1,
+        p_guess: 0.2,
+        p_slip: 0.1,
+        knowledge_components: null
+      };
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          studentId: parseInt(studentId),
+          kcId: parseInt(kcId),
+          mastery: masteryData.p_mastery,
+          masteryPercentage: Math.round(masteryData.p_mastery * 100),
+          knowledgeComponent: masteryData.knowledge_components,
+          bktParams: {
+            p_mastery: masteryData.p_mastery,
+            p_transit: masteryData.p_transit,
+            p_guess: masteryData.p_guess,
+            p_slip: masteryData.p_slip
+          }
+        })
+      };
+      
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
   // GET /api/students/:id/kid-friendly-next-activity - Get next activity
   if (path.includes('/kid-friendly-next-activity') && httpMethod === 'GET') {
     try {
@@ -2074,6 +2202,7 @@ exports.handler = async (event, context) => {
   if (path.match(/\/api\/content\/\d+$/) && httpMethod === 'GET') {
     try {
       const contentId = path.split('/').pop();
+      console.log('[API] Loading content for ID:', contentId);
       
       const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
       const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
@@ -2094,13 +2223,18 @@ exports.handler = async (event, context) => {
         .eq('id', contentId)
         .single();
       
+      console.log('[API] Content query result:', { data: !!data, error });
+      console.log('[API] Content data preview:', data ? { id: data.id, type: data.type, content: data.content?.substring(0, 50) } : null);
+      
       if (error) {
+        console.error('[API] Content query error:', error);
         return {
           statusCode: 404,
           headers,
           body: JSON.stringify({
             error: 'Content not found',
-            message: error.message
+            message: error.message,
+            contentId: contentId
           })
         };
       }
@@ -3527,6 +3661,9 @@ exports.handler = async (event, context) => {
         '/api/admin/users', 
         '/api/students/:id', 
         '/api/students/kcs/sequence',
+        '/api/students/:id/kcs/:kcId/mastery',
+        '/api/kcs/:id',
+        '/api/content/:id',
         '/api/teachers/:id', 
         '/api/parents/:id', 
         '/api/classrooms/:id'
