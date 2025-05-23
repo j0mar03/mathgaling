@@ -199,6 +199,8 @@ exports.handler = async (event, context) => {
         pathModule.join(process.cwd(), 'uploads', 'images'),
         pathModule.join(__dirname, '..', '..', 'client', 'server', 'uploads', 'images'),
         pathModule.join('/opt/build/repo/client/server/uploads/images'),
+        pathModule.join(process.cwd(), 'client', 'build', 'uploads', 'images'), // New build location
+        pathModule.join('/opt/build/repo/client/build/uploads/images'), // Netlify build location
       ];
       
       let foundImages = [];
@@ -258,6 +260,8 @@ exports.handler = async (event, context) => {
         pathModule.join(process.cwd(), 'uploads', 'images', filename),
         pathModule.join(__dirname, '..', '..', 'client', 'server', 'uploads', 'images', filename),
         pathModule.join('/opt/build/repo/client/server/uploads/images', filename), // Netlify build path
+        pathModule.join(process.cwd(), 'client', 'build', 'uploads', 'images', filename), // New build location
+        pathModule.join('/opt/build/repo/client/build/uploads/images', filename), // Netlify build location
       ];
       
       console.log('[DEBUG] Checking possible image paths:', possiblePaths);

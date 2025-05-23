@@ -1,6 +1,6 @@
 [build]
-  # Build command
-  command = "cd client && npm install && npm run build"
+  # Build command - includes copying images
+  command = "cd client && npm install && npm run build && mkdir -p build/uploads && cp -r server/uploads/* build/uploads/ || echo 'No uploads to copy'"
   
   # Directory to publish
   publish = "client/build"
