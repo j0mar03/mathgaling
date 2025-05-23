@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
-import { useAuth } from '../../context/AuthContext';\nimport { enhanceQuizCompletion, getMotivationalQuote } from './QuizEnhancer';
-import './PracticeQuizView.css'; // Use PracticeQuizView styles\nimport './QuizCompleteEnhanced.css'; // Enhanced completion styles
+import { useAuth } from '../../context/AuthContext';
+import { getMotivationalQuote } from './QuizEnhancer';
+import './PracticeQuizView.css'; // Use PracticeQuizView styles
+import './QuizCompleteEnhanced.css'; // Enhanced completion styles
 
 const QuizView = () => {
   const navigate = useNavigate();
