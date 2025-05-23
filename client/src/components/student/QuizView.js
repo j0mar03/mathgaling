@@ -471,14 +471,25 @@ const QuizView = () => {
     setLoading(true); // Show loading while potentially re-navigating/fetching
     setHasLoadedSequentialIds(false); // Force reload of sequential IDs if needed
 
+    // IMPORTANT: Always preserve the current KC when retrying
+    // Get KC ID from multiple possible sources to ensure we stay in the same knowledge component
+    const currentKcId = queryParams.get('kc_id') || 
+                        sequentialIds[0]?.kcId || 
+                        content?.knowledge_component_id || 
+                        content?.kcId;
+    
+    console.log(`[handleRetryQuiz] Current KC ID: ${currentKcId}`);
+    console.log(`[handleRetryQuiz] Sequential IDs:`, sequentialIds);
+    
     // Navigate back to the first question of the current sequence/KC
     const firstQuestionId = sequentialIds.length > 0 ? sequentialIds[0].id : id; // Use first sequential ID or current ID
-    const kcIdFromQuery = queryParams.get('kc_id');
-    const retryUrl = kcIdFromQuery
-                     ? `/student/quiz/${firstQuestionId}?kc_id=${kcIdFromQuery}&mode=sequential&qnum=1&correct=0`
+    
+    // Always include the KC ID to ensure we stay in the same knowledge component
+    const retryUrl = currentKcId
+                     ? `/student/quiz/${firstQuestionId}?kc_id=${currentKcId}&mode=sequential&qnum=1&correct=0`
                      : `/student/quiz/${firstQuestionId}?mode=sequential&qnum=1&correct=0`;
 
-    console.log(`Retrying quiz. Navigating to: ${retryUrl}`);
+    console.log(`[handleRetryQuiz] Retrying quiz in same KC. Navigating to: ${retryUrl}`);
     navigate(retryUrl, { replace: true });
   };
 
@@ -1328,12 +1339,8 @@ const QuizView = () => {
             );
           } else {
             console.log('[QuizView] No image URL found for this question ID:', content?.id);
-            // Show placeholder for debugging
-            return (
-              <div style={{ padding: '10px', background: '#f0f0f0', fontSize: '12px', color: '#666' }}>
-                [DEBUG: No image found for question {content?.id}]
-              </div>
-            );
+            // Don't render anything if no image - just return null
+            return null;
           }
         })()}
       </div>
