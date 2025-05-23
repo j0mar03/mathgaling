@@ -2693,8 +2693,8 @@ exports.handler = async (event, context) => {
           )
         `)
         .eq('student_id', studentId)
-        .lt('mastery_level', 0.5)
-        .order('mastery_level');
+        .lt('p_mastery', 0.5)
+        .order('p_mastery');
       
       if (error) {
         return {
@@ -3913,6 +3913,157 @@ exports.handler = async (event, context) => {
       };
       
     } catch (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
+  // GET /api/students/:id/knowledge-states - Get student's knowledge states
+  if (path.includes('/students/') && path.includes('/knowledge-states') && httpMethod === 'GET') {
+    try {
+      const pathParts = path.split('/');
+      const studentId = pathParts[pathParts.indexOf('students') + 1];
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      console.log(`[Netlify] Getting knowledge states for student ${studentId}`);
+      
+      // Get all knowledge states for the student with KC details
+      const { data, error } = await supabase
+        .from('knowledge_states')
+        .select(`
+          *,
+          knowledge_components (
+            id,
+            name,
+            description,
+            curriculum_code,
+            grade_level
+          )
+        `)
+        .eq('student_id', studentId)
+        .order('knowledge_component_id');
+      
+      if (error) {
+        console.error('[Netlify] Knowledge states fetch error:', error);
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to fetch knowledge states',
+            message: error.message
+          })
+        };
+      }
+      
+      console.log(`[Netlify] Found ${data?.length || 0} knowledge states for student ${studentId}`);
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify(data || [])
+      };
+      
+    } catch (error) {
+      console.error('[Netlify] Knowledge states endpoint error:', error);
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
+  // GET /api/students/:id/grade-knowledge-components - Get all KCs for student's grade
+  if (path.includes('/students/') && path.includes('/grade-knowledge-components') && httpMethod === 'GET') {
+    try {
+      const pathParts = path.split('/');
+      const studentId = pathParts[pathParts.indexOf('students') + 1];
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      console.log(`[Netlify] Getting grade KCs for student ${studentId}`);
+      
+      // First get student's grade level
+      const { data: student, error: studentError } = await supabase
+        .from('students')
+        .select('grade_level')
+        .eq('id', studentId)
+        .single();
+        
+      if (studentError || !student) {
+        console.error('[Netlify] Student lookup error:', studentError);
+        return {
+          statusCode: 404,
+          headers,
+          body: JSON.stringify({
+            error: 'Student not found',
+            message: studentError?.message || 'Student not found'
+          })
+        };
+      }
+      
+      // Get all KCs for the student's grade level with their current mastery
+      const { data: gradeKCs, error: kcError } = await supabase
+        .from('knowledge_components')
+        .select(`
+          id,
+          name,
+          description,
+          curriculum_code,
+          grade_level,
+          knowledge_states!left (
+            p_mastery,
+            student_id
+          )
+        `)
+        .eq('grade_level', student.grade_level)
+        .eq('knowledge_states.student_id', studentId)
+        .order('curriculum_code');
+        
+      if (kcError) {
+        console.error('[Netlify] Grade KCs fetch error:', kcError);
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to fetch grade knowledge components',
+            message: kcError.message
+          })
+        };
+      }
+      
+      // Transform the data to include current mastery
+      const transformedKCs = gradeKCs.map(kc => ({
+        ...kc,
+        current_mastery: kc.knowledge_states?.[0]?.p_mastery || 0
+      }));
+      
+      console.log(`[Netlify] Found ${transformedKCs?.length || 0} KCs for grade ${student.grade_level}`);
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify(transformedKCs || [])
+      };
+      
+    } catch (error) {
+      console.error('[Netlify] Grade KCs endpoint error:', error);
       return {
         statusCode: 500,
         headers,
