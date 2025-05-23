@@ -44,6 +44,47 @@ exports.handler = async (event, context) => {
     queryStringParameters: event.queryStringParameters
   });
   
+  // Debug endpoint to check KC content
+  if (path.includes('/debug/kc') || (event.rawUrl && event.rawUrl.includes('/debug/kc'))) {
+    const queryParams = new URLSearchParams(event.queryStringParameters || {});
+    const kcId = queryParams.get('kc_id');
+    
+    const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+    const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+    
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    
+    const { data: kcData } = await supabase
+      .from('knowledge_components')
+      .select('*')
+      .eq('id', kcId)
+      .single();
+      
+    const { data: allContent } = await supabase
+      .from('content_items')
+      .select('*')
+      .eq('knowledge_component_id', kcId);
+      
+    const { data: quizContent } = await supabase
+      .from('content_items')
+      .select('*')
+      .eq('knowledge_component_id', kcId)
+      .eq('type', 'multiple_choice');
+    
+    return {
+      statusCode: 200,
+      headers,
+      body: JSON.stringify({
+        kcId,
+        kcData,
+        totalContent: allContent?.length || 0,
+        quizContent: quizContent?.length || 0,
+        allContentTypes: allContent?.map(c => c.type) || [],
+        sampleContent: allContent?.slice(0, 3) || []
+      })
+    };
+  }
+  
   // Early catch for students/kcs/sequence endpoint
   if (path.includes('students/kcs/sequence') || (event.rawUrl && event.rawUrl.includes('students/kcs/sequence'))) {
     console.log('[EARLY DEBUG] Caught sequence endpoint request');
@@ -76,8 +117,7 @@ exports.handler = async (event, context) => {
             curriculum_code
           )
         `)
-        .eq('type', 'quiz')
-        .limit(limit);
+        .eq('type', 'multiple_choice');
         
       if (kcId) {
         query = query.eq('knowledge_component_id', kcId);
@@ -121,7 +161,8 @@ exports.handler = async (event, context) => {
       const shuffled = formattedQuestions.sort(() => Math.random() - 0.5);
       const selectedQuestions = shuffled.slice(0, limit);
       
-      console.log('[EARLY DEBUG] Returning', selectedQuestions.length, 'questions');
+      console.log('[EARLY DEBUG] Found', formattedQuestions.length, 'total questions');
+      console.log('[EARLY DEBUG] Returning', selectedQuestions.length, 'selected questions');
       
       return {
         statusCode: 200,
@@ -1396,8 +1437,7 @@ exports.handler = async (event, context) => {
             curriculum_code
           )
         `)
-        .eq('type', 'quiz')
-        .limit(limit);
+        .eq('type', 'multiple_choice');
         
       if (kcId) {
         query = query.eq('knowledge_component_id', kcId);
@@ -1580,18 +1620,78 @@ exports.handler = async (event, context) => {
       const pathParts = path.split('/');
       const studentId = pathParts[pathParts.indexOf('students') + 1];
       
-      // Mock progress data
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // Get student grade level
+      const { data: studentData } = await supabase
+        .from('students')
+        .select('grade_level')
+        .eq('id', studentId)
+        .single();
+      
+      const gradeLevel = studentData?.grade_level || 3;
+      
+      // Get total knowledge components for this grade level
+      const { data: totalKCs, error: kcError } = await supabase
+        .from('knowledge_components')
+        .select('id')
+        .eq('grade_level', gradeLevel);
+      
+      if (kcError) {
+        console.error('Error fetching KCs for progress:', kcError);
+      }
+      
+      const totalTopics = totalKCs?.length || 7; // Default to 7 if error
+      
+      // Get student's knowledge states to calculate completed topics
+      const { data: knowledgeStates, error: ksError } = await supabase
+        .from('knowledge_states')
+        .select('knowledge_component_id, mastery')
+        .eq('student_id', studentId);
+      
+      if (ksError) {
+        console.error('Error fetching knowledge states:', ksError);
+      }
+      
+      // Count topics with mastery >= 0.8 as completed
+      const topicsCompleted = knowledgeStates?.filter(ks => ks.mastery >= 0.8).length || 0;
+      
+      // Calculate learning streak (simplified - days with activity)
+      const { data: recentResponses, error: responseError } = await supabase
+        .from('responses')
+        .select('created_at')
+        .eq('student_id', studentId)
+        .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()) // Last 7 days
+        .order('created_at', { ascending: false });
+      
+      // Simple streak calculation - count unique days with responses
+      const uniqueDays = new Set();
+      recentResponses?.forEach(response => {
+        const date = new Date(response.created_at).toDateString();
+        uniqueDays.add(date);
+      });
+      
+      const streak = uniqueDays.size || 0;
+      
       return {
         statusCode: 200,
         headers,
         body: JSON.stringify({
-          totalQuizzes: 10,
-          correctAnswers: 7,
-          knowledgeComponents: []
+          totalTopics,
+          topicsCompleted,
+          streak,
+          // Legacy fields for backward compatibility
+          totalQuizzes: totalTopics,
+          correctAnswers: topicsCompleted,
+          knowledgeComponents: knowledgeStates || []
         })
       };
       
     } catch (error) {
+      console.error('Progress endpoint error:', error);
       return {
         statusCode: 500,
         headers,
@@ -1740,8 +1840,7 @@ exports.handler = async (event, context) => {
             curriculum_code
           )
         `)
-        .eq('type', 'quiz')
-        .limit(limit);
+        .eq('type', 'multiple_choice');
         
       if (kcId) {
         query = query.eq('knowledge_component_id', kcId);
@@ -1871,7 +1970,7 @@ exports.handler = async (event, context) => {
         .from('content_items')
         .select('*')
         .eq('knowledge_component_id', kcId)
-        .eq('type', 'quiz');
+        .eq('type', 'multiple_choice');
       
       if (error || !questions || questions.length === 0) {
         return {
@@ -1968,7 +2067,7 @@ exports.handler = async (event, context) => {
       let query = supabase
         .from('content_items')
         .select('*')
-        .eq('type', 'quiz')
+        .eq('type', 'multiple_choice')
         .limit(limit);
         
       if (kcId) {
