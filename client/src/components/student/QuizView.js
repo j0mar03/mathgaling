@@ -1265,26 +1265,59 @@ const QuizView = () => {
         
         {/* Display question image if available */}
         {(() => {
-          // Debug image data
-          console.log('[QuizView] Content metadata:', content?.metadata);
-          console.log('[QuizView] Looking for image in:', {
-            imageUrl: content?.metadata?.imageUrl,
-            image: content?.metadata?.image,
-            image_url: content?.image_url
+          // Debug image data extensively
+          console.log('[QuizView] FULL CONTENT OBJECT:', content);
+          console.log('[QuizView] Content metadata (raw):', content?.metadata);
+          console.log('[QuizView] Content metadata type:', typeof content?.metadata);
+          
+          // Try to parse metadata if it's a string
+          let parsedMetadata = content?.metadata;
+          if (typeof content?.metadata === 'string') {
+            try {
+              parsedMetadata = JSON.parse(content.metadata);
+              console.log('[QuizView] Parsed metadata:', parsedMetadata);
+            } catch (e) {
+              console.log('[QuizView] Failed to parse metadata:', e);
+            }
+          }
+          
+          console.log('[QuizView] Looking for image in ALL possible locations:', {
+            'metadata.imageUrl': content?.metadata?.imageUrl,
+            'metadata.image': content?.metadata?.image,
+            'metadata.image_url': content?.metadata?.image_url,
+            'image_url': content?.image_url,
+            'image_path': content?.image_path,
+            'parsedMetadata.imageUrl': parsedMetadata?.imageUrl,
+            'parsedMetadata.image': parsedMetadata?.image,
+            'parsedMetadata.image_url': parsedMetadata?.image_url,
+            'all content keys': Object.keys(content || {})
           });
           
-          const imageUrl = content?.metadata?.imageUrl || content?.metadata?.image || content?.image_url;
+          // Check multiple possible image field locations
+          const imageUrl = content?.metadata?.imageUrl || 
+                           content?.metadata?.image || 
+                           content?.metadata?.image_url ||
+                           content?.image_url ||
+                           content?.image_path ||
+                           parsedMetadata?.imageUrl ||
+                           parsedMetadata?.image ||
+                           parsedMetadata?.image_url;
           
           if (imageUrl) {
             console.log('[QuizView] Found image URL:', imageUrl);
+            // Ensure it's a proper URL
+            const fullImageUrl = imageUrl.startsWith('/') ? imageUrl : `/api/images/${imageUrl}`;
+            console.log('[QuizView] Using image URL:', fullImageUrl);
+            
             return (
               <div className="quiz-image-container">
                 <img
-                  src={imageUrl}
+                  src={fullImageUrl}
                   alt="Question visual"
                   className="quiz-image"
                   onError={(e) => {
                     console.log('Image failed to load:', e.target.src);
+                    console.log('Image error event:', e);
                     e.target.style.display = 'none';
                   }}
                   onLoad={(e) => {
@@ -1294,8 +1327,13 @@ const QuizView = () => {
               </div>
             );
           } else {
-            console.log('[QuizView] No image URL found for this question');
-            return null;
+            console.log('[QuizView] No image URL found for this question ID:', content?.id);
+            // Show placeholder for debugging
+            return (
+              <div style={{ padding: '10px', background: '#f0f0f0', fontSize: '12px', color: '#666' }}>
+                [DEBUG: No image found for question {content?.id}]
+              </div>
+            );
           }
         })()}
       </div>

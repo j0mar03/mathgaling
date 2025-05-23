@@ -188,6 +188,59 @@ exports.handler = async (event, context) => {
     }
   }
   
+  // GET /api/images - List available images (debug endpoint)
+  if (path === '/api/images' && httpMethod === 'GET') {
+    try {
+      const fs = require('fs');
+      const pathModule = require('path');
+      
+      const possibleDirs = [
+        pathModule.join(process.cwd(), 'client', 'server', 'uploads', 'images'),
+        pathModule.join(process.cwd(), 'uploads', 'images'),
+        pathModule.join(__dirname, '..', '..', 'client', 'server', 'uploads', 'images'),
+        pathModule.join('/opt/build/repo/client/server/uploads/images'),
+      ];
+      
+      let foundImages = [];
+      let checkedPaths = [];
+      
+      for (const dir of possibleDirs) {
+        checkedPaths.push({
+          path: dir,
+          exists: fs.existsSync(dir),
+          isDirectory: fs.existsSync(dir) ? fs.statSync(dir).isDirectory() : false
+        });
+        
+        if (fs.existsSync(dir) && fs.statSync(dir).isDirectory()) {
+          const files = fs.readdirSync(dir);
+          foundImages = files.filter(file => /\.(png|jpg|jpeg|gif)$/i.test(file));
+          break;
+        }
+      }
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          checkedPaths,
+          foundImages,
+          totalImages: foundImages.length,
+          sampleImages: foundImages.slice(0, 5)
+        })
+      };
+      
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Failed to list images',
+          message: error.message
+        })
+      };
+    }
+  }
+  
   // GET /api/images/:filename - Serve uploaded images
   if (path.includes('/images/') && httpMethod === 'GET') {
     try {
@@ -195,19 +248,43 @@ exports.handler = async (event, context) => {
       const fs = require('fs');
       const pathModule = require('path');
       
-      // Construct the path to the image file
-      const imagePath = pathModule.join(process.cwd(), 'client', 'server', 'uploads', 'images', filename);
+      console.log('[DEBUG] Image request for filename:', filename);
+      console.log('[DEBUG] Current working directory:', process.cwd());
+      console.log('[DEBUG] Path being accessed:', path);
       
-      console.log('[DEBUG] Attempting to serve image:', imagePath);
+      // Try multiple possible image locations
+      const possiblePaths = [
+        pathModule.join(process.cwd(), 'client', 'server', 'uploads', 'images', filename),
+        pathModule.join(process.cwd(), 'uploads', 'images', filename),
+        pathModule.join(__dirname, '..', '..', 'client', 'server', 'uploads', 'images', filename),
+        pathModule.join('/opt/build/repo/client/server/uploads/images', filename), // Netlify build path
+      ];
+      
+      console.log('[DEBUG] Checking possible image paths:', possiblePaths);
+      
+      let imagePath = null;
+      let imageExists = false;
+      
+      for (const testPath of possiblePaths) {
+        console.log('[DEBUG] Testing path:', testPath);
+        if (fs.existsSync(testPath)) {
+          imagePath = testPath;
+          imageExists = true;
+          console.log('[DEBUG] Found image at:', testPath);
+          break;
+        }
+      }
       
       // Check if file exists
-      if (!fs.existsSync(imagePath)) {
+      if (!imageExists) {
+        console.log('[DEBUG] Image not found in any location');
         return {
           statusCode: 404,
           headers,
           body: JSON.stringify({
             error: 'Image not found',
-            filename: filename
+            filename: filename,
+            searchedPaths: possiblePaths
           })
         };
       }
@@ -243,6 +320,32 @@ exports.handler = async (event, context) => {
         })
       };
     }
+  }
+  
+  // Test image endpoint - /api/test-image
+  if (path.includes('/test-image')) {
+    return {
+      statusCode: 200,
+      headers: {
+        ...headers,
+        'Content-Type': 'text/html'
+      },
+      body: `
+        <html>
+          <body>
+            <h3>Image Test</h3>
+            <p>Testing if images are accessible:</p>
+            <img src="/api/images/question-image-1746159641748-595628045.png" alt="Test Image 1" style="max-width: 200px;" onerror="this.style.display='none'; this.nextSibling.style.display='block';">
+            <div style="display:none; color:red;">Image 1 failed to load</div>
+            <br><br>
+            <img src="/api/images/question-image-1746160685228-410158988.png" alt="Test Image 2" style="max-width: 200px;" onerror="this.style.display='none'; this.nextSibling.style.display='block';">
+            <div style="display:none; color:red;">Image 2 failed to load</div>
+            <br><br>
+            <a href="/api/images">List all images</a>
+          </body>
+        </html>
+      `
+    };
   }
   
   // Hello endpoint - /api/hello
