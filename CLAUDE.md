@@ -50,3 +50,25 @@ SUPABASE_URL=https://xxx.supabase.co
 SUPABASE_ANON_KEY=xxx
 SUPABASE_SERVICE_API_KEY=xxx
 ```
+
+## Recent Quiz System Fixes (Jan 2025)
+Key issues resolved in the quiz system:
+
+### 1. Image Serving in Production
+- **Issue**: Images not accessible in Netlify deployment
+- **Fix**: Updated `netlify.toml` to copy uploads during build, added image endpoints to `/netlify/functions/api.js`
+
+### 2. KC ID Loss During Quiz Navigation
+- **Issue**: `kc_id` parameter lost after first question, causing "Question text not available"
+- **Fix**: Modified `handleNextQuestion` in `QuizView.js` to preserve KC ID in all navigation calls
+- **Critical**: Always preserve URL parameters when navigating between quiz questions
+
+### 3. Missing Student Progress API
+- **Issue**: Student progress page failing due to missing endpoints
+- **Fix**: Added `/api/students/:id/knowledge-states` and `/api/students/:id/grade-knowledge-components` to Netlify function
+
+### 4. Debug Messages for Image-less Questions
+- **Fix**: Return `null` instead of debug div when no image exists
+
+### Quiz Navigation Pattern:
+Maintain this URL structure: `/student/quiz/{id}?kc_id={kc_id}&mode=sequential&qnum={num}&correct={count}`
