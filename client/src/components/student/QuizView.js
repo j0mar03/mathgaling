@@ -360,6 +360,31 @@ const QuizView = () => {
               data: contentErr.response?.data,
               url: `/api/content/${id}`
             });
+            
+            // If content loading fails in sequential mode, try to skip to next question
+            if (isSequentialMode && sequentialIds.length > 0) {
+              const currentQNum = parseInt(queryParams.get('qnum'), 10) || 1;
+              const currentIndex = currentQNum - 1;
+              const nextIndex = currentIndex + 1;
+              
+              console.log(`[QuizView] Content ${id} failed to load, attempting to skip to next question`);
+              
+              if (nextIndex < sequentialIds.length && sequentialIds[nextIndex]) {
+                const nextQuestionId = sequentialIds[nextIndex].id;
+                const kcIdFromQuery = queryParams.get('kc_id');
+                const correctParam = queryParams.get('correct') || '0';
+                
+                console.log(`[QuizView] Skipping to next question: ${nextQuestionId}`);
+                
+                const skipUrl = kcIdFromQuery 
+                  ? `/student/quiz/${nextQuestionId}?kc_id=${kcIdFromQuery}&mode=sequential&qnum=${currentQNum + 1}&correct=${correctParam}`
+                  : `/student/quiz/${nextQuestionId}?mode=sequential&qnum=${currentQNum + 1}&correct=${correctParam}`;
+                
+                navigate(skipUrl, { replace: true });
+                return;
+              }
+            }
+            
             setError(`Failed to load quiz content (${contentErr.response?.status || 'Unknown error'}). Please try again.`);
             setLoading(false);
           }
@@ -653,10 +678,18 @@ const QuizView = () => {
         }
 
         // If we get here, both attempts failed
-        setError(err.response?.status === 404 
-          ? 'Question not found. Please try again or contact support.'
-          : 'Failed to load question. Please try again or contact support.');
-        setLoading(false);
+        // In non-sequential mode, just show error
+        if (!isSequentialMode) {
+          setError(err.response?.status === 404 
+            ? 'Question not found. Please try again or contact support.'
+            : 'Failed to load question. Please try again or contact support.');
+          setLoading(false);
+        } else {
+          // In sequential mode, we don't expect this useEffect to run, but if it does and fails,
+          // let the sequential loading useEffect handle it
+          console.log('[QuizView] Content loading failed in sequential mode, letting sequential loader handle it');
+          setLoading(false);
+        }
       }
     };
 
