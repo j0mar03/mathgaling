@@ -2569,7 +2569,7 @@ exports.handler = async (event, context) => {
         .single();
       
       if (responseError) {
-        console.error('Response insert error:', responseError);
+        console.error('[Netlify] ❌ Response insert error:', responseError);
         return {
           statusCode: 500,
           headers,
@@ -2580,15 +2580,19 @@ exports.handler = async (event, context) => {
         };
       }
       
+      console.log(`[Netlify] ✅ Response saved successfully with ID: ${response.id}`);
       console.log(`[Netlify] 🎯 REACHED KC MASTERY UPDATE SECTION`);
       
       // Update KC mastery only if NOT practice mode
       const practiceMode = responseData.practice_mode || false;
       let newMastery = null;
       
-      console.log(`[Netlify] 🔍 Practice mode: ${practiceMode}, Will process KC update: ${!practiceMode}`);
+      console.log(`[Netlify] 🔍 Practice mode check: ${practiceMode}`);
+      console.log(`[Netlify] 🔍 Will process KC update: ${!practiceMode}`);
       
       if (!practiceMode) {
+        console.log(`[Netlify] 🚀 STARTING KC MASTERY UPDATE PROCESS`);
+        
         // Get KC ID from content item (since frontend doesn't send it directly)
         const contentItemId = responseData.content_item_id || responseData.contentItemId;
         console.log(`[Netlify] Looking up KC for content item: ${contentItemId}`);
@@ -2668,6 +2672,8 @@ exports.handler = async (event, context) => {
       } else {
         console.log('[Netlify] Practice mode - skipping KC mastery update');
       }
+      
+      console.log(`[Netlify] 🏁 PREPARING FINAL RESPONSE - newMastery: ${newMastery}`);
       
       const finalResponse = {
         message: practiceMode ? 'Practice response recorded' : 'Response processed successfully',
