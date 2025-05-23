@@ -759,7 +759,7 @@ const QuizView = () => {
         correctAnswer: content?.correct_answer,
         isCorrect: isCorrect,
         options: content?.options || null, // Store options for MCQs
-        knowledgeComponent: content?.KnowledgeComponent?.name || 'N/A',
+        knowledgeComponent: content?.knowledge_components?.name || content?.KnowledgeComponent?.name || 'N/A',
         questionNumber: questionNumber // Store the question number for this item
       }
     ]);
@@ -1016,7 +1016,7 @@ const QuizView = () => {
     );
   }
 
-  if (!content) {
+  if (!content && !loading && !isLoadingSequentialIds) {
       return (
           <div className="error-container">
               <h2>Error</h2>
@@ -1036,7 +1036,14 @@ const QuizView = () => {
   if (quizCompleted) {
     const actualTotalQuestions = isSequentialMode && sequentialIds.length > 0 ? sequentialIds.length : totalQuestions;
     const masteryLevel = actualTotalQuestions > 0 ? correctAnswersCount / actualTotalQuestions : 0;
-    const currentKcName = answeredQuestions[0]?.knowledgeComponent || "This Topic"; // Get KC name from first answered question
+    // Try to get KC name from multiple sources
+    const currentKcName = 
+      answeredQuestions[0]?.knowledgeComponent ||
+      content?.knowledge_components?.name ||
+      content?.knowledgeComponent?.name ||
+      sequentialIds[0]?.knowledgeComponent?.name ||
+      sequentialIds[0]?.curriculumCode ||
+      "This Topic";
 
     let masteryStatusText = '';
     let currentKcStatusText = '';

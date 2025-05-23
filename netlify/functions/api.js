@@ -2025,7 +2025,15 @@ exports.handler = async (event, context) => {
       
       const { data, error } = await supabase
         .from('content_items')
-        .select('*')
+        .select(`
+          *,
+          knowledge_components (
+            id,
+            name,
+            curriculum_code,
+            description
+          )
+        `)
         .eq('id', contentId)
         .single();
       
