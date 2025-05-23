@@ -29,11 +29,20 @@ const StudentDetailView = () => {
   const [messageSuccess, setMessageSuccess] = useState(false);
   const [messageError, setMessageError] = useState(null);
   
+  // Add refresh logic for URL parameters  
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('refresh')) {
+      console.log('[StudentDetailView] Refresh triggered by URL parameter');
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch detailed student performance
-        const performanceResponse = await axios.get(`/api/students/${id}/detailed-performance`);
+        // Fetch detailed student performance (with cache busting for Supabase)
+        const performanceResponse = await axios.get(`/api/students/${id}/detailed-performance?_t=${Date.now()}`);
         setDetailedPerformance(performanceResponse.data);
         setStudent(performanceResponse.data.studentInfo); // Use correct property name 'studentInfo'
         

@@ -100,6 +100,51 @@ const StudentProgress = () => {
     };
     
     fetchData();
+  }, [studentId, token]);
+
+  // Add window focus listener and periodic refresh like MasteryLevelDashboard
+  useEffect(() => {
+    const handleFocus = () => {
+      console.log("[StudentProgress] Window focused, refreshing data...");
+      if (token && studentId) {
+        setLoading(true);
+        // Re-fetch data when window gains focus
+        const fetchDataOnFocus = async () => {
+          try {
+            const headers = { Authorization: `Bearer ${token}` };
+
+            const studentResponse = await axios.get(`/api/students/${studentId}?_t=${Date.now()}`, { headers });
+            setStudent(studentResponse.data);
+            
+            const knowledgeStatesResponse = await axios.get(`/api/students/${studentId}/knowledge-states?_t=${Date.now()}`, { headers });
+            setKnowledgeStates(knowledgeStatesResponse.data);
+
+            const gradeKCsResponse = await axios.get(`/api/students/${studentId}/grade-knowledge-components?_t=${Date.now()}`, { headers });
+            setAllKnowledgeComponents(gradeKCsResponse.data);
+            
+          } catch (error) {
+            console.error("[StudentProgress] Error refreshing data:", error);
+          } finally {
+            setLoading(false);
+          }
+        };
+        
+        fetchDataOnFocus();
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    
+    // Add periodic refresh every 30 seconds
+    const refreshInterval = setInterval(() => {
+      console.log("[StudentProgress] Periodic refresh triggered");
+      handleFocus();
+    }, 30000);
+    
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      clearInterval(refreshInterval);
+    };
   }, [studentId, token]); // Dependency array includes studentId and token from context
   
   if (loading) {
@@ -297,8 +342,31 @@ const StudentProgress = () => {
   return (
     <div className="student-progress">
       <div className="progress-header">
-        <h1>📊 Ang Iyong Learning Progress</h1>
-        <p>I-track ang iyong mastery sa iba't ibang math topics!</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+          <div>
+            <h1>📊 Ang Iyong Learning Progress</h1>
+            <p>I-track ang iyong mastery sa iba't ibang math topics!</p>
+          </div>
+          <button 
+            onClick={() => {
+              console.log("[StudentProgress] Manual refresh requested");
+              setLoading(true);
+              setTimeout(() => window.location.reload(), 100);
+            }}
+            style={{
+              background: '#4CAF50',
+              color: 'white',
+              border: 'none',
+              borderRadius: '5px',
+              padding: '8px 16px',
+              cursor: 'pointer',
+              fontSize: '14px'
+            }}
+            disabled={loading}
+          >
+            {loading ? '🔄' : '🔄 Refresh'}
+          </button>
+        </div>
       </div>
       
       <div className="progress-summary">
