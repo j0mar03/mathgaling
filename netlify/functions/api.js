@@ -2231,9 +2231,10 @@ exports.handler = async (event, context) => {
         .insert({
           student_id: parseInt(studentId),
           content_item_id: responseData.contentItemId,
-          response: responseData.answer,
-          is_correct: responseData.isCorrect,
-          timestamp: new Date().toISOString()
+          answer: responseData.answer,
+          correct: responseData.isCorrect,
+          time_spent: responseData.timeSpent || null,
+          interaction_data: responseData.interactionData || null
         })
         .select()
         .single();
