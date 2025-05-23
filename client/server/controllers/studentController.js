@@ -274,7 +274,9 @@ exports.processResponse = async (req, res) => {
     res.status(201).json({
       message: practice_mode ? 'Practice response recorded' : 'Response processed successfully',
       responseId: responseRecord.id,
+      correct: correct,
       newMastery: practice_mode ? null : newMastery,
+      knowledgeState: practice_mode ? null : { p_mastery: newMastery }, // Include knowledge state for frontend logging
       nextContentItemId: nextContentItemId,
       quizCompletionStatus: quizCompletionStatus,
       practice_mode: practice_mode || false

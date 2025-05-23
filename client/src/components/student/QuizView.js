@@ -25,6 +25,7 @@ const QuizView = () => {
   const [strugglingKCs, setStrugglingKCs] = useState([]);
   const [quizCompletionStatus, setQuizCompletionStatus] = useState(null);
   const [masteryLevel, setMasteryLevel] = useState(0);
+  const [actualKcMastery, setActualKcMastery] = useState(0); // Track actual BKT mastery from backend
 
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
@@ -139,9 +140,15 @@ const QuizView = () => {
     if (quizCompleted && user?.id && token) {
       const fetchCompletionData = async () => {
         try {
-          // Calculate mastery level
+          // Calculate quiz score mastery level
           const calculatedMasteryLevel = questions.length > 0 ? score / questions.length : 0;
-          setMasteryLevel(calculatedMasteryLevel);
+          
+          // Use actual KC mastery if available, otherwise fall back to quiz score
+          const effectiveMastery = actualKcMastery > 0 ? actualKcMastery : calculatedMasteryLevel;
+          
+          // Set masteryLevel to the effective mastery for UI display
+          setMasteryLevel(effectiveMastery);
+          console.log(`[Completion Effect] Quiz score mastery: ${(calculatedMasteryLevel * 100).toFixed(1)}%, Actual KC mastery: ${(actualKcMastery * 100).toFixed(1)}%, Using effective mastery: ${(effectiveMastery * 100).toFixed(1)}%`);
 
           // Always try to fetch the next topic ID for the "Continue" button logic
           let nextKcId = null;
@@ -191,8 +198,8 @@ const QuizView = () => {
             setNextKcIdForContinuation(nextKcId);
           }
 
-          // Fetch struggling KCs if mastery is below 80%
-          if (calculatedMasteryLevel < 0.8) {
+          // Fetch struggling KCs if effective mastery is below 80%
+          if (effectiveMastery < 0.8) {
             try {
               console.log("[Completion Effect] Fetching struggling KCs...");
               const response = await axios.get(`/api/students/${user.id}/struggling-kcs`, {
@@ -207,12 +214,12 @@ const QuizView = () => {
             setStrugglingKCs([]);
           }
 
-          // Set completion status
+          // Set completion status using effective mastery
           setQuizCompletionStatus({
             status: 'completed',
             message: 'Quiz completed! Great job!',
-            masteryAchieved: calculatedMasteryLevel >= 0.75,
-            currentMastery: calculatedMasteryLevel,
+            masteryAchieved: effectiveMastery >= 0.75,
+            currentMastery: effectiveMastery,
             masteryThreshold: 0.75,
             showKCRecommendations: true
           });
@@ -224,7 +231,7 @@ const QuizView = () => {
 
       fetchCompletionData();
     }
-  }, [quizCompleted, user?.id, token, score, questions.length, kcDetails]);
+  }, [quizCompleted, user?.id, token, score, questions.length, kcDetails, actualKcMastery]);
 
   // Enhanced answer validation function
   const validateAnswer = (studentAnswer, correctAnswer) => {
@@ -360,9 +367,15 @@ const QuizView = () => {
       
       console.log('[QuizView] Response submitted successfully:', response.data);
       
-      // Log if mastery was updated
+      // Log if mastery was updated and track actual mastery
       if (response.data?.knowledgeState) {
-        console.log(`[QuizView] Knowledge state updated - new mastery: ${(response.data.knowledgeState.p_mastery * 100).toFixed(1)}%`);
+        const newActualMastery = response.data.knowledgeState.p_mastery;
+        console.log(`[QuizView] Knowledge state updated - new mastery: ${(newActualMastery * 100).toFixed(1)}%`);
+        setActualKcMastery(newActualMastery);
+      } else if (response.data?.newMastery !== null && response.data?.newMastery !== undefined) {
+        const newActualMastery = response.data.newMastery;
+        console.log(`[QuizView] Mastery updated - new mastery: ${(newActualMastery * 100).toFixed(1)}%`);
+        setActualKcMastery(newActualMastery);
       }
       
     } catch (err) {
