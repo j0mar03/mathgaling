@@ -32,6 +32,7 @@ const QuizView = () => {
   const [hintRequests, setHintRequests] = useState(0);
   const [searchingNextTopic, setSearchingNextTopic] = useState(false); // Loading state for next topic search
   const [nextTopicSearchComplete, setNextTopicSearchComplete] = useState(false); // Track if search is done
+  const [finalScoreCalculated, setFinalScoreCalculated] = useState(0); // Store final score for consistent display
 
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
@@ -169,7 +170,9 @@ const QuizView = () => {
           
           // For mastery quizzes, we want simple sequential progression KC1 → KC2 → KC3
           // If the student has ≥75% mastery, allow progression to next KC
-          if (effectiveMastery >= 0.75) {
+          const shouldFindNext = effectiveMastery >= 0.75 || finalScoreCalculated >= 0.75;
+          if (shouldFindNext && !nextKcIdForContinuation) {
+            setSearchingNextTopic(true);
             try {
               console.log("[Completion Effect] Full kcDetails:", kcDetails);
               const currentKcCurriculumCode = kcDetails?.curriculum_code;
@@ -191,14 +194,39 @@ const QuizView = () => {
             } catch (err) {
               console.warn("[Completion Effect] Error fetching next KC in sequence:", err.message);
               
-              // Simple fallback: try next KC by incrementing current KC ID
-              if (kcDetails?.id) {
-                nextKcId = kcDetails.id + 1;
-                console.log(`[Completion Effect] 🔄 Fallback: trying next KC ID ${nextKcId}`);
+              // Fallback: try to get next KC from grade-level KCs
+              try {
+                const response = await axios.get(`/api/students/${user.id}/grade-knowledge-components?_t=${Date.now()}`, {
+                  headers: { Authorization: `Bearer ${token}` }
+                });
+                
+                if (response.data && Array.isArray(response.data)) {
+                  const sortedKCs = response.data.sort((a, b) => {
+                    if (a.curriculum_code && b.curriculum_code) {
+                      return a.curriculum_code.localeCompare(b.curriculum_code);
+                    }
+                    return 0;
+                  });
+                  
+                  const currentKcId = questions[0]?.knowledge_component?.id || kcDetails?.id;
+                  const currentIndex = sortedKCs.findIndex(kc => kc.id === currentKcId);
+                  
+                  if (currentIndex !== -1 && currentIndex < sortedKCs.length - 1) {
+                    const nextKC = sortedKCs[currentIndex + 1];
+                    nextKcId = nextKC.id;
+                    console.log(`[Completion Effect] 🔄 Fallback found next topic: ${nextKC.name} (ID: ${nextKC.id})`);
+                  }
+                }
+              } catch (fallbackErr) {
+                console.error('[Completion Effect] Fallback also failed:', fallbackErr);
               }
             }
+            
+            setSearchingNextTopic(false);
+            setNextTopicSearchComplete(true);
           } else {
             console.log(`[Completion Effect] ❌ Mastery ${(effectiveMastery * 100).toFixed(1)}% < 75%. Retry current KC instead of advancing.`);
+            setNextTopicSearchComplete(true);
           }
           
           setNextKcIdForContinuation(nextKcId);
@@ -408,14 +436,16 @@ const QuizView = () => {
       setHintRequests(0);
     } else {
       // Quiz completed - check for next topic
-      setQuizCompleted(true);
-      
-      // Calculate final score percentage
+      // Calculate final score percentage first (including current answer)
       const finalScore = (score + (correct ? 1 : 0)) / questions.length;
+      setFinalScoreCalculated(finalScore); // Store for consistent use
       console.log(`[QuizView] Quiz completed with score: ${finalScore * 100}%`);
       
-      // If student performed well (75%+ score) or achieved high mastery, find next topic
-      if (finalScore >= 0.75 || actualKcMastery >= 0.8) {
+      setQuizCompleted(true);
+      
+      // Don't search for next topic here - let the useEffect handle it
+      // This prevents the button from flickering
+      if (false) {
         console.log('[QuizView] Student performed well, searching for next topic...');
         setSearchingNextTopic(true); // Start loading state
         
@@ -486,6 +516,11 @@ const QuizView = () => {
     
     // Set completion indicator for progress page refresh
     localStorage.setItem('quiz_completed', 'true');
+    localStorage.setItem('quiz_mastery_update', JSON.stringify({
+      kcId: kcDetails?.id || questions[0]?.knowledge_component?.id,
+      newMastery: actualKcMastery || masteryLevel,
+      timestamp: Date.now()
+    }));
     
     // Force refresh of dashboard data by adding timestamp
     navigate('/student?refresh=' + Date.now());
@@ -601,7 +636,7 @@ const QuizView = () => {
                 <span className="score-total">/ {questions.length}</span>
               </div>
               <div className="score-percentage">
-                {((score / questions.length) * 100).toFixed(0)}%
+                {(scorePercentage * 100).toFixed(0)}%
               </div>
             </div>
             <div className="time-display">
@@ -774,7 +809,17 @@ const QuizView = () => {
                 🏠 Back to Dashboard
               </button>
               <button 
-                onClick={() => window.location.href = '/student/progress'}
+                onClick={async () => {
+                  // Ensure mastery updates are saved
+                  await new Promise(resolve => setTimeout(resolve, 1000));
+                  localStorage.setItem('quiz_completed', 'true');
+                  localStorage.setItem('quiz_mastery_update', JSON.stringify({
+                    kcId: kcDetails?.id || questions[0]?.knowledge_component?.id,
+                    newMastery: actualKcMastery || masteryLevel,
+                    timestamp: Date.now()
+                  }));
+                  window.location.href = '/student/progress?refresh=' + Date.now();
+                }}
                 className="nav-button"
                 style={{
                   background: 'linear-gradient(135deg, #8e44ad, #9b59b6)',
