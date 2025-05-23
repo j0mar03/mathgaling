@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext'; // Import useAuth
 import './StudentDashboard.css'; // Import CSS file
@@ -30,6 +30,7 @@ const FILIPINO_EMOJIS = {
 };
 
 const StudentDashboard = () => {
+  const location = useLocation();
   const [loading, setLoading] = useState(true);
   const [student, setStudent] = useState(null);
   const [modules, setModules] = useState([]); // State for modules and their KCs
@@ -62,6 +63,16 @@ const StudentDashboard = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // Add refresh listener for URL changes
+  useEffect(() => {
+    const urlParams = new URLSearchParams(location.search);
+    if (urlParams.get('refresh')) {
+      console.log('[StudentDashboard] Refresh triggered by URL parameter');
+      // Clear the refresh param from URL
+      window.history.replaceState({}, '', '/student');
+    }
+  }, [location.search]);
+
   useEffect(() => {
     const fetchData = async () => {
       if (!studentId) {
@@ -70,8 +81,8 @@ const StudentDashboard = () => {
         return;
       }
       try {
-        // Fetch student profile
-        const studentResponse = await axios.get(`/api/students/${studentId}`, {
+        // Fetch student profile (with cache busting for Supabase)
+        const studentResponse = await axios.get(`/api/students/${studentId}?_t=${Date.now()}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         setStudent(studentResponse.data);
@@ -100,8 +111,8 @@ const StudentDashboard = () => {
         const fetchedNextActivity = activityResponse.data;
         setNextActivity(fetchedNextActivity);
 
-        // Fetch consolidated dashboard data
-        const dashboardResponse = await axios.get(`/api/students/${studentId}/dashboard`, {
+        // Fetch consolidated dashboard data (with cache busting for Supabase)
+        const dashboardResponse = await axios.get(`/api/students/${studentId}/dashboard?_t=${Date.now()}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         
@@ -144,7 +155,7 @@ const StudentDashboard = () => {
         } else {
           // If no modules data, try to fetch knowledge components directly
           try {
-            const kcsResponse = await axios.get(`/api/students/${studentId}/grade-knowledge-components`, {
+            const kcsResponse = await axios.get(`/api/students/${studentId}/grade-knowledge-components?_t=${Date.now()}`, {
               headers: { Authorization: `Bearer ${token}` }
             });
             

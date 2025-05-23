@@ -60,13 +60,13 @@ const MasteryLevelDashboard = () => {
       }
 
       try {
-        // First, fetch knowledge components to ensure we have all topics
-        const kcResponse = await axios.get(`/api/students/${user.id}/grade-knowledge-components`, {
+        // First, fetch knowledge components to ensure we have all topics (with cache busting)
+        const kcResponse = await axios.get(`/api/students/${user.id}/grade-knowledge-components?_t=${Date.now()}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
 
-        // Then fetch knowledge states
-        const statesResponse = await axios.get(`/api/students/${user.id}/knowledge-states`, {
+        // Then fetch knowledge states (with cache busting)
+        const statesResponse = await axios.get(`/api/students/${user.id}/knowledge-states?_t=${Date.now()}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
 
@@ -124,7 +124,7 @@ const MasteryLevelDashboard = () => {
     fetchData();
   }, [user?.id, token]);
 
-  // Add window focus listener to refresh data when user returns from quiz
+  // Add window focus listener and periodic refresh
   useEffect(() => {
     const handleFocus = () => {
       console.log("[MasteryDashboard] Window focused, refreshing data...");
@@ -133,11 +133,11 @@ const MasteryLevelDashboard = () => {
         // Re-fetch data when window gains focus (user returns from quiz)
         const fetchDataOnFocus = async () => {
           try {
-            const kcResponse = await axios.get(`/api/students/${user.id}/grade-knowledge-components`, {
+            const kcResponse = await axios.get(`/api/students/${user.id}/grade-knowledge-components?_t=${Date.now()}`, {
               headers: { Authorization: `Bearer ${token}` }
             });
 
-            const statesResponse = await axios.get(`/api/students/${user.id}/knowledge-states`, {
+            const statesResponse = await axios.get(`/api/students/${user.id}/knowledge-states?_t=${Date.now()}`, {
               headers: { Authorization: `Bearer ${token}` }
             });
 
@@ -177,7 +177,17 @@ const MasteryLevelDashboard = () => {
     };
 
     window.addEventListener('focus', handleFocus);
-    return () => window.removeEventListener('focus', handleFocus);
+    
+    // Add periodic refresh every 30 seconds
+    const refreshInterval = setInterval(() => {
+      console.log("[MasteryDashboard] Periodic refresh triggered");
+      handleFocus();
+    }, 30000);
+    
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      clearInterval(refreshInterval);
+    };
   }, [user?.id, token]);
 
   const getMasteryColor = (mastery) => {

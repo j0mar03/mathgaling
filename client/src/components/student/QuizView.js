@@ -363,7 +363,11 @@ const QuizView = () => {
         correct: isCorrect,
         practice_mode: false // Explicitly set to false to ensure mastery updates
       }, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache' // Prevent caching for Supabase
+        }
       });
       
       console.log('[QuizView] Response submitted successfully:', response.data);
@@ -408,8 +412,11 @@ const QuizView = () => {
     setHintRequests(prev => prev + 1);
   };
 
-  const handleBackToDashboard = () => {
-    navigate('/student');
+  const handleBackToDashboard = async () => {
+    // Small delay to ensure Supabase mastery update completes
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Force refresh of dashboard data by adding timestamp
+    navigate('/student?refresh=' + Date.now());
   };
 
   const handleRetryQuiz = () => {
