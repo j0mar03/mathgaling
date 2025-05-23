@@ -392,7 +392,7 @@ const QuizView = () => {
     }
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentQuestionIndex < questions.length - 1) {
       setCurrentQuestionIndex(prev => prev + 1);
       setSelectedOption(null);
@@ -403,7 +403,50 @@ const QuizView = () => {
       setShowHint(false);
       setHintRequests(0);
     } else {
+      // Quiz completed - check for next topic
       setQuizCompleted(true);
+      
+      // Calculate final score percentage
+      const finalScore = (score + (correct ? 1 : 0)) / questions.length;
+      console.log(`[QuizView] Quiz completed with score: ${finalScore * 100}%`);
+      
+      // If student performed well (75%+ score) or achieved high mastery, find next topic
+      if (finalScore >= 0.75 || actualKcMastery >= 0.8) {
+        try {
+          console.log('[QuizView] Student performed well, finding next topic...');
+          
+          // Get current KC ID from the first question
+          const currentKcId = questions[0]?.knowledge_component?.id;
+          if (currentKcId) {
+            // Fetch all grade-level KCs to find the next one
+            const response = await axios.get(`/api/students/${user.id}/grade-knowledge-components?_t=${Date.now()}`, {
+              headers: { Authorization: `Bearer ${token}` }
+            });
+            
+            if (response.data && Array.isArray(response.data)) {
+              // Sort by curriculum_code to get proper sequence
+              const sortedKCs = response.data.sort((a, b) => {
+                if (a.curriculum_code && b.curriculum_code) {
+                  return a.curriculum_code.localeCompare(b.curriculum_code);
+                }
+                return 0;
+              });
+              
+              // Find current KC index and get next one
+              const currentIndex = sortedKCs.findIndex(kc => kc.id === currentKcId);
+              if (currentIndex !== -1 && currentIndex < sortedKCs.length - 1) {
+                const nextKC = sortedKCs[currentIndex + 1];
+                console.log(`[QuizView] Found next topic: ${nextKC.name} (ID: ${nextKC.id})`);
+                setNextKcIdForContinuation(nextKC.id);
+              } else {
+                console.log('[QuizView] No next topic found - student may have completed all topics');
+              }
+            }
+          }
+        } catch (error) {
+          console.error('[QuizView] Error finding next topic:', error);
+        }
+      }
     }
   };
 
@@ -441,7 +484,7 @@ const QuizView = () => {
   const handleContinueToNextTopic = () => {
     if (!nextKcIdForContinuation) {
       console.warn("Cannot continue, next KC ID not available. Navigating to dashboard.");
-      navigate('/student');
+      navigate('/student?refresh=' + Date.now());
       return;
     }
     
@@ -477,30 +520,35 @@ const QuizView = () => {
       kcDetails?.name ||
       "This Topic";
 
+    // Calculate actual performance - use the higher of score percentage or actual mastery
+    const scorePercentage = score / questions.length;
+    const actualPerformance = Math.max(scorePercentage, actualKcMastery);
+    
+    console.log(`[QuizView] Performance calculation: Score ${score}/${questions.length} (${(scorePercentage * 100).toFixed(1)}%), Actual KC Mastery: ${(actualKcMastery * 100).toFixed(1)}%, Using: ${(actualPerformance * 100).toFixed(1)}%`);
+    
     let masteryStatusText = '';
     let currentKcStatusText = '';
     let encouragingQuote = '';
     let showUnlockMessage = false;
 
-    if (masteryLevel >= 0.9) {
+    if (actualPerformance >= 0.9 || scorePercentage >= 0.9) {
       masteryStatusText = 'Mastered!';
       currentKcStatusText = 'Mastered! 🎉';
       encouragingQuote = `Wow! You mastered ${currentKcName}! Amazing job! 🚀`;
-    } else if (masteryLevel >= 0.75) {
+      showUnlockMessage = true;
+    } else if (actualPerformance >= 0.75 || scorePercentage >= 0.75) {
       masteryStatusText = 'Excellent!';
       currentKcStatusText = 'Excellent Progress! 👍';
       encouragingQuote = `Great work! You're doing fantastic on ${currentKcName}! Keep it up! ✨`;
       showUnlockMessage = true;
-    } else if (masteryLevel >= 0.5) {
+    } else if (actualPerformance >= 0.5 || scorePercentage >= 0.5) {
       masteryStatusText = 'Good Progress';
       currentKcStatusText = 'Making Good Progress 😊';
       encouragingQuote = `Nice try! You're learning ${currentKcName}. Practice makes perfect! 💪`;
-      showUnlockMessage = true;
     } else {
       masteryStatusText = 'Needs Review';
       currentKcStatusText = 'Needs Review 🧐';
       encouragingQuote = `Great start! Let's keep practicing ${currentKcName} to get even better! 💡`;
-      showUnlockMessage = true;
     }
 
     return (
@@ -537,8 +585,8 @@ const QuizView = () => {
           </div>
 
           <div className="action-buttons">
-            {/* Show Continue button if score is 75% or higher AND a next topic is available */}
-            {masteryLevel >= 0.75 && nextKcIdForContinuation ? ( 
+            {/* Show Continue button if performance is 75% or higher AND a next topic is available */}
+            {(actualPerformance >= 0.75 || scorePercentage >= 0.75) && nextKcIdForContinuation ? ( 
               <button onClick={handleContinueToNextTopic} className="retry-button" style={{ backgroundColor: '#2ecc71' }}>
                 🚀 Continue to Next Topic!
               </button>

@@ -40,6 +40,16 @@ const StudentProgress = () => {
   // Use the authenticated user's ID
   const studentId = user?.id;
   
+  // Add refresh logic for URL parameters (similar to other components)
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('refresh')) {
+      console.log('[StudentProgress] Refresh triggered by URL parameter');
+      // Clear the refresh param from URL
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
+
   useEffect(() => {
     const fetchData = async () => {
       // Ensure studentId is available before fetching
@@ -59,16 +69,16 @@ const StudentProgress = () => {
         // Add authorization header to all requests
         const headers = { Authorization: `Bearer ${token}` };
 
-        // Fetch student profile
-        const studentResponse = await axios.get(`/api/students/${studentId}`, { headers });
+        // Fetch student profile (with cache busting for Supabase)
+        const studentResponse = await axios.get(`/api/students/${studentId}?_t=${Date.now()}`, { headers });
         setStudent(studentResponse.data);
         
-        // Fetch knowledge states
-        const knowledgeStatesResponse = await axios.get(`/api/students/${studentId}/knowledge-states`, { headers });
+        // Fetch knowledge states (with cache busting for Supabase)
+        const knowledgeStatesResponse = await axios.get(`/api/students/${studentId}/knowledge-states?_t=${Date.now()}`, { headers });
         setKnowledgeStates(knowledgeStatesResponse.data);
 
-        // Fetch knowledge components for the student's grade level
-        const gradeKCsResponse = await axios.get(`/api/students/${studentId}/grade-knowledge-components`, { headers });
+        // Fetch knowledge components for the student's grade level (with cache busting)
+        const gradeKCsResponse = await axios.get(`/api/students/${studentId}/grade-knowledge-components?_t=${Date.now()}`, { headers });
         setAllKnowledgeComponents(gradeKCsResponse.data);
         
         // Fetch learning path (which includes responses)
