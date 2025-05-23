@@ -56,6 +56,8 @@ const QuizView = () => {
             });
             
             if (kcResponse.data) {
+              console.log("[KC Details Debug] Fetched KC details:", kcResponse.data);
+              console.log("[KC Details Debug] curriculum_code:", kcResponse.data.curriculum_code);
               setKcDetails(kcResponse.data);
             }
           } catch (kcErr) {
@@ -165,6 +167,7 @@ const QuizView = () => {
           // If the student has ≥75% mastery, allow progression to next KC
           if (effectiveMastery >= 0.75) {
             try {
+              console.log("[Completion Effect] Full kcDetails:", kcDetails);
               const currentKcCurriculumCode = kcDetails?.curriculum_code;
               console.log(`[Completion Effect] ✅ Mastery threshold met (${(effectiveMastery * 100).toFixed(1)}% ≥ 75%). Getting next KC after: ${currentKcCurriculumCode}`);
 
