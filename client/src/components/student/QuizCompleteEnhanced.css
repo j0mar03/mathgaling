@@ -876,3 +876,34 @@
   margin: 0;
   line-height: 1.4;
 }
+
+
+/* Fixed Button Layout Styles */
+.primary-actions {
+  margin: 1.5rem 0;
+}
+
+.continue-to-next-button:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4) !important;
+}
+
+.retry-quiz-button:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 5px 15px rgba(52, 152, 219, 0.4) !important;
+}
+
+.nav-button:hover {
+  transform: translateY(-2px);
+  opacity: 0.9;
+}
+
+.loading-container {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.8; }
+  100% { opacity: 1; }
+}

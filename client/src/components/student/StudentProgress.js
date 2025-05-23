@@ -179,11 +179,67 @@ const StudentProgress = () => {
       }
     }, 30000);
     
-    // Check for quiz completion on mount
-    const checkQuizCompletion = () => {
+    // Enhanced quiz completion check with retry mechanism
+    const checkQuizCompletion = async () => {
       const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get('from_quiz') || localStorage.getItem('quiz_completed')) {
-        handleFocus();
+      const quizCompleted = urlParams.get('from_quiz') || localStorage.getItem('quiz_completed');
+      
+      if (quizCompleted) {
+        console.log('[StudentProgress] Quiz completion detected, implementing enhanced refresh');
+        
+        // Add delay to allow database processing
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // Clear the indicator to prevent infinite refreshes
+        localStorage.removeItem('quiz_completed');
+        urlParams.delete('from_quiz');
+        window.history.replaceState({}, '', window.location.pathname);
+        
+        // Implement retry mechanism for data fetching
+        let retryCount = 0;
+        const maxRetries = 3;
+        
+        const retryFetch = async () => {
+          try {
+            console.log(`[StudentProgress] Fetching updated data (attempt ${retryCount + 1}/${maxRetries})`);
+            setLoading(true);
+            
+            const headers = { Authorization: `Bearer ${token}` };
+            
+            // Force fresh data with stronger cache busting
+            const timestamp = Date.now();
+            const studentResponse = await axios.get(`/api/students/${studentId}?_t=${timestamp}&fresh=true`, { headers });
+            setStudent(studentResponse.data);
+            
+            const knowledgeStatesResponse = await axios.get(`/api/students/${studentId}/knowledge-states?_t=${timestamp}&fresh=true`, { headers });
+            setKnowledgeStates(knowledgeStatesResponse.data);
+
+            const gradeKCsResponse = await axios.get(`/api/students/${studentId}/grade-knowledge-components?_t=${timestamp}&fresh=true`, { headers });
+            setAllKnowledgeComponents(gradeKCsResponse.data);
+            
+            const performanceResponse = await axios.get(`/api/students/me/detailed-performance?_t=${timestamp}&fresh=true`, { headers });
+            if (performanceResponse.data.recentResponses) {
+              setResponses(performanceResponse.data.recentResponses);
+            }
+            
+            console.log('[StudentProgress] ✅ Data refresh completed successfully');
+            setLoading(false);
+            
+          } catch (error) {
+            console.error(`[StudentProgress] Retry ${retryCount + 1} failed:`, error);
+            retryCount++;
+            
+            if (retryCount < maxRetries) {
+              console.log(`[StudentProgress] Retrying in 2 seconds... (${retryCount}/${maxRetries})`);
+              setTimeout(retryFetch, 2000);
+            } else {
+              console.error('[StudentProgress] All retry attempts failed');
+              setLoading(false);
+            }
+          }
+        };
+        
+        retryFetch();
       }
     };
     

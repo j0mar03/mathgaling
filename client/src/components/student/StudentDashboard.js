@@ -193,14 +193,12 @@ const StudentDashboard = () => {
           }
         }
 
-        // Determine currentLearningStep
+        // Enhanced KC progression algorithm - finds where student left off
         let determinedStep = null;
         const allKcsFromModules = fetchedModules.flatMap(module => module.knowledgeComponents);
         
-        // First, try to identify KC1 by sorting all KCs by curriculum_code and taking the first one
-        // This is more reliable than searching by name
         if (allKcsFromModules.length > 0) {
-          // Sort by curriculum_code to get KC1
+          // Sort by curriculum_code to get proper KC sequence
           const sortedKCs = [...allKcsFromModules].sort((a, b) => {
             if (a.curriculum_code && b.curriculum_code) {
               return a.curriculum_code.localeCompare(b.curriculum_code);
@@ -208,23 +206,79 @@ const StudentDashboard = () => {
             return 0;
           });
           
-          const firstKC = sortedKCs[0];
+          // Find the first non-mastered KC in sequence (where student left off)
+          let nextKC = null;
+          let lastMasteredKC = null;
           
-          if (firstKC) {
-            const masteryValue = typeof firstKC.mastery === 'number' ? firstKC.mastery : 0;
-            // Prioritize first KC if new student (mastery very low) or if not fully mastered
-            if (masteryValue < 0.95) { 
-              determinedStep = {
-                id: firstKC.id,
-                name: firstKC.name,
-                description: firstKC.description || `Let's learn all about: ${firstKC.name}!`,
-                emoji: KC_ICONS[firstKC.name] || KC_ICONS.default,
-                mastery: Math.round(masteryValue * 100),
-                difficulty: firstKC.difficulty || 'medium',
-                type: 'kc',
-                isPrimary: true,
-              };
+          for (let i = 0; i < sortedKCs.length; i++) {
+            const kc = sortedKCs[i];
+            const masteryValue = typeof kc.mastery === 'number' ? kc.mastery : 0;
+            
+            if (masteryValue >= 0.95) {
+              // This KC is mastered
+              lastMasteredKC = kc;
+            } else {
+              // This is the first non-mastered KC - where student should continue
+              nextKC = kc;
+              break;
             }
+          }
+          
+          // Determine action type and button text
+          let actionType = 'start';
+          let buttonText = 'Simulan';
+          let description = '';
+          
+          if (nextKC) {
+            const masteryValue = typeof nextKC.mastery === 'number' ? nextKC.mastery : 0;
+            
+            if (lastMasteredKC) {
+              // Student has mastered some KCs, continuing progression
+              actionType = 'continue';
+              buttonText = 'Magpatuloy';
+              description = `Ipagpatuloy ang pag-aaral sa: ${nextKC.name}`;
+            } else if (masteryValue > 0 && masteryValue < 0.95) {
+              // Student started but hasn't mastered this KC
+              actionType = 'resume';
+              buttonText = 'Ipagpatuloy';
+              description = `Tapusin ang pag-aaral sa: ${nextKC.name}`;
+            } else {
+              // New student or first KC
+              actionType = 'start';
+              buttonText = 'Simulan';
+              description = `Magsimula sa: ${nextKC.name}`;
+            }
+            
+            determinedStep = {
+              id: nextKC.id,
+              name: nextKC.name,
+              description: description || `Let's learn all about: ${nextKC.name}!`,
+              emoji: KC_ICONS[nextKC.name] || KC_ICONS.default,
+              mastery: Math.round(masteryValue * 100),
+              difficulty: nextKC.difficulty || 'medium',
+              type: 'kc',
+              isPrimary: true,
+              actionType: actionType,
+              buttonText: buttonText
+            };
+          } else if (lastMasteredKC) {
+            // All KCs are mastered - perfect student!
+            actionType = 'perfect';
+            buttonText = 'Magpatuloy';
+            description = 'Napakahusay! Lahat ng paksa ay natapos na. Mag-review tayo!';
+            
+            determinedStep = {
+              id: lastMasteredKC.id,
+              name: 'Perfect Mastery!',
+              description: description,
+              emoji: '🏆',
+              mastery: 100,
+              difficulty: 'mastered',
+              type: 'review',
+              isPrimary: true,
+              actionType: actionType,
+              buttonText: buttonText
+            };
           }
         }
         
@@ -626,7 +680,7 @@ const StudentDashboard = () => {
               onMouseOver={(e) => e.target.style.transform = 'scale(1.05)'}
               onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
             >
-              Simulan na! (Let's Start!) ✨
+{currentLearningStep?.buttonText || 'Simulan'} na! ✨
             </button>
           </div>
         </section>

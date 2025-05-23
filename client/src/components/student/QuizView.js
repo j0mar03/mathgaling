@@ -622,38 +622,178 @@ const QuizView = () => {
           </div>
 
           <div className="action-buttons">
-            {/* Show different buttons based on performance and next topic search status */}
-            {(() => {
-              const performedWell = (actualPerformance >= 0.75 || scorePercentage >= 0.75);
+            {/* Fixed button layout with clear separation */}
+            <div className="primary-actions" style={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              gap: '1rem', 
+              alignItems: 'center',
+              marginBottom: '1rem'
+            }}>
+              {/* Continue to Next Topic Button (if available) */}
+              {(() => {
+                const performedWell = (actualPerformance >= 0.75 || scorePercentage >= 0.75);
+                
+                // Show loading state while searching
+                if (performedWell && searchingNextTopic) {
+                  return (
+                    <div className="loading-container" style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      padding: '1rem',
+                      background: 'linear-gradient(135deg, #f39c12, #e67e22)',
+                      borderRadius: '15px',
+                      color: 'white',
+                      minWidth: '250px'
+                    }}>
+                      <div style={{
+                        width: '30px',
+                        height: '30px',
+                        border: '3px solid rgba(255,255,255,0.3)',
+                        borderTop: '3px solid white',
+                        borderRadius: '50%',
+                        animation: 'spin 1s linear infinite',
+                        marginBottom: '0.5rem'
+                      }}></div>
+                      <span>🔍 Finding Next Topic...</span>
+                    </div>
+                  );
+                }
+                
+                // Show continue button if next topic is found
+                if (performedWell && nextTopicSearchComplete && nextKcIdForContinuation) {
+                  return (
+                    <button 
+                      onClick={handleContinueToNextTopic} 
+                      className="continue-to-next-button"
+                      style={{
+                        background: 'linear-gradient(135deg, #27ae60, #2ecc71)',
+                        color: 'white',
+                        border: 'none',
+                        padding: '1rem 2rem',
+                        borderRadius: '25px',
+                        fontSize: '1.1rem',
+                        fontWeight: 'bold',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        minWidth: '250px',
+                        justifyContent: 'center',
+                        boxShadow: '0 4px 15px rgba(39, 174, 96, 0.3)'
+                      }}
+                      onMouseOver={(e) => {
+                        e.target.style.transform = 'translateY(-2px)';
+                        e.target.style.boxShadow = '0 6px 20px rgba(39, 174, 96, 0.4)';
+                      }}
+                      onMouseOut={(e) => {
+                        e.target.style.transform = 'translateY(0)';
+                        e.target.style.boxShadow = '0 4px 15px rgba(39, 174, 96, 0.3)';
+                      }}
+                    >
+                      🚀 Continue to Next Topic!
+                    </button>
+                  );
+                }
+                
+                return null; // No continue button if conditions not met
+              })()}
               
-              // If still searching for next topic, show loading button
-              if (performedWell && searchingNextTopic) {
-                return (
-                  <button disabled className="retry-button" style={{ backgroundColor: '#f39c12', opacity: 0.7 }}>
-                    🔍 Finding Next Topic...
-                  </button>
-                );
-              }
-              
-              // If performed well and search is complete with next topic found
-              if (performedWell && nextTopicSearchComplete && nextKcIdForContinuation) {
-                return (
-                  <button onClick={handleContinueToNextTopic} className="retry-button" style={{ backgroundColor: '#2ecc71' }}>
-                    🚀 Continue to Next Topic!
-                  </button>
-                );
-              }
-              
-              // Default: show retry button
-              return (
-                <button onClick={handleRetryQuiz} className="retry-button">
-                  🔁 Retry Quiz
-                </button>
-              );
-            })()}
-            <button onClick={handleBackToDashboard} className="back-button">
-              🏠 Back to Dashboard
-            </button>
+              {/* Retry Quiz Button (separate from continue button) */}
+              {(() => {
+                const scorePercentage = score / questions.length;
+                const showRetry = scorePercentage < 0.8; // Show retry for scores below 80%
+                
+                if (showRetry) {
+                  return (
+                    <button 
+                      onClick={handleRetryQuiz} 
+                      className="retry-quiz-button"
+                      style={{
+                        background: 'linear-gradient(135deg, #3498db, #5dade2)',
+                        color: 'white',
+                        border: 'none',
+                        padding: '0.8rem 1.8rem',
+                        borderRadius: '20px',
+                        fontSize: '1rem',
+                        fontWeight: '600',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        minWidth: '200px',
+                        justifyContent: 'center',
+                        boxShadow: '0 3px 10px rgba(52, 152, 219, 0.3)'
+                      }}
+                      onMouseOver={(e) => {
+                        e.target.style.transform = 'translateY(-2px)';
+                        e.target.style.boxShadow = '0 5px 15px rgba(52, 152, 219, 0.4)';
+                      }}
+                      onMouseOut={(e) => {
+                        e.target.style.transform = 'translateY(0)';
+                        e.target.style.boxShadow = '0 3px 10px rgba(52, 152, 219, 0.3)';
+                      }}
+                    >
+                      🔁 Try Again
+                    </button>
+                  );
+                }
+                
+                return null; // No retry button for high scores
+              })()}
+            </div>
+            
+            {/* Navigation buttons */}
+            <div className="navigation-buttons" style={{
+              display: 'flex',
+              gap: '1rem',
+              justifyContent: 'center',
+              flexWrap: 'wrap'
+            }}>
+              <button 
+                onClick={handleBackToDashboard} 
+                className="nav-button"
+                style={{
+                  background: 'linear-gradient(135deg, #6c757d, #8b939d)',
+                  color: 'white',
+                  border: 'none',
+                  padding: '0.8rem 1.5rem',
+                  borderRadius: '20px',
+                  fontSize: '1rem',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}
+              >
+                🏠 Back to Dashboard
+              </button>
+              <button 
+                onClick={() => window.location.href = '/student/progress'}
+                className="nav-button"
+                style={{
+                  background: 'linear-gradient(135deg, #8e44ad, #9b59b6)',
+                  color: 'white',
+                  border: 'none',
+                  padding: '0.8rem 1.5rem',
+                  borderRadius: '20px',
+                  fontSize: '1rem',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem'
+                }}
+              >
+                📊 View Progress
+              </button>
+            </div>
           </div>
 
           <p className="encouragement-quote" style={{ fontStyle: 'italic', margin: '1rem 0', color: '#7f8c8d' }}>
