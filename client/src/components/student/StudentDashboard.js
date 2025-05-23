@@ -715,6 +715,37 @@ const StudentDashboard = () => {
               Start Quiz 📝
             </button>
           </div>
+
+          {/* Progress Card */}
+          <div style={{
+            background: 'linear-gradient(135deg, #9C27B0, #E91E63)',
+            borderRadius: '15px',
+            padding: '20px',
+            textAlign: 'center',
+            color: 'white',
+            boxShadow: '0 4px 15px rgba(156,39,176,0.3)'
+          }}>
+            <div style={{ fontSize: '48px', marginBottom: '15px' }}>📊</div>
+            <h3 style={{ fontSize: '1.5em', marginBottom: '10px' }}>My Progress</h3>
+            <p style={{ marginBottom: '20px' }}>See how you're doing!</p>
+            <button
+              onClick={() => navigate('/student/progress')}
+              style={{
+                background: 'white',
+                color: '#9C27B0',
+                padding: '12px 25px',
+                borderRadius: '25px',
+                border: 'none',
+                fontSize: '1.1em',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                width: '100%',
+                boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
+              }}
+            >
+              View Progress 📈
+            </button>
+          </div>
         </div>
       </section>
 

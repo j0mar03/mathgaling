@@ -77,3 +77,6 @@ Maintain this URL structure: `/student/quiz/{id}?kc_id={kc_id}&mode=sequential&q
 - Add memory because of upcoming git push
 - Added memory placeholder
 - Memory to add: Added memory placeholder
+
+## Memories
+- Fix math mastery

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
-import { useAuth } from '../../context/AuthContext';
-import './PracticeQuizView.css'; // Use PracticeQuizView styles
+import { useAuth } from '../../context/AuthContext';\nimport { enhanceQuizCompletion, getMotivationalQuote } from './QuizEnhancer';
+import './PracticeQuizView.css'; // Use PracticeQuizView styles\nimport './QuizCompleteEnhanced.css'; // Enhanced completion styles
 
 const QuizView = () => {
   const navigate = useNavigate();
@@ -481,6 +481,10 @@ const QuizView = () => {
   const handleBackToDashboard = async () => {
     // Small delay to ensure Supabase mastery update completes
     await new Promise(resolve => setTimeout(resolve, 1000));
+    
+    // Set completion indicator for progress page refresh
+    localStorage.setItem('quiz_completed', 'true');
+    
     // Force refresh of dashboard data by adding timestamp
     navigate('/student?refresh=' + Date.now());
   };
@@ -510,9 +514,14 @@ const QuizView = () => {
   const handleContinueToNextTopic = () => {
     if (!nextKcIdForContinuation) {
       console.warn("Cannot continue, next KC ID not available. Navigating to dashboard.");
+      // Set completion indicator before navigating
+      localStorage.setItem('quiz_completed', 'true');
       navigate('/student?refresh=' + Date.now());
       return;
     }
+    
+    // Set completion indicator for potential future returns to progress
+    localStorage.setItem('quiz_completed', 'true');
     
     // Navigate to the start of the next KC's sequence
     const nextUrl = `/student/quiz?kc_id=${nextKcIdForContinuation}&mode=sequential`;
@@ -560,21 +569,21 @@ const QuizView = () => {
     if (actualPerformance >= 0.9 || scorePercentage >= 0.9) {
       masteryStatusText = 'Mastered!';
       currentKcStatusText = 'Mastered! 🎉';
-      encouragingQuote = `Wow! You mastered ${currentKcName}! Amazing job! 🚀`;
+      encouragingQuote = getMotivationalQuote(scorePercentage, currentKcName);
       showUnlockMessage = true;
     } else if (actualPerformance >= 0.75 || scorePercentage >= 0.75) {
       masteryStatusText = 'Excellent!';
       currentKcStatusText = 'Excellent Progress! 👍';
-      encouragingQuote = `Great work! You're doing fantastic on ${currentKcName}! Keep it up! ✨`;
+      encouragingQuote = getMotivationalQuote(scorePercentage, currentKcName);
       showUnlockMessage = true;
     } else if (actualPerformance >= 0.5 || scorePercentage >= 0.5) {
       masteryStatusText = 'Good Progress';
       currentKcStatusText = 'Making Good Progress 😊';
-      encouragingQuote = `Nice try! You're learning ${currentKcName}. Practice makes perfect! 💪`;
+      encouragingQuote = getMotivationalQuote(scorePercentage, currentKcName);
     } else {
       masteryStatusText = 'Needs Review';
       currentKcStatusText = 'Needs Review 🧐';
-      encouragingQuote = `Great start! Let's keep practicing ${currentKcName} to get even better! 💡`;
+      encouragingQuote = getMotivationalQuote(scorePercentage, currentKcName);
     }
 
     return (

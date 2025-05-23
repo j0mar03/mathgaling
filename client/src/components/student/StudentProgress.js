@@ -35,7 +35,9 @@ const StudentProgress = () => {
   const [responses, setResponses] = useState([]);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const [topicsPerPage] = useState(8); // Number of topics to show per page
+  const [topicsPerPage] = useState(12); // Number of topics to show per page
+  const [selectedArea, setSelectedArea] = useState('all'); // Filter by curriculum area
+  const [showOnlyStarted, setShowOnlyStarted] = useState(false); // Filter by started status
   const { user, token } = useAuth(); // Get user AND token from context
 
   // Use the authenticated user's ID
@@ -106,11 +108,23 @@ const StudentProgress = () => {
     fetchData();
   }, [studentId, token]);
 
-  // Add window focus listener and periodic refresh like MasteryLevelDashboard
+  // Enhanced refresh functionality with quiz completion detection
   useEffect(() => {
     const handleFocus = () => {
       console.log("[StudentProgress] Window focused, refreshing data...");
       if (token && studentId) {
+        // Check if returning from quiz (URL params or localStorage)
+        const urlParams = new URLSearchParams(window.location.search);
+        const returnedFromQuiz = urlParams.get('from_quiz') || localStorage.getItem('quiz_completed');
+        
+        if (returnedFromQuiz) {
+          console.log("[StudentProgress] Detected return from quiz, forcing refresh");
+          // Clear the indicator
+          urlParams.delete('from_quiz');
+          localStorage.removeItem('quiz_completed');
+          window.history.replaceState({}, '', window.location.pathname);
+        }
+        
         setLoading(true);
         // Re-fetch data when window gains focus
         const fetchDataOnFocus = async () => {
@@ -126,6 +140,12 @@ const StudentProgress = () => {
             const gradeKCsResponse = await axios.get(`/api/students/${studentId}/grade-knowledge-components?_t=${Date.now()}`, { headers });
             setAllKnowledgeComponents(gradeKCsResponse.data);
             
+            // Also refresh recent activity
+            const performanceResponse = await axios.get(`/api/students/me/detailed-performance?_t=${Date.now()}`, { headers });
+            if (performanceResponse.data.recentResponses) {
+              setResponses(performanceResponse.data.recentResponses);
+            }
+            
           } catch (error) {
             console.error("[StudentProgress] Error refreshing data:", error);
           } finally {
@@ -139,15 +159,42 @@ const StudentProgress = () => {
 
     window.addEventListener('focus', handleFocus);
     
-    // Add periodic refresh every 30 seconds
+    // Add periodic refresh every 30 seconds, but only if user is active
+    let lastActivity = Date.now();
+    const activityEvents = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
+    
+    const updateActivity = () => {
+      lastActivity = Date.now();
+    };
+    
+    activityEvents.forEach(event => {
+      document.addEventListener(event, updateActivity, true);
+    });
+    
     const refreshInterval = setInterval(() => {
-      console.log("[StudentProgress] Periodic refresh triggered");
-      handleFocus();
+      // Only refresh if user was active in the last 2 minutes
+      if (Date.now() - lastActivity < 120000) {
+        console.log("[StudentProgress] Periodic refresh triggered");
+        handleFocus();
+      }
     }, 30000);
+    
+    // Check for quiz completion on mount
+    const checkQuizCompletion = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('from_quiz') || localStorage.getItem('quiz_completed')) {
+        handleFocus();
+      }
+    };
+    
+    checkQuizCompletion();
     
     return () => {
       window.removeEventListener('focus', handleFocus);
       clearInterval(refreshInterval);
+      activityEvents.forEach(event => {
+        document.removeEventListener(event, updateActivity, true);
+      });
     };
   }, [studentId, token]); // Dependency array includes studentId and token from context
   
@@ -184,22 +231,35 @@ const StudentProgress = () => {
   // Calculate pagination for topics
   const indexOfLastTopic = currentPage * topicsPerPage;
   const indexOfFirstTopic = indexOfLastTopic - topicsPerPage;
-  // Sort by mastery, then by whether it's started (to show started ones first within same mastery), then by name
-  const sortedCombinedKCs = [...combinedKCs].sort((a, b) => {
+  // Filter by curriculum area and started status
+  const filteredKCs = combinedKCs.filter(kc => {
+    const matchesArea = selectedArea === 'all' || kc.curriculum_code?.includes(selectedArea);
+    const matchesStarted = !showOnlyStarted || kc.started;
+    return matchesArea && matchesStarted;
+  });
+
+  // Sort by mastery, then by whether it's started, then by curriculum code, then by name
+  const sortedCombinedKCs = [...filteredKCs].sort((a, b) => {
     // Primary sort: p_mastery descending
     if (b.p_mastery !== a.p_mastery) {
       return (b.p_mastery || 0) - (a.p_mastery || 0);
     }
     // Secondary sort: started KCs before unstarted KCs
     if (a.started !== b.started) {
-      return a.started ? -1 : 1; // if a.started is true, it comes before b (false)
+      return a.started ? -1 : 1;
     }
-    // Tertiary sort: alphabetically by name
+    // Tertiary sort: by curriculum code
+    const curriculumA = a.curriculum_code || '';
+    const curriculumB = b.curriculum_code || '';
+    if (curriculumA !== curriculumB) {
+      return curriculumA.localeCompare(curriculumB);
+    }
+    // Quaternary sort: alphabetically by name
     return (a.name || '').localeCompare(b.name || '');
   });
 
   const currentTopics = sortedCombinedKCs.slice(indexOfFirstTopic, indexOfLastTopic);
-  const totalPages = Math.ceil(combinedKCs.length / topicsPerPage);
+  const totalPages = Math.ceil(sortedCombinedKCs.length / topicsPerPage);
 
   // Function to change page
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
@@ -404,11 +464,162 @@ const StudentProgress = () => {
           <div className="activity-count">{responses.length} responses</div>
           <p>sa huling session</p>
         </div>
+        
+        <div className="summary-card">
+          <h3>🏆 Mastery Level</h3>
+          <div className="mastery-level">
+            {combinedKCs.filter(kc => kc.p_mastery >= 0.8).length}
+          </div>
+          <p>mastered topics</p>
+        </div>
+      </div>
+      
+      {/* Filter Controls */}
+      <div className="filter-controls">
+        <div className="filter-group">
+          <label>Filter by Area:</label>
+          <select 
+            value={selectedArea} 
+            onChange={(e) => {
+              setSelectedArea(e.target.value);
+              setCurrentPage(1); // Reset to first page when filtering
+            }}
+            className="filter-select"
+          >
+            <option value="all">All Areas</option>
+            <option value="NS">🔢 Number Sense</option>
+            <option value="GEO">📐 Geometry</option>
+            <option value="MEAS">📏 Measurement</option>
+            <option value="ALG">🧮 Algebra</option>
+            <option value="STAT">📊 Statistics</option>
+          </select>
+        </div>
+        
+        <div className="filter-group">
+          <label>
+            <input
+              type="checkbox"
+              checked={showOnlyStarted}
+              onChange={(e) => {
+                setShowOnlyStarted(e.target.checked);
+                setCurrentPage(1); // Reset to first page when filtering
+              }}
+            />
+            Show only started topics
+          </label>
+        </div>
+        
+        <div className="results-info">
+          Showing {sortedCombinedKCs.length} of {combinedKCs.length} topics
+        </div>
       </div>
       
       <div className="mastery-chart">
-        <h2>Mastery by Topic</h2>
-        <div className="chart-container">
+        <h2>Mastery by Topic {selectedArea !== 'all' && `- ${areaNames[selectedArea] || selectedArea}`}</h2>
+        
+        {/* Topic Cards Grid */}
+        <div className="topic-cards-grid">
+          {currentTopics.map((kc, index) => {
+            const masteryPercentage = Math.round((kc.p_mastery || 0) * 100);
+            const getTopicEmoji = (name) => {
+              const lower = name.toLowerCase();
+              if (lower.includes('number')) return '🔢';
+              if (lower.includes('add')) return '➕';
+              if (lower.includes('subtract')) return '➖';
+              if (lower.includes('multiply')) return '✖️';
+              if (lower.includes('divid')) return '➗';
+              if (lower.includes('money')) return '💰';
+              if (lower.includes('place value')) return '🔣';
+              if (lower.includes('compar')) return '⚖️';
+              if (lower.includes('order')) return '📊';
+              if (lower.includes('round')) return '🔄';
+              if (lower.includes('fraction')) return '½';
+              if (lower.includes('ordinal')) return '🏅';
+              return '📝';
+            };
+            
+            return (
+              <div key={kc.id} className={`topic-card ${!kc.started ? 'not-started' : ''}`}>
+                <div className="topic-header">
+                  <span className="topic-emoji">{getTopicEmoji(kc.name)}</span>
+                  <div className="topic-title">
+                    <h4>{kc.name?.replace(/^KC\d+:\s*/, '') || 'Unknown Topic'}</h4>
+                    <span className="curriculum-code">{kc.curriculum_code}</span>
+                  </div>
+                </div>
+                
+                <div className="topic-progress">
+                  <div className="progress-circle">
+                    <svg viewBox="0 0 36 36" className="circular-chart">
+                      <path className="circle-bg"
+                        d="M18 2.0845
+                          a 15.9155 15.9155 0 0 1 0 31.831
+                          a 15.9155 15.9155 0 0 1 0 -31.831"
+                      />
+                      <path className="circle"
+                        strokeDasharray={`${masteryPercentage}, 100`}
+                        d="M18 2.0845
+                          a 15.9155 15.9155 0 0 1 0 31.831
+                          a 15.9155 15.9155 0 0 1 0 -31.831"
+                        style={{
+                          stroke: masteryPercentage >= 80 ? '#27ae60' : 
+                                  masteryPercentage >= 50 ? '#3498db' : '#e74c3c'
+                        }}
+                      />
+                      <text x="18" y="20.35" className="percentage">{masteryPercentage}%</text>
+                    </svg>
+                  </div>
+                  
+                  <div className="mastery-status">
+                    {masteryPercentage >= 80 ? '🏆 Mastered!' :
+                     masteryPercentage >= 50 ? '📈 Good Progress' :
+                     kc.started ? '💪 Keep Practicing' : '🆕 Not Started'}
+                  </div>
+                </div>
+                
+                <div className="topic-actions">
+                  {kc.started ? (
+                    <Link 
+                      to={`/student/quiz?kc_id=${kc.id}&mode=practice`}
+                      className="practice-button"
+                    >
+                      {masteryPercentage >= 80 ? '🔄 Review' : '📚 Practice'}
+                    </Link>
+                  ) : (
+                    <Link 
+                      to={`/student/quiz?kc_id=${kc.id}&mode=practice`}
+                      className="start-button"
+                    >
+                      🚀 Start Learning
+                    </Link>
+                  )}
+                </div>
+                
+                {kc.description && (
+                  <div className="topic-description">
+                    {kc.description}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+        
+        {/* Keep the bar chart as an alternative view */}
+        <div className="chart-toggle">
+          <button 
+            onClick={() => {
+              const chartContainer = document.querySelector('.chart-container');
+              const isHidden = chartContainer.style.display === 'none';
+              chartContainer.style.display = isHidden ? 'block' : 'none';
+            }}
+            className="toggle-chart-btn"
+          >
+            📊 Toggle Bar Chart View
+          </button>
+        </div>
+        
+        <div className="chart-container" style={{ display: 'none', marginTop: '20px' }}>
           <Bar data={chartData} options={chartOptions} />
         </div>
         
