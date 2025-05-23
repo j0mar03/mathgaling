@@ -111,6 +111,9 @@ exports.handler = async (event, context) => {
           knowledge_component_id,
           difficulty,
           metadata,
+          options,
+          correct_answer,
+          explanation,
           knowledge_components (
             id,
             name,
@@ -1431,6 +1434,9 @@ exports.handler = async (event, context) => {
           knowledge_component_id,
           difficulty,
           metadata,
+          options,
+          correct_answer,
+          explanation,
           knowledge_components (
             id,
             name,
@@ -1834,6 +1840,9 @@ exports.handler = async (event, context) => {
           knowledge_component_id,
           difficulty,
           metadata,
+          options,
+          correct_answer,
+          explanation,
           knowledge_components (
             id,
             name,
@@ -2220,6 +2229,11 @@ exports.handler = async (event, context) => {
       const studentId = pathParts[pathParts.indexOf('students') + 1];
       const responseData = JSON.parse(event.body);
       
+      console.log('[DEBUG] Response submission data:', responseData);
+      console.log('[DEBUG] Content item ID (camelCase):', responseData.contentItemId);
+      console.log('[DEBUG] Content item ID (snake_case):', responseData.content_item_id);
+      console.log('[DEBUG] Student ID:', studentId);
+      
       const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
       const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkJXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
       
@@ -2230,11 +2244,11 @@ exports.handler = async (event, context) => {
         .from('responses')
         .insert({
           student_id: parseInt(studentId),
-          content_item_id: responseData.contentItemId,
+          content_item_id: responseData.content_item_id || responseData.contentItemId,
           answer: responseData.answer,
-          correct: responseData.isCorrect,
-          time_spent: responseData.timeSpent || null,
-          interaction_data: responseData.interactionData || null
+          correct: responseData.correct || responseData.isCorrect,
+          time_spent: responseData.time_spent || responseData.timeSpent || null,
+          interaction_data: responseData.interaction_data || responseData.interactionData || null
         })
         .select()
         .single();
@@ -2251,18 +2265,20 @@ exports.handler = async (event, context) => {
         };
       }
       
-      // Update or create knowledge state
-      if (responseData.knowledgeComponentId) {
+      // Update or create knowledge state  
+      const kcId = responseData.knowledge_component_id || responseData.knowledgeComponentId;
+      if (kcId) {
         const { data: existingState } = await supabase
           .from('knowledge_states')
           .select('*')
           .eq('student_id', studentId)
-          .eq('knowledge_component_id', responseData.knowledgeComponentId)
+          .eq('knowledge_component_id', kcId)
           .single();
           
         if (existingState) {
           // Update existing state - simple increment for now
-          const newMastery = responseData.isCorrect ? 
+          const isCorrect = responseData.correct || responseData.isCorrect;
+          const newMastery = isCorrect ? 
             Math.min(existingState.mastery_level + 0.1, 1.0) : 
             Math.max(existingState.mastery_level - 0.05, 0);
             
@@ -2273,15 +2289,15 @@ exports.handler = async (event, context) => {
               last_updated: new Date().toISOString()
             })
             .eq('student_id', studentId)
-            .eq('knowledge_component_id', responseData.knowledgeComponentId);
+            .eq('knowledge_component_id', kcId);
         } else {
           // Create new knowledge state
           await supabase
             .from('knowledge_states')
             .insert({
               student_id: parseInt(studentId),
-              knowledge_component_id: responseData.knowledgeComponentId,
-              mastery_level: responseData.isCorrect ? 0.6 : 0.4,
+              knowledge_component_id: kcId,
+              mastery_level: isCorrect ? 0.6 : 0.4,
               last_updated: new Date().toISOString()
             });
         }
