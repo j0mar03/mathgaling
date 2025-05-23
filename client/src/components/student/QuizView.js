@@ -155,6 +155,17 @@ const QuizView = () => {
         console.log("[loadSequentialIds] Fetched sequential sequence:", fetchedSequence);
         setSequentialIds(fetchedSequence);
         setHasLoadedSequentialIds(true);
+        
+        // Set the correct sequential index based on the current question ID
+        if (id) {
+          const currentIndex = fetchedSequence.findIndex(item => item.id.toString() === id.toString());
+          if (currentIndex !== -1) {
+            console.log(`[loadSequentialIds] Found current question at index ${currentIndex} in sequence`);
+            setCurrentSequentialIndex(currentIndex);
+          } else {
+            console.log(`[loadSequentialIds] Current question ID ${id} not found in sequence`);
+          }
+        }
         // totalQuestions is already fixed at 8, QuizSummary also defaults to 8.
         // The display will use sequentialIds.length for "X of Y" in sequential mode.
 
@@ -168,22 +179,34 @@ const QuizView = () => {
             console.log('[QuizView] Current id from params:', id);
             console.log('[QuizView] Current kc_id from query:', queryParams.get('kc_id'));
             
-            // Only navigate if the current 'id' (from URL params) is not already the first in sequence
-            // or if 'id' is not present (e.g. initial load via kc_id or just mode=sequential)
-            // Also, if currentKcId is provided and differs from the one in queryParams, it means we are starting a new KC sequence.
-            if (id !== firstQuestionIdInSequence.toString() || !id || (currentKcId && queryParams.get('kc_id') !== currentKcId)) {
+            // Only navigate if:
+            // 1. No ID is present (initial load), OR
+            // 2. Starting a new KC sequence (different kc_id), OR  
+            // 3. User is on question 1 but not the first question in sequence
+            // Do NOT navigate if user is already in progress (qnum > 1) - let them continue where they are
+            const currentQNum = parseInt(queryParams.get('qnum'), 10) || 1;
+            const isInProgress = currentQNum > 1;
+            const isNewKcSequence = currentKcId && queryParams.get('kc_id') !== currentKcId;
+            const isInitialLoad = !id;
+            const needsRedirectToFirst = id && currentQNum === 1 && id !== firstQuestionIdInSequence.toString();
+            
+            if (isInitialLoad || isNewKcSequence || needsRedirectToFirst) {
                  const navigateUrl = currentKcId 
                                    ? `/student/quiz/${firstQuestionIdInSequence}?kc_id=${currentKcId}&mode=sequential&qnum=1&correct=0`
                                    : `/student/quiz/${firstQuestionIdInSequence}?mode=sequential&qnum=1&correct=0`;
                  console.log(`[QuizView] Navigating to first question in sequence: ${firstQuestionIdInSequence} for KC ID: ${currentKcId}. URL: ${navigateUrl}`);
-                 // Ensure navigation doesn't get stuck if the current ID is already the first one.
-                 // This can happen if the component re-renders but id is already correct.
-                 // The `replace: true` helps manage history.
                  navigate(navigateUrl, { replace: true });
             } else {
-                 console.log(`[QuizView] Already on the first question of the sequence (${id}) for KC ID (${queryParams.get('kc_id')}), no navigation needed from loadSequentialIds.`);
-                 // If already on the correct ID, ensure content is loaded for it.
-                 // This might be handled by the loadSequentialQuiz effect.
+                 console.log(`[QuizView] NOT navigating because:`, {
+                   isInProgress,
+                   currentQNum,
+                   currentId: id,
+                   firstQuestionId: firstQuestionIdInSequence,
+                   isNewKcSequence,
+                   isInitialLoad,
+                   needsRedirectToFirst
+                 });
+                 console.log(`[QuizView] User is already in correct position - staying on current question`);
             }
         } else {
             console.log('[QuizView] No questions in fetchedSequence');
@@ -215,13 +238,20 @@ const QuizView = () => {
       const kcIdFromQuery = queryParams.get('kc_id');
       console.log('[QuizView] Triggering loadSequentialIds with KC ID:', kcIdFromQuery);
       loadSequentialIds(kcIdFromQuery);
+    } else if (isSequentialMode && hasLoadedSequentialIds && id && sequentialIds.length > 0) {
+      // Update sequential index if we have loaded sequence and current ID
+      const currentIndex = sequentialIds.findIndex(item => item.id.toString() === id.toString());
+      if (currentIndex !== -1 && currentIndex !== currentSequentialIndex) {
+        console.log(`[QuizView] Updating sequential index to ${currentIndex} for question ID ${id}`);
+        setCurrentSequentialIndex(currentIndex);
+      }
     } else if (isSequentialMode && !id && hasLoadedSequentialIds && sequentialIds.length === 0) {
       // If we've loaded but found no questions, show error instead of just setting loading to false
       console.log('[QuizView] No sequential IDs found, setting error');
       setError('No quiz questions available for this topic. Please try another topic or contact support.');
       setLoading(false);
     }
-  }, [isSequentialMode, id, token, studentId, hasLoadedSequentialIds, isLoadingSequentialIds, location.search, navigate, sequentialIds.length]); // Added location.search and navigate
+  }, [isSequentialMode, id, token, studentId, hasLoadedSequentialIds, isLoadingSequentialIds, location.search, navigate, sequentialIds.length, sequentialIds, currentSequentialIndex]); // Added location.search and navigate
 
   // Fetch student name
   useEffect(() => {
