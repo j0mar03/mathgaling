@@ -21,6 +21,10 @@ const QuizView = () => {
   const [score, setScore] = useState(0);
   const [kcDetails, setKcDetails] = useState(null);
   const [answeredQuestions, setAnsweredQuestions] = useState([]);
+  const [nextKcIdForContinuation, setNextKcIdForContinuation] = useState(null);
+  const [strugglingKCs, setStrugglingKCs] = useState([]);
+  const [quizCompletionStatus, setQuizCompletionStatus] = useState(null);
+  const [masteryLevel, setMasteryLevel] = useState(0);
 
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
@@ -130,6 +134,98 @@ const QuizView = () => {
     return () => clearInterval(timer);
   }, [location.search, token, user?.id]);
 
+  // Fetch completion data when quiz is completed
+  useEffect(() => {
+    if (quizCompleted && user?.id && token) {
+      const fetchCompletionData = async () => {
+        try {
+          // Calculate mastery level
+          const calculatedMasteryLevel = questions.length > 0 ? score / questions.length : 0;
+          setMasteryLevel(calculatedMasteryLevel);
+
+          // Always try to fetch the next topic ID for the "Continue" button logic
+          let nextKcId = null;
+          
+          // Try kid-friendly endpoint first
+          try {
+            const currentKcCurriculumCode = kcDetails?.curriculum_code;
+            const params = {};
+            if (currentKcCurriculumCode) {
+              params.current_kc_curriculum_code = currentKcCurriculumCode;
+            }
+            console.log(`[Completion Effect] Fetching kid-friendly next activity. Current KC curriculum_code: ${currentKcCurriculumCode}`);
+
+            const nextActivityResponse = await axios.get(`/api/students/${user.id}/kid-friendly-next-activity`, {
+              headers: { Authorization: `Bearer ${token}` },
+              params: params
+            });
+
+            if (nextActivityResponse.data && nextActivityResponse.data.kc_id) {
+              nextKcId = nextActivityResponse.data.kc_id;
+              console.log(`[Completion Effect] Found next KC ID via kid-friendly: ${nextKcId}`);
+            } else if (nextActivityResponse.data && (nextActivityResponse.data.completed_sequence || nextActivityResponse.data.all_mastered)) {
+              console.log(`[Completion Effect] Kid-friendly endpoint indicated sequence completion or all mastered`);
+              nextKcId = null;
+            }
+          } catch (err) {
+            console.warn("[Completion Effect] Error fetching kid-friendly next activity:", err.message);
+          }
+
+          // Fallback to recommended content endpoint
+          if (!nextKcId) {
+            try {
+              console.log("[Completion Effect] Trying /recommended-content as fallback.");
+              const recommendResponse = await axios.get(`/api/students/${user.id}/recommended-content`, {
+                headers: { Authorization: `Bearer ${token}` },
+              });
+              if (recommendResponse.data && recommendResponse.data.length > 0 && recommendResponse.data[0].kc_id) {
+                nextKcId = recommendResponse.data[0].kc_id;
+                console.log(`[Completion Effect] Found next KC ID via recommended-content: ${nextKcId}`);
+              }
+            } catch (err) {
+              console.warn("[Completion Effect] Error fetching recommended content:", err.message);
+            }
+          }
+          
+          if (nextKcId) {
+            setNextKcIdForContinuation(nextKcId);
+          }
+
+          // Fetch struggling KCs if mastery is below 80%
+          if (calculatedMasteryLevel < 0.8) {
+            try {
+              console.log("[Completion Effect] Fetching struggling KCs...");
+              const response = await axios.get(`/api/students/${user.id}/struggling-kcs`, {
+                headers: { Authorization: `Bearer ${token}` }
+              });
+              setStrugglingKCs(response.data || []);
+            } catch (error) {
+              console.error("[Completion Effect] Error fetching struggling KCs:", error);
+              setStrugglingKCs([]);
+            }
+          } else {
+            setStrugglingKCs([]);
+          }
+
+          // Set completion status
+          setQuizCompletionStatus({
+            status: 'completed',
+            message: 'Quiz completed! Great job!',
+            masteryAchieved: calculatedMasteryLevel >= 0.75,
+            currentMastery: calculatedMasteryLevel,
+            masteryThreshold: 0.75,
+            showKCRecommendations: true
+          });
+
+        } catch (error) {
+          console.error("[Completion Effect] Error fetching completion data:", error);
+        }
+      };
+
+      fetchCompletionData();
+    }
+  }, [quizCompleted, user?.id, token, score, questions.length, kcDetails]);
+
   // Enhanced answer validation function
   const validateAnswer = (studentAnswer, correctAnswer) => {
     if (!studentAnswer || !correctAnswer) {
@@ -238,19 +334,37 @@ const QuizView = () => {
       }
     ]);
     
-    // Submit response to backend
+    // Submit response to backend (NOT practice mode - this should update mastery)
     try {
-      await axios.post(`/api/students/${user.id}/responses`, {
+      console.log('[QuizView] Submitting mastery quiz response for KC progress update');
+      console.log('[QuizView] Question details:', {
+        id: currentQuestion.id,
+        kc_id: currentQuestion.knowledge_component?.id,
+        kc_name: currentQuestion.knowledge_component?.name
+      });
+      
+      const response = await axios.post(`/api/students/${user.id}/responses`, {
         content_item_id: currentQuestion.id,
         answer: currentQuestion.type === 'fill_in_blank' ? fillInAnswer : selectedOption,
         time_spent: timeSpent, 
         interaction_data: {
+          hintRequests: 0,
+          attempts: 1,
           selectedOption: currentQuestion.type === 'fill_in_blank' ? fillInAnswer : selectedOption
         },
-        correct: isCorrect
+        correct: isCorrect,
+        practice_mode: false // Explicitly set to false to ensure mastery updates
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      
+      console.log('[QuizView] Response submitted successfully:', response.data);
+      
+      // Log if mastery was updated
+      if (response.data?.knowledgeState) {
+        console.log(`[QuizView] Knowledge state updated - new mastery: ${(response.data.knowledgeState.p_mastery * 100).toFixed(1)}%`);
+      }
+      
     } catch (err) {
       console.error('Error recording response:', err);
       // Non-critical, so continue without showing error to user
@@ -274,7 +388,7 @@ const QuizView = () => {
   };
 
   const handleRetryQuiz = () => {
-    // Reset all state
+    // Reset all state for retry
     setCurrentQuestionIndex(0);
     setSelectedOption(null);
     setFillInAnswer('');
@@ -283,7 +397,26 @@ const QuizView = () => {
     setScore(0);
     setQuizCompleted(false);
     setAnsweredQuestions([]);
+    setQuizCompletionStatus(null);
+    setStrugglingKCs([]);
+    setNextKcIdForContinuation(null);
     setTimeSpent(0);
+    
+    // Reload the current quiz
+    window.location.reload();
+  };
+
+  const handleContinueToNextTopic = () => {
+    if (!nextKcIdForContinuation) {
+      console.warn("Cannot continue, next KC ID not available. Navigating to dashboard.");
+      navigate('/student');
+      return;
+    }
+    
+    // Navigate to the start of the next KC's sequence
+    const nextUrl = `/student/quiz?kc_id=${nextKcIdForContinuation}&mode=sequential`;
+    console.log(`Continuing to next topic. Navigating to: ${nextUrl}`);
+    navigate(nextUrl);
   };
 
   if (loading) {
@@ -306,33 +439,42 @@ const QuizView = () => {
   }
 
   if (quizCompleted) {
-    const masteryLevel = questions.length > 0 ? score / questions.length : 0;
+    // Try to get KC name from multiple sources
+    const currentKcName = 
+      answeredQuestions[0]?.knowledgeComponent ||
+      kcDetails?.name ||
+      "This Topic";
+
     let masteryStatusText = '';
+    let currentKcStatusText = '';
     let encouragingQuote = '';
+    let showUnlockMessage = false;
 
     if (masteryLevel >= 0.9) {
       masteryStatusText = 'Mastered!';
-      encouragingQuote = 'Wow! You mastered this topic! Amazing job! 🚀';
+      currentKcStatusText = 'Mastered! 🎉';
+      encouragingQuote = `Wow! You mastered ${currentKcName}! Amazing job! 🚀`;
     } else if (masteryLevel >= 0.75) {
       masteryStatusText = 'Excellent!';
-      encouragingQuote = 'Great work! You\'re doing fantastic! Keep it up! ✨';
+      currentKcStatusText = 'Excellent Progress! 👍';
+      encouragingQuote = `Great work! You're doing fantastic on ${currentKcName}! Keep it up! ✨`;
+      showUnlockMessage = true;
     } else if (masteryLevel >= 0.5) {
       masteryStatusText = 'Good Progress';
-      encouragingQuote = 'Nice try! You\'re learning well. Practice makes perfect! 💪';
+      currentKcStatusText = 'Making Good Progress 😊';
+      encouragingQuote = `Nice try! You're learning ${currentKcName}. Practice makes perfect! 💪`;
+      showUnlockMessage = true;
     } else {
       masteryStatusText = 'Needs Review';
-      encouragingQuote = 'Great start! Let\'s keep practicing to get even better! 💡';
+      currentKcStatusText = 'Needs Review 🧐';
+      encouragingQuote = `Great start! Let's keep practicing ${currentKcName} to get even better! 💡`;
+      showUnlockMessage = true;
     }
 
     return (
       <div className="quiz-completion">
-        <h2>Math Mastery Quiz Complete!</h2>
-        {kcDetails && (
-          <div className="kc-info">
-            <h3>{kcDetails.name}</h3>
-            <p>You've completed your math mastery assessment for this topic.</p>
-          </div>
-        )}
+        <h2>Quiz Complete!</h2>
+
         <div className="quiz-summary">
           <div className="summary-card">
             <h3>Your Score</h3>
@@ -352,20 +494,55 @@ const QuizView = () => {
           </div>
 
           <div className="feedback-section">
-            <h3>How did you do?</h3>
-            <div className={masteryLevel >= 0.9 ? 'perfect-score' : masteryLevel >= 0.75 ? 'good-score' : masteryLevel >= 0.5 ? 'average-score' : 'needs-practice'}>
-              <p>{encouragingQuote}</p>
-            </div>
+            <p className="score">
+              📊 Progress: {currentKcName} – {currentKcStatusText}
+            </p>
+            {showUnlockMessage && (
+              <p className="unlock-message" style={{ color: '#2ecc71', fontWeight: 'bold' }}>
+                🔓 Keep going to unlock the next topic!
+              </p>
+            )}
           </div>
 
           <div className="action-buttons">
+            {/* Show Continue button if score is 75% or higher AND a next topic is available */}
+            {masteryLevel >= 0.75 && nextKcIdForContinuation ? ( 
+              <button onClick={handleContinueToNextTopic} className="retry-button" style={{ backgroundColor: '#2ecc71' }}>
+                🚀 Continue to Next Topic!
+              </button>
+            ) : (
+              <button onClick={handleRetryQuiz} className="retry-button">
+                🔁 Retry Quiz
+              </button>
+            )}
             <button onClick={handleBackToDashboard} className="back-button">
-              Back to Dashboard
-            </button>
-            <button onClick={handleRetryQuiz} className="retry-button">
-              Try Again
+              🏠 Back to Dashboard
             </button>
           </div>
+
+          <p className="encouragement-quote" style={{ fontStyle: 'italic', margin: '1rem 0', color: '#7f8c8d' }}>
+            💬 "{encouragingQuote}"
+          </p>
+
+          {/* Show struggling KCs if any */}
+          {strugglingKCs.length > 0 && (
+            <div style={{ 
+              backgroundColor: '#fff3cd', 
+              border: '1px solid #ffeaa7', 
+              borderRadius: '8px', 
+              padding: '1rem', 
+              margin: '1rem 0' 
+            }}>
+              <h4 style={{ color: '#856404', margin: '0 0 0.5rem 0' }}>📚 Recommended Practice Topics:</h4>
+              <ul style={{ margin: '0', paddingLeft: '1.5rem' }}>
+                {strugglingKCs.slice(0, 3).map((kc, index) => (
+                  <li key={index} style={{ color: '#856404', marginBottom: '0.25rem' }}>
+                    {kc.name} (Mastery: {(kc.current_mastery * 100).toFixed(0)}%)
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {/* Question breakdown */}
           {answeredQuestions.length > 0 && (
@@ -407,6 +584,7 @@ const QuizView = () => {
                     <p><strong>Status:</strong> <span style={{ color: item.isCorrect ? '#27ae60' : '#c0392b' }}>{item.isCorrect ? 'Correct ✔️' : 'Incorrect ❌'}</span></p>
                   </div>
                 ))}
+                {answeredQuestions.length === 0 && <p>No question details available for this quiz.</p>}
               </div>
             </details>
           )}
@@ -420,7 +598,31 @@ const QuizView = () => {
   return (
     <div className="practice-quiz">
       <div className="quiz-header">
-        <h2>Math Mastery Quiz {kcDetails ? `- ${kcDetails.name}` : ''}</h2>
+        <h2>Math Mastery Quiz</h2>
+        
+        {/* Knowledge Component Information */}
+        {(currentQuestion.knowledge_component || kcDetails) && (
+          <div className="kc-info" style={{
+            backgroundColor: '#f8f9fa',
+            padding: '1rem',
+            borderRadius: '10px',
+            margin: '1rem 0',
+            textAlign: 'center'
+          }}>
+            <h3 style={{ color: '#2c3e50', margin: '0 0 0.5rem 0', fontSize: '1.1rem' }}>
+              📚 Topic: {currentQuestion.knowledge_component?.name || kcDetails?.name}
+            </h3>
+            {(currentQuestion.knowledge_component?.curriculum_code || kcDetails?.curriculum_code) && (
+              <span style={{ fontSize: '0.9rem', color: '#7f8c8d' }}>
+                Code: {currentQuestion.knowledge_component?.curriculum_code || kcDetails?.curriculum_code}
+              </span>
+            )}
+            <div style={{ fontSize: '0.9em', color: '#666', marginTop: '5px' }}>
+              🎯 Mastery assessment to improve your understanding of this topic
+            </div>
+          </div>
+        )}
+        
         <div className="quiz-progress">
           Question {currentQuestionIndex + 1} of {questions.length}
         </div>
