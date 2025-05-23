@@ -2676,6 +2676,8 @@ exports.handler = async (event, context) => {
       const pathParts = path.split('/');
       const studentId = pathParts[pathParts.indexOf('students') + 1];
       
+      console.log(`[Netlify] Getting struggling KCs for student ${studentId}`);
+      
       const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
       const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
       
@@ -2697,6 +2699,7 @@ exports.handler = async (event, context) => {
         .order('p_mastery');
       
       if (error) {
+        console.error('[Netlify] Struggling KCs fetch error:', error);
         return {
           statusCode: 500,
           headers,
@@ -2707,11 +2710,13 @@ exports.handler = async (event, context) => {
         };
       }
       
+      console.log(`[Netlify] Found ${data?.length || 0} struggling KCs for student ${studentId}`);
+      
       // Format response
       const strugglingKcs = (data || []).map(state => ({
-        kcId: state.knowledge_component_id,
-        kcName: state.knowledge_components?.name || 'Unknown',
-        masteryLevel: state.mastery_level
+        id: state.knowledge_component_id,
+        name: state.knowledge_components?.name || 'Unknown',
+        current_mastery: state.p_mastery || 0
       }));
       
       return {
@@ -3433,11 +3438,40 @@ exports.handler = async (event, context) => {
     }
   }
   
-  // GET /api/students/:id/detailed-performance - Get detailed student performance
+  // GET /api/students/:id/detailed-performance or /api/students/me/detailed-performance
   if (path.includes('/detailed-performance') && httpMethod === 'GET') {
     try {
       const pathParts = path.split('/');
-      const studentId = pathParts[pathParts.indexOf('students') + 1];
+      let studentId = pathParts[pathParts.indexOf('students') + 1];
+      
+      // Handle /api/students/me/detailed-performance - extract ID from token
+      if (studentId === 'me') {
+        const authHeader = event.headers.authorization || event.headers.Authorization;
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+          return {
+            statusCode: 401,
+            headers,
+            body: JSON.stringify({ error: 'No valid authorization token provided' })
+          };
+        }
+        
+        try {
+          const token = authHeader.split(' ')[1];
+          const base64Payload = token.split('.')[1];
+          const payload = JSON.parse(Buffer.from(base64Payload, 'base64').toString());
+          studentId = payload.id;
+          console.log(`[Netlify] Extracted student ID ${studentId} from /me/ token`);
+        } catch (tokenError) {
+          console.error('[Netlify] Token parsing error:', tokenError);
+          return {
+            statusCode: 401,
+            headers,
+            body: JSON.stringify({ error: 'Invalid authorization token' })
+          };
+        }
+      }
+      
+      console.log(`[Netlify] Getting detailed performance for student ${studentId}`);
       
       const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
       const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
