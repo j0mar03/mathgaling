@@ -147,7 +147,7 @@ router.get('/:id/kid-friendly-next-activity', optionalAuth, async (req, res) => 
   try {
     const studentId = parseInt(req.params.id, 10);
     const { current_kc_curriculum_code } = req.query; // KC curriculum code just completed
-    const masteryThreshold = 0.95; // Consider KC mastered if mastery is >= this value
+    const masteryThreshold = 0.8; // Consider KC mastered if mastery is >= this value (80% is reasonable)
 
     if (isNaN(studentId)) return res.status(400).json({ error: 'Invalid Student ID' });
 

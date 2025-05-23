@@ -26,6 +26,8 @@ const QuizView = () => {
   const [quizCompletionStatus, setQuizCompletionStatus] = useState(null);
   const [masteryLevel, setMasteryLevel] = useState(0);
   const [actualKcMastery, setActualKcMastery] = useState(0); // Track actual BKT mastery from backend
+  const [showHint, setShowHint] = useState(false);
+  const [hintRequests, setHintRequests] = useState(0);
 
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
@@ -150,53 +152,43 @@ const QuizView = () => {
           setMasteryLevel(effectiveMastery);
           console.log(`[Completion Effect] Quiz score mastery: ${(calculatedMasteryLevel * 100).toFixed(1)}%, Actual KC mastery: ${(actualKcMastery * 100).toFixed(1)}%, Using effective mastery: ${(effectiveMastery * 100).toFixed(1)}%`);
 
-          // Always try to fetch the next topic ID for the "Continue" button logic
+          // Simple sequential KC progression logic for Math Mastery
           let nextKcId = null;
           
-          // Try kid-friendly endpoint first
-          try {
-            const currentKcCurriculumCode = kcDetails?.curriculum_code;
-            const params = {};
-            if (currentKcCurriculumCode) {
-              params.current_kc_curriculum_code = currentKcCurriculumCode;
-            }
-            console.log(`[Completion Effect] Fetching kid-friendly next activity. Current KC curriculum_code: ${currentKcCurriculumCode}`);
-
-            const nextActivityResponse = await axios.get(`/api/students/${user.id}/kid-friendly-next-activity`, {
-              headers: { Authorization: `Bearer ${token}` },
-              params: params
-            });
-
-            if (nextActivityResponse.data && nextActivityResponse.data.kc_id) {
-              nextKcId = nextActivityResponse.data.kc_id;
-              console.log(`[Completion Effect] Found next KC ID via kid-friendly: ${nextKcId}`);
-            } else if (nextActivityResponse.data && (nextActivityResponse.data.completed_sequence || nextActivityResponse.data.all_mastered)) {
-              console.log(`[Completion Effect] Kid-friendly endpoint indicated sequence completion or all mastered`);
-              nextKcId = null;
-            }
-          } catch (err) {
-            console.warn("[Completion Effect] Error fetching kid-friendly next activity:", err.message);
-          }
-
-          // Fallback to recommended content endpoint
-          if (!nextKcId) {
+          // For mastery quizzes, we want simple sequential progression KC1 → KC2 → KC3
+          // If the student has ≥75% mastery, allow progression to next KC
+          if (effectiveMastery >= 0.75) {
             try {
-              console.log("[Completion Effect] Trying /recommended-content as fallback.");
-              const recommendResponse = await axios.get(`/api/students/${user.id}/recommended-content`, {
+              const currentKcCurriculumCode = kcDetails?.curriculum_code;
+              console.log(`[Completion Effect] ✅ Mastery threshold met (${(effectiveMastery * 100).toFixed(1)}% ≥ 75%). Getting next KC after: ${currentKcCurriculumCode}`);
+
+              // Use kid-friendly endpoint for sequential progression
+              const nextActivityResponse = await axios.get(`/api/students/${user.id}/kid-friendly-next-activity`, {
                 headers: { Authorization: `Bearer ${token}` },
+                params: currentKcCurriculumCode ? { current_kc_curriculum_code: currentKcCurriculumCode } : {}
               });
-              if (recommendResponse.data && recommendResponse.data.length > 0 && recommendResponse.data[0].kc_id) {
-                nextKcId = recommendResponse.data[0].kc_id;
-                console.log(`[Completion Effect] Found next KC ID via recommended-content: ${nextKcId}`);
+
+              if (nextActivityResponse.data && nextActivityResponse.data.kc_id) {
+                nextKcId = nextActivityResponse.data.kc_id;
+                console.log(`[Completion Effect] 🚀 Next KC in sequence: KC${nextKcId} (${nextActivityResponse.data.curriculum_code || 'unknown code'})`);
+              } else if (nextActivityResponse.data && (nextActivityResponse.data.completed_sequence || nextActivityResponse.data.all_mastered)) {
+                console.log(`[Completion Effect] 🎉 Sequence completed! All KCs mastered for this grade level.`);
+                nextKcId = null;
               }
             } catch (err) {
-              console.warn("[Completion Effect] Error fetching recommended content:", err.message);
+              console.warn("[Completion Effect] Error fetching next KC in sequence:", err.message);
+              
+              // Simple fallback: try next KC by incrementing current KC ID
+              if (kcDetails?.id) {
+                nextKcId = kcDetails.id + 1;
+                console.log(`[Completion Effect] 🔄 Fallback: trying next KC ID ${nextKcId}`);
+              }
             }
+          } else {
+            console.log(`[Completion Effect] ❌ Mastery ${(effectiveMastery * 100).toFixed(1)}% < 75%. Retry current KC instead of advancing.`);
           }
           
-          if (nextKcId) {
-            setNextKcIdForContinuation(nextKcId);
-          }
+          setNextKcIdForContinuation(nextKcId);
 
           // Fetch struggling KCs if effective mastery is below 80%
           if (effectiveMastery < 0.8) {
@@ -355,7 +347,7 @@ const QuizView = () => {
         answer: currentQuestion.type === 'fill_in_blank' ? fillInAnswer : selectedOption,
         time_spent: timeSpent, 
         interaction_data: {
-          hintRequests: 0,
+          hintRequests: hintRequests,
           attempts: 1,
           selectedOption: currentQuestion.type === 'fill_in_blank' ? fillInAnswer : selectedOption
         },
@@ -391,9 +383,17 @@ const QuizView = () => {
       setFillInAnswer('');
       setSubmitted(false);
       setCorrect(null);
+      // Reset hint state for new question
+      setShowHint(false);
+      setHintRequests(0);
     } else {
       setQuizCompleted(true);
     }
+  };
+
+  const handleRequestHint = () => {
+    setShowHint(true);
+    setHintRequests(prev => prev + 1);
   };
 
   const handleBackToDashboard = () => {
@@ -730,17 +730,49 @@ const QuizView = () => {
           </div>
         )}
 
+        {showHint && currentQuestion.explanation && (
+          <div className="hint-container" style={{
+            backgroundColor: '#e8f4fd',
+            border: '1px solid #bee5eb',
+            borderRadius: '8px',
+            padding: '1rem',
+            margin: '1rem 0'
+          }}>
+            <h4 style={{ color: '#0c5460', margin: '0 0 0.5rem 0' }}>💡 Hint:</h4>
+            <p style={{ color: '#0c5460', margin: '0' }}>{currentQuestion.explanation}</p>
+          </div>
+        )}
+
         <div className="quiz-actions">
           {!submitted ? (
-            <button 
-              className="submit-button" 
-              onClick={handleSubmit}
-              disabled={currentQuestion.type === 'fill_in_blank' 
-                ? !fillInAnswer.trim() 
-                : selectedOption === null}
-            >
-              Submit Answer
-            </button>
+            <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+              <button 
+                className="submit-button" 
+                onClick={handleSubmit}
+                disabled={currentQuestion.type === 'fill_in_blank' 
+                  ? !fillInAnswer.trim() 
+                  : selectedOption === null}
+              >
+                Submit Answer
+              </button>
+              {currentQuestion.explanation && !showHint && (
+                <button 
+                  className="hint-button"
+                  onClick={handleRequestHint}
+                  style={{
+                    backgroundColor: '#17a2b8',
+                    color: 'white',
+                    border: 'none',
+                    padding: '10px 20px',
+                    borderRadius: '5px',
+                    cursor: 'pointer',
+                    fontSize: '16px'
+                  }}
+                >
+                  💡 Get Hint
+                </button>
+              )}
+            </div>
           ) : (
             <button className="next-button" onClick={handleNext}>
               {currentQuestionIndex < questions.length - 1 ? 'Next Question' : 'Complete Quiz'}
