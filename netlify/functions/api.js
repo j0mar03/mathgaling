@@ -2,7 +2,9 @@
 const { createClient } = require('@supabase/supabase-js');
 
 exports.handler = async (event, context) => {
-  console.log('API called:', event.httpMethod, event.path);
+  console.log('🌐 API called:', event.httpMethod, event.path);
+  console.log('🔍 Raw URL:', event.rawUrl);
+  console.log('📊 Headers:', event.headers);
   
   // CORS headers
   const headers = {
@@ -2530,15 +2532,22 @@ exports.handler = async (event, context) => {
   
   // POST /api/students/:id/responses - Submit student response
   if (path.includes('/students/') && path.includes('/responses') && httpMethod === 'POST') {
+    console.log(`[Netlify] 🎯 QUIZ RESPONSE SUBMISSION STARTED`);
+    console.log(`[Netlify] Request path: ${path}`);
+    console.log(`[Netlify] Full event body:`, event.body);
+    
     try {
       const pathParts = path.split('/');
       const studentId = pathParts[pathParts.indexOf('students') + 1];
+      console.log(`[Netlify] 👤 Student ID extracted: ${studentId}`);
       const responseData = JSON.parse(event.body);
       
-      console.log('[DEBUG] Response submission data:', responseData);
-      console.log('[DEBUG] Content item ID (camelCase):', responseData.contentItemId);
-      console.log('[DEBUG] Content item ID (snake_case):', responseData.content_item_id);
-      console.log('[DEBUG] Student ID:', studentId);
+      console.log(`[Netlify] 📝 Parsed response data for student ${studentId}:`, responseData);
+      console.log(`[Netlify] 🔍 Practice mode check: ${responseData.practice_mode}`);
+      console.log(`[Netlify] 🎯 Content item ID: ${responseData.content_item_id || responseData.contentItemId}`);
+      console.log(`[Netlify] ✅ Answer correct: ${responseData.correct}`);
+      console.log(`[Netlify] ⏱️ Time spent: ${responseData.time_spent}`);
+      
       
       const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
       const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkJXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
@@ -2571,11 +2580,13 @@ exports.handler = async (event, context) => {
         };
       }
       
+      console.log(`[Netlify] 🎯 REACHED KC MASTERY UPDATE SECTION`);
+      
       // Update KC mastery only if NOT practice mode
       const practiceMode = responseData.practice_mode || false;
       let newMastery = null;
       
-      console.log(`[Netlify] practice_mode: ${practiceMode}, processing KC update: ${!practiceMode}`);
+      console.log(`[Netlify] 🔍 Practice mode: ${practiceMode}, Will process KC update: ${!practiceMode}`);
       
       if (!practiceMode) {
         // Get KC ID from content item (since frontend doesn't send it directly)
@@ -2658,17 +2669,21 @@ exports.handler = async (event, context) => {
         console.log('[Netlify] Practice mode - skipping KC mastery update');
       }
       
+      const finalResponse = {
+        message: practiceMode ? 'Practice response recorded' : 'Response processed successfully',
+        responseId: response.id,
+        correct: responseData.correct || responseData.isCorrect,
+        newMastery: practiceMode ? null : newMastery,
+        knowledgeState: practiceMode ? null : { p_mastery: newMastery },
+        practice_mode: practiceMode || false
+      };
+      
+      console.log(`[Netlify] 🎉 RESPONSE SUBMISSION COMPLETE - Sending back:`, finalResponse);
+      
       return {
         statusCode: 200,
         headers,
-        body: JSON.stringify({
-          message: practiceMode ? 'Practice response recorded' : 'Response processed successfully',
-          responseId: response.id,
-          correct: responseData.correct || responseData.isCorrect,
-          newMastery: practiceMode ? null : newMastery,
-          knowledgeState: practiceMode ? null : { p_mastery: newMastery },
-          practice_mode: practiceMode || false
-        })
+        body: JSON.stringify(finalResponse)
       };
       
     } catch (error) {
@@ -3968,6 +3983,56 @@ exports.handler = async (event, context) => {
           error: 'Server error',
           message: error.message
         })
+      };
+    }
+  }
+  
+  // GET /api/debug/mastery/:studentId - Simple mastery check
+  if (path.includes('/debug/mastery/') && httpMethod === 'GET') {
+    try {
+      const pathParts = path.split('/');
+      const studentId = pathParts[pathParts.indexOf('mastery') + 1];
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // Get KC states for this student
+      const { data: kcStates } = await supabase
+        .from('knowledge_states')
+        .select('*, knowledge_components(name, curriculum_code)')
+        .eq('student_id', studentId);
+        
+      // Get recent responses
+      const { data: responses } = await supabase
+        .from('responses')
+        .select('*, content_items(knowledge_component_id)')
+        .eq('student_id', studentId)
+        .order('created_at', { ascending: false })
+        .limit(10);
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          student_id: studentId,
+          kc_states: kcStates || [],
+          recent_responses: responses || [],
+          summary: {
+            total_kc_states: kcStates?.length || 0,
+            recent_responses_count: responses?.length || 0,
+            average_mastery: kcStates?.length ? 
+              (kcStates.reduce((sum, kc) => sum + (kc.p_mastery || 0), 0) / kcStates.length).toFixed(3) : 'N/A'
+          }
+        })
+      };
+      
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({ error: error.message })
       };
     }
   }
