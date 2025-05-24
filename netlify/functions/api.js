@@ -3705,21 +3705,71 @@ exports.handler = async (event, context) => {
         };
       }
       
-      // Format data to match what TeacherDashboard expects
-      const performanceData = (enrollments || []).map(enrollment => ({
-        student: enrollment.students,
-        performance: {
-          averageScore: 75 + Math.random() * 20, // Mock performance data
-          questionsAnswered: Math.floor(Math.random() * 50) + 10,
-          timeSpent: Math.floor(Math.random() * 3600) + 300,
-          lastActive: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString()
-        },
-        intervention: {
-          needed: Math.random() > 0.7,
-          priority: Math.random() > 0.8 ? 'high' : 'medium',
-          reason: 'Performance tracking'
-        }
-      }));
+      // Get real performance data for each student
+      const performanceData = await Promise.all(
+        (enrollments || []).map(async (enrollment) => {
+          const studentId = enrollment.student_id;
+          
+          // Get student's knowledge states for mastery calculation
+          const { data: knowledgeStates } = await supabase
+            .from('knowledge_states')
+            .select('p_mastery')
+            .eq('student_id', studentId);
+          
+          // Calculate average mastery across all KCs
+          let mathMastery = 0;
+          if (knowledgeStates && knowledgeStates.length > 0) {
+            const totalMastery = knowledgeStates.reduce((sum, ks) => sum + (ks.p_mastery || 0), 0);
+            mathMastery = totalMastery / knowledgeStates.length;
+          }
+          
+          // Get recent responses for activity data
+          const { data: recentResponses } = await supabase
+            .from('responses')
+            .select('created_at, correct, time_spent')
+            .eq('student_id', studentId)
+            .order('created_at', { ascending: false })
+            .limit(50);
+          
+          // Calculate performance metrics
+          let questionsAnswered = 0;
+          let correctAnswers = 0;
+          let totalTimeSpent = 0;
+          let lastActive = null;
+          
+          if (recentResponses && recentResponses.length > 0) {
+            questionsAnswered = recentResponses.length;
+            correctAnswers = recentResponses.filter(r => r.correct).length;
+            totalTimeSpent = recentResponses.reduce((sum, r) => sum + (r.time_spent || 0), 0);
+            lastActive = recentResponses[0].created_at;
+          }
+          
+          const averageScore = questionsAnswered > 0 ? (correctAnswers / questionsAnswered) * 100 : 0;
+          
+          // Determine intervention need based on actual data
+          const needsIntervention = mathMastery < 0.4 || (questionsAnswered > 10 && averageScore < 60);
+          const priority = mathMastery < 0.3 ? 'high' : mathMastery < 0.5 ? 'medium' : 'low';
+          
+          return {
+            student: enrollment.students,
+            performance: {
+              mathMastery: mathMastery,
+              averageMastery: mathMastery, // For backwards compatibility
+              averageScore: averageScore,
+              questionsAnswered: questionsAnswered,
+              timeSpent: totalTimeSpent,
+              lastActive: lastActive || enrollment.joined_at
+            },
+            intervention: {
+              needed: needsIntervention,
+              priority: priority,
+              reason: needsIntervention ? 
+                (mathMastery < 0.4 ? 'Low mastery level' : 'Low quiz performance') : 
+                'On track'
+            }
+          };
+        })
+      );
       
       return {
         statusCode: 200,

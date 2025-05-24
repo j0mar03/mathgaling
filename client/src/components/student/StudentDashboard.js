@@ -126,6 +126,7 @@ const StudentDashboard = () => {
           headers: { Authorization: `Bearer ${token}` }
         });
         const fetchedNextActivity = activityResponse.data;
+        console.log('[StudentDashboard] Kid-friendly next activity response:', fetchedNextActivity);
         setNextActivity(fetchedNextActivity);
 
         // Fetch consolidated dashboard data (with cache busting for Supabase)
@@ -214,6 +215,14 @@ const StudentDashboard = () => {
         let determinedStep = null;
         const allKcsFromModules = fetchedModules.flatMap(module => module.knowledgeComponents);
         
+        console.log('[StudentDashboard] Total KCs from modules:', allKcsFromModules.length);
+        console.log('[StudentDashboard] First few KCs:', allKcsFromModules.slice(0, 3).map(kc => ({
+          id: kc.id,
+          name: kc.name,
+          curriculum_code: kc.curriculum_code,
+          mastery: kc.mastery
+        })));
+        
         if (allKcsFromModules.length > 0) {
           // Sort by curriculum_code to get proper KC sequence
           const sortedKCs = [...allKcsFromModules].sort((a, b) => {
@@ -230,6 +239,8 @@ const StudentDashboard = () => {
           for (let i = 0; i < sortedKCs.length; i++) {
             const kc = sortedKCs[i];
             const masteryValue = typeof kc.mastery === 'number' ? kc.mastery : 0;
+            
+            console.log(`[StudentDashboard] Checking KC ${i}: ${kc.name} (${kc.curriculum_code}), mastery: ${masteryValue}`);
             
             if (masteryValue >= 0.95) {
               // This KC is mastered
@@ -356,21 +367,52 @@ const StudentDashboard = () => {
           };
         }
         
-        // Final fallback: If still no step determined, create a generic one
+        // Final fallback: If still no step determined, find the first KC for the grade level
         if (!determinedStep) {
-          console.log('[StudentDashboard] No determined step found, creating generic fallback');
-          determinedStep = {
-            id: 1, // Default to first KC
-            name: "Let's Start Learning!",
-            description: "Ready to begin your math adventure?",
-            emoji: "🎯",
-            mastery: 0,
-            difficulty: 'easy',
-            type: 'kc',
-            isPrimary: true,
-            actionType: 'start',
-            buttonText: 'Simulan'
-          };
+          console.log('[StudentDashboard] No determined step found, using first KC for grade level');
+          
+          // Try to get the first KC from the sorted KCs
+          let firstKC = null;
+          if (allKcsFromModules && allKcsFromModules.length > 0) {
+            // Sort by curriculum_code to get the first KC in sequence
+            const sortedKCs = [...allKcsFromModules].sort((a, b) => {
+              if (a.curriculum_code && b.curriculum_code) {
+                return a.curriculum_code.localeCompare(b.curriculum_code);
+              }
+              return 0;
+            });
+            firstKC = sortedKCs[0];
+          }
+          
+          if (firstKC) {
+            determinedStep = {
+              id: firstKC.id,
+              name: firstKC.name || "Let's Start Learning!",
+              description: firstKC.description || "Ready to begin your math adventure?",
+              emoji: KC_ICONS[firstKC.name] || KC_ICONS.default || "🎯",
+              mastery: 0,
+              difficulty: 'easy',
+              type: 'kc',
+              isPrimary: true,
+              actionType: 'start',
+              buttonText: 'Simulan'
+            };
+          } else {
+            // Absolute fallback - no KCs found at all
+            console.warn('[StudentDashboard] No KCs found for student, using minimal fallback');
+            determinedStep = {
+              id: null, // Don't default to a specific KC ID
+              name: "Welcome to Math!",
+              description: "Let's explore math together!",
+              emoji: "🎯",
+              mastery: 0,
+              difficulty: 'easy',
+              type: 'explore',
+              isPrimary: true,
+              actionType: 'explore',
+              buttonText: 'Explore'
+            };
+          }
         }
         
         console.log('[StudentDashboard] Final determinedStep:', determinedStep);
@@ -704,20 +746,26 @@ const StudentDashboard = () => {
 
             <button
               onClick={() => {
-                // Use the KC ID from currentLearningStep if available
-                let quizUrl = '/student/quiz?mode=sequential&limit=8';
-                
-                if (currentLearningStep && currentLearningStep.kc_id) {
-                  // Use kc_id if available (from the kid-friendly-next-activity API)
-                  quizUrl = `/student/quiz?kc_id=${currentLearningStep.kc_id}&mode=sequential&limit=8`;
-                } else if (currentLearningStep && currentLearningStep.id) {
-                  // Use id as KC ID
-                  quizUrl = `/student/quiz?kc_id=${currentLearningStep.id}&mode=sequential&limit=8`;
+                // Handle different action types
+                if (currentLearningStep?.type === 'explore' || !currentLearningStep?.id) {
+                  // If no specific KC, go to mastery dashboard to explore all topics
+                  navigate('/student/mastery-dashboard');
+                } else {
+                  // Use the KC ID from currentLearningStep if available
+                  let quizUrl = '/student/quiz?mode=sequential&limit=8';
+                  
+                  if (currentLearningStep && currentLearningStep.kc_id) {
+                    // Use kc_id if available (from the kid-friendly-next-activity API)
+                    quizUrl = `/student/quiz?kc_id=${currentLearningStep.kc_id}&mode=sequential&limit=8`;
+                  } else if (currentLearningStep && currentLearningStep.id) {
+                    // Use id as KC ID
+                    quizUrl = `/student/quiz?kc_id=${currentLearningStep.id}&mode=sequential&limit=8`;
+                  }
+                  
+                  console.log('[StudentDashboard] Navigating to quiz with currentLearningStep:', currentLearningStep);
+                  console.log('[StudentDashboard] Quiz URL:', quizUrl);
+                  navigate(quizUrl);
                 }
-                
-                console.log('[StudentDashboard] Navigating to quiz with currentLearningStep:', currentLearningStep);
-                console.log('[StudentDashboard] Quiz URL:', quizUrl);
-                navigate(quizUrl);
               }}
               style={{
                 background: 'linear-gradient(135deg, #FF6B6B, #FF8E53)',
