@@ -3482,12 +3482,17 @@ exports.handler = async (event, context) => {
         const enrollments = classroomData.studentIds.map(studentId => ({
           classroom_id: classroom.id,
           student_id: studentId,
-          enrollmentDate: new Date().toISOString()
+          enrollment_date: new Date().toISOString()
         }));
         
-        await supabase
+        console.log('[Netlify] Adding students to classroom:', enrollments);
+        const { error: enrollmentError } = await supabase
           .from('classroom_students')
           .insert(enrollments);
+          
+        if (enrollmentError) {
+          console.error('[Netlify] Failed to enroll students:', enrollmentError);
+        }
       }
       
       return {
@@ -3624,7 +3629,7 @@ exports.handler = async (event, context) => {
         .from('classroom_students')
         .select(`
           student_id,
-          enrollmentDate,
+          enrollment_date,
           students (
             id,
             name,
@@ -3765,16 +3770,24 @@ exports.handler = async (event, context) => {
       const supabase = createClient(supabaseUrl, supabaseKey);
       
       // Get students in classroom
+      console.log('[Netlify] Querying classroom_students for classroom:', classroomId);
       const { data, error } = await supabase
         .from('classroom_students')
         .select(`
           student_id,
-          enrollmentDate,
+          enrollment_date,
           students (*)
         `)
         .eq('classroom_id', classroomId);
       
+      console.log('[Netlify] Classroom students query result:', { 
+        classroomId, 
+        error: error ? error.message : null, 
+        dataCount: data ? data.length : 0 
+      });
+      
       if (error) {
+        console.error('[Netlify] Failed to fetch classroom students:', error);
         return {
           statusCode: 500,
           headers,
@@ -3788,7 +3801,7 @@ exports.handler = async (event, context) => {
       // Format response to return student objects
       const students = (data || []).map(enrollment => ({
         ...enrollment.students,
-        enrollmentDate: enrollment.enrollmentDate
+        enrollmentDate: enrollment.enrollment_date
       }));
       
       return {
