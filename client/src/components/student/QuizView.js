@@ -171,9 +171,13 @@ const QuizView = () => {
           // For mastery quizzes, we want simple sequential progression KC1 → KC2 → KC3
           // If the student has ≥75% mastery, allow progression to next KC
           const shouldFindNext = effectiveMastery >= 0.75 || finalScoreCalculated >= 0.75;
-          if (shouldFindNext && !nextKcIdForContinuation) {
-            setSearchingNextTopic(true);
-            try {
+          
+          console.log(`[Completion Effect] Should find next? ${shouldFindNext}, Current nextKcId: ${nextKcIdForContinuation}`);
+          
+          if (shouldFindNext) {
+            if (!nextKcIdForContinuation) {
+              setSearchingNextTopic(true);
+              try {
               console.log("[Completion Effect] Full kcDetails:", kcDetails);
               const currentKcCurriculumCode = kcDetails?.curriculum_code;
               console.log(`[Completion Effect] ✅ Mastery threshold met (${(effectiveMastery * 100).toFixed(1)}% ≥ 75%). Getting next KC after: ${currentKcCurriculumCode}`);
@@ -226,12 +230,17 @@ const QuizView = () => {
             
             setSearchingNextTopic(false);
             setNextTopicSearchComplete(true);
+            setNextKcIdForContinuation(nextKcId);
+            } else {
+              // Already have a next KC ID, just mark as complete
+              console.log(`[Completion Effect] ✅ Already have next KC ID: ${nextKcIdForContinuation}`);
+              setNextTopicSearchComplete(true);
+            }
           } else {
-            console.log(`[Completion Effect] ❌ Mastery ${(effectiveMastery * 100).toFixed(1)}% < 75%. Retry current KC instead of advancing.`);
+            console.log(`[Completion Effect] ❌ Mastery/Score too low for progression. Effective mastery: ${(effectiveMastery * 100).toFixed(1)}%, Score: ${(finalScoreCalculated * 100).toFixed(1)}%`);
             setNextTopicSearchComplete(true);
+            setNextKcIdForContinuation(null);
           }
-          
-          setNextKcIdForContinuation(nextKcId);
 
           // Fetch struggling KCs if effective mastery is below 80%
           if (effectiveMastery < 0.8) {

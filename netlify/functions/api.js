@@ -1801,12 +1801,113 @@ exports.handler = async (event, context) => {
       
       const supabase = createClient(supabaseUrl, supabaseKey);
       
-      // Mock dashboard data for now
+      console.log(`[Netlify] Getting dashboard data for student ${studentId}`);
+      
+      // Get student info
+      const { data: student } = await supabase
+        .from('students')
+        .select('grade_level')
+        .eq('id', studentId)
+        .single();
+        
+      if (!student) {
+        return {
+          statusCode: 404,
+          headers,
+          body: JSON.stringify({ error: 'Student not found' })
+        };
+      }
+      
+      // Get all KCs for student's grade with mastery data
+      const { data: gradeKCs } = await supabase
+        .from('knowledge_components')
+        .select(`
+          *,
+          knowledge_states!left (
+            p_mastery,
+            student_id
+          )
+        `)
+        .eq('grade_level', student.grade_level)
+        .eq('knowledge_states.student_id', studentId)
+        .order('curriculum_code');
+        
+      // Process KCs into modules
+      const modules = [];
+      const moduleMap = new Map();
+      
+      gradeKCs?.forEach(kc => {
+        // Determine module based on curriculum code
+        let moduleName = 'Module 1';
+        let moduleId = 'module-1';
+        
+        if (kc.curriculum_code) {
+          // Extract quarter from curriculum code (e.g., G3-NS-01 -> Quarter 1)
+          const match = kc.curriculum_code.match(/^G\d+-([A-Z]+)-(\d+)/);
+          if (match) {
+            const area = match[1];
+            const num = parseInt(match[2]);
+            
+            // Group by ranges (adjust as needed)
+            if (num <= 10) {
+              moduleId = 'module-1';
+              moduleName = 'Module 1: Number Sense Basics';
+            } else if (num <= 20) {
+              moduleId = 'module-2';
+              moduleName = 'Module 2: Operations';
+            } else if (num <= 30) {
+              moduleId = 'module-3';
+              moduleName = 'Module 3: Advanced Operations';
+            } else {
+              moduleId = 'module-4';
+              moduleName = 'Module 4: Problem Solving';
+            }
+          }
+        }
+        
+        // Get or create module
+        if (!moduleMap.has(moduleId)) {
+          moduleMap.set(moduleId, {
+            id: moduleId,
+            name: moduleName,
+            knowledgeComponents: []
+          });
+        }
+        
+        // Add KC to module with mastery data
+        const module = moduleMap.get(moduleId);
+        module.knowledgeComponents.push({
+          id: kc.id,
+          name: kc.name,
+          description: kc.description,
+          curriculum_code: kc.curriculum_code,
+          mastery: kc.knowledge_states?.[0]?.p_mastery || 0,
+          difficulty: kc.difficulty || 3
+        });
+      });
+      
+      // Convert map to array
+      moduleMap.forEach(module => {
+        modules.push(module);
+      });
+      
+      // Sort modules by ID
+      modules.sort((a, b) => a.id.localeCompare(b.id));
+      
+      // Get recent activity
+      const { data: recentResponses } = await supabase
+        .from('responses')
+        .select('*')
+        .eq('student_id', studentId)
+        .order('created_at', { ascending: false })
+        .limit(5);
+        
       return {
         statusCode: 200,
         headers,
         body: JSON.stringify({
-          recentActivity: [],
+          modules,
+          recentActivity: recentResponses || [],
           recommendations: [],
           badges: []
         })
@@ -1980,11 +2081,18 @@ exports.handler = async (event, context) => {
         };
       }
       
-      // Get all KCs for the student's grade level
+      // Get all KCs for the student's grade level with mastery data
       const { data: gradeKCs } = await supabase
         .from('knowledge_components')
-        .select('*')
+        .select(`
+          *,
+          knowledge_states!left (
+            p_mastery,
+            student_id
+          )
+        `)
         .eq('grade_level', student.grade_level)
+        .eq('knowledge_states.student_id', studentId)
         .order('curriculum_code');
         
       if (!gradeKCs || gradeKCs.length === 0) {
@@ -2023,8 +2131,36 @@ exports.handler = async (event, context) => {
           };
         }
       } else {
-        // No current KC, return the first one
-        nextKC = gradeKCs[0];
+        // No current KC provided - find where student left off
+        console.log('[Netlify] No current KC provided, finding where student left off...');
+        
+        // Find first non-mastered KC (mastery < 0.95)
+        for (const kc of gradeKCs) {
+          const mastery = kc.knowledge_states?.[0]?.p_mastery || 0;
+          console.log(`[Netlify] KC ${kc.curriculum_code}: ${kc.name}, mastery: ${mastery}`);
+          
+          if (mastery < 0.95) {
+            nextKC = kc;
+            console.log(`[Netlify] Found non-mastered KC where student should continue: ${kc.name}`);
+            break;
+          }
+        }
+        
+        // If all KCs are mastered, return completion message
+        if (!nextKC) {
+          console.log('[Netlify] All KCs are mastered!');
+          return {
+            statusCode: 200,
+            headers,
+            body: JSON.stringify({
+              type: 'quiz',
+              kc_id: null,
+              message: 'Congratulations! You have mastered all topics!',
+              completed_sequence: true,
+              all_mastered: true
+            })
+          };
+        }
       }
       
       if (nextKC) {
