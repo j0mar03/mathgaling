@@ -1512,6 +1512,50 @@ exports.handler = async (event, context) => {
     }
   }
   
+  // GET /api/knowledge-components - List all knowledge components (general endpoint)
+  if (path === '/api/knowledge-components' && httpMethod === 'GET') {
+    try {
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      const { data, error } = await supabase
+        .from('knowledge_components')
+        .select('*')
+        .order('curriculum_code', { ascending: true });
+      
+      if (error) {
+        console.error('Error fetching knowledge components:', error);
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to fetch knowledge components',
+            message: error.message
+          })
+        };
+      }
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify(data || [])
+      };
+      
+    } catch (error) {
+      console.error('Error in knowledge components endpoint:', error);
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
   // GET /api/admin/content-items - List content items
   if (path.includes('/admin/content-items') && httpMethod === 'GET') {
     try {
