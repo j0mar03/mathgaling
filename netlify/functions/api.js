@@ -3571,7 +3571,7 @@ exports.handler = async (event, context) => {
       
       const { data, error } = await supabase
         .from('classrooms')
-        .select('id, name, description, teacher_id, grade_level, createdAt, updatedAt')
+        .select('id, name, description, teacher_id, createdAt, updatedAt')
         .eq('teacher_id', teacherId);
       
       console.log(`[Netlify] Supabase query result:`, { data, error, teacherId });
@@ -3719,7 +3719,7 @@ exports.handler = async (event, context) => {
       
       const { data, error } = await supabase
         .from('classrooms')
-        .select('id, name, description, teacher_id, grade_level, createdAt, updatedAt')
+        .select('id, name, description, teacher_id, createdAt, updatedAt')
         .eq('id', classroomId)
         .single();
       
@@ -3820,14 +3820,8 @@ exports.handler = async (event, context) => {
       
       const supabase = createClient(supabaseUrl, supabaseKey);
       
-      // Get classroom details first
-      const { data: classroom } = await supabase
-        .from('classrooms')
-        .select('grade_level')
-        .eq('id', classroomId)
-        .single();
-      
-      const gradeLevel = classroom?.grade_level || 3;
+      // Default to grade 3 since grade_level column doesn't exist in classrooms table
+      const gradeLevel = 3;
       
       // Get KCs for grade level
       const { data, error } = await supabase
