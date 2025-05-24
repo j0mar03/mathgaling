@@ -6,6 +6,7 @@ import './CreateStudentModal.css';
 const CreateStudentModal = ({ onClose, onSuccess, classroomId }) => {
   const [formData, setFormData] = useState({
     name: '',
+    username: '',
     email: '',
     password: '',
     grade_level: '3',
@@ -15,6 +16,7 @@ const CreateStudentModal = ({ onClose, onSuccess, classroomId }) => {
     learningStyle: 'visual',
     specialNeeds: ''
   });
+  const [useUsername, setUseUsername] = useState(true); // Default to username for new students
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const { token } = useAuth();
@@ -36,6 +38,13 @@ const CreateStudentModal = ({ onClose, onSuccess, classroomId }) => {
     setFormData(prev => ({ ...prev, password }));
   };
 
+  const generateUsername = () => {
+    const firstName = formData.name.split(' ')[0].toLowerCase().replace(/[^a-z]/g, '');
+    const randomNum = Math.floor(Math.random() * 999);
+    const username = `${firstName}${randomNum}`;
+    setFormData(prev => ({ ...prev, username }));
+  };
+
   const generateEmail = () => {
     const firstName = formData.name.split(' ')[0].toLowerCase();
     const randomNum = Math.floor(Math.random() * 9999);
@@ -50,12 +59,22 @@ const CreateStudentModal = ({ onClose, onSuccess, classroomId }) => {
 
     try {
       // First create the student account
-      const signupResponse = await axios.post('/api/auth/register/student', {
-        email: formData.email,
-        password: formData.password,
+      const signupData = {
         name: formData.name,
+        password: formData.password,
         grade_level: parseInt(formData.grade_level)
-      });
+      };
+      
+      if (useUsername && formData.username) {
+        // New style: username-based login
+        signupData.username = formData.username;
+        signupData.email = `${formData.username}@student.mathgaling.com`;
+      } else {
+        // Legacy style: email-based login
+        signupData.email = formData.email;
+      }
+      
+      const signupResponse = await axios.post('/api/auth/register/student', signupData);
 
       if (!signupResponse.data.student) {
         throw new Error('Failed to create student account');
@@ -107,8 +126,10 @@ const CreateStudentModal = ({ onClose, onSuccess, classroomId }) => {
       onSuccess({
         ...signupResponse.data.student,
         credentials: {
-          email: formData.email,
-          password: formData.password
+          username: useUsername ? formData.username : undefined,
+          email: useUsername ? `${formData.username}@student.mathgaling.com` : formData.email,
+          password: formData.password,
+          loginMethod: useUsername ? 'username' : 'email'
         }
       });
     } catch (err) {
@@ -197,22 +218,67 @@ const CreateStudentModal = ({ onClose, onSuccess, classroomId }) => {
             <h3>Account Credentials</h3>
             
             <div className="form-group">
-              <label htmlFor="email">Email/Username *</label>
-              <div className="input-with-button">
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  required
-                  placeholder="student@example.com"
-                />
-                <button type="button" onClick={generateEmail} className="generate-btn">
-                  Generate
-                </button>
+              <label>Login Method</label>
+              <div className="radio-group">
+                <label className="radio-option">
+                  <input
+                    type="radio"
+                    checked={useUsername}
+                    onChange={() => setUseUsername(true)}
+                  />
+                  <span>Username (Recommended for students)</span>
+                </label>
+                <label className="radio-option">
+                  <input
+                    type="radio"
+                    checked={!useUsername}
+                    onChange={() => setUseUsername(false)}
+                  />
+                  <span>Email (Legacy method)</span>
+                </label>
               </div>
             </div>
+            
+            {useUsername ? (
+              <div className="form-group">
+                <label htmlFor="username">Username *</label>
+                <div className="input-with-button">
+                  <input
+                    type="text"
+                    id="username"
+                    name="username"
+                    value={formData.username}
+                    onChange={handleChange}
+                    required
+                    placeholder="student123"
+                    pattern="[a-zA-Z0-9]+"
+                    title="Username can only contain letters and numbers"
+                  />
+                  <button type="button" onClick={generateUsername} className="generate-btn">
+                    Generate
+                  </button>
+                </div>
+                <small>Students will use this username to log in. Email will be auto-generated.</small>
+              </div>
+            ) : (
+              <div className="form-group">
+                <label htmlFor="email">Email *</label>
+                <div className="input-with-button">
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    required
+                    placeholder="student@example.com"
+                  />
+                  <button type="button" onClick={generateEmail} className="generate-btn">
+                    Generate
+                  </button>
+                </div>
+              </div>
+            )}
 
             <div className="form-group">
               <label htmlFor="password">Password *</label>
@@ -286,16 +352,30 @@ const CreateStudentModal = ({ onClose, onSuccess, classroomId }) => {
             </button>
           </div>
 
-          {formData.email && formData.password && (
+          {((useUsername && formData.username) || (!useUsername && formData.email)) && formData.password && (
             <div className="credentials-preview">
               <h4>Login Credentials Preview:</h4>
-              <div className="credential-item">
-                <span>Email:</span> {formData.email}
-              </div>
+              {useUsername ? (
+                <>
+                  <div className="credential-item">
+                    <span>Username:</span> {formData.username}
+                  </div>
+                  <div className="credential-item">
+                    <span>Auto-generated Email:</span> {formData.username}@student.mathgaling.com
+                  </div>
+                </>
+              ) : (
+                <div className="credential-item">
+                  <span>Email:</span> {formData.email}
+                </div>
+              )}
               <div className="credential-item">
                 <span>Password:</span> {formData.password}
               </div>
-              <small>Make sure to save these credentials!</small>
+              <div className="credential-item login-method">
+                <span>Login Method:</span> Student will log in using their {useUsername ? 'username' : 'email'}
+              </div>
+              <small>Make sure to save these credentials and inform the student about the login method!</small>
             </div>
           )}
         </form>

@@ -4175,7 +4175,7 @@ exports.handler = async (event, context) => {
     }
   }
   
-  // GET /api/classrooms/:id/knowledge-components - Get KCs for classroom grade level
+  // GET /api/classrooms/:id/knowledge-components - Get KCs with real-time performance data
   if (path.includes('/classrooms/') && path.includes('/knowledge-components') && httpMethod === 'GET') {
     try {
       const pathParts = path.split('/');
@@ -4186,34 +4186,146 @@ exports.handler = async (event, context) => {
       
       const supabase = createClient(supabaseUrl, supabaseKey);
       
-      // Default to grade 3 since grade_level column doesn't exist in classrooms table
-      const gradeLevel = 3;
+      // Get students in the classroom
+      const { data: classroomStudents, error: studentsError } = await supabase
+        .from('classroom_students')
+        .select(`
+          student_id,
+          students (
+            id,
+            grade_level
+          )
+        `)
+        .eq('classroom_id', classroomId);
+      
+      if (studentsError) {
+        console.error('Error fetching classroom students:', studentsError);
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to fetch classroom students',
+            message: studentsError.message
+          })
+        };
+      }
+      
+      if (!classroomStudents || classroomStudents.length === 0) {
+        // No students in classroom, return empty KCs
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify([])
+        };
+      }
+      
+      // Determine grade level from students (use most common grade or default to 3)
+      const gradeLevels = classroomStudents.map(cs => cs.students?.grade_level).filter(Boolean);
+      const gradeLevel = gradeLevels.length > 0 ? Math.max(...gradeLevels) : 3;
+      const studentIds = classroomStudents.map(cs => cs.student_id);
       
       // Get KCs for grade level
-      const { data, error } = await supabase
+      const { data: knowledgeComponents, error: kcError } = await supabase
         .from('knowledge_components')
         .select('*')
         .eq('grade_level', gradeLevel)
-        .order('id');
+        .order('curriculum_code');
       
-      if (error) {
+      if (kcError) {
         return {
           statusCode: 500,
           headers,
           body: JSON.stringify({
             error: 'Failed to fetch knowledge components',
-            message: error.message
+            message: kcError.message
           })
         };
       }
       
+      if (!knowledgeComponents || knowledgeComponents.length === 0) {
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify([])
+        };
+      }
+      
+      // Get knowledge states for all students and all KCs
+      const kcIds = knowledgeComponents.map(kc => kc.id);
+      const { data: knowledgeStates, error: statesError } = await supabase
+        .from('knowledge_states')
+        .select('student_id, knowledge_component_id, p_mastery')
+        .in('student_id', studentIds)
+        .in('knowledge_component_id', kcIds);
+      
+      if (statesError) {
+        console.error('Error fetching knowledge states:', statesError);
+        // Continue without states data
+      }
+      
+      // Calculate performance data for each KC
+      const enrichedKCs = knowledgeComponents.map(kc => {
+        const kcStates = (knowledgeStates || []).filter(ks => ks.knowledge_component_id === kc.id);
+        const totalStudents = studentIds.length;
+        
+        if (kcStates.length === 0) {
+          return {
+            ...kc,
+            averageMastery: 0,
+            totalStudents,
+            studentsWithData: 0,
+            masteryLevels: {
+              veryLow: totalStudents,  // All students at very low if no data
+              low: 0,
+              medium: 0,
+              high: 0,
+              veryHigh: 0
+            }
+          };
+        }
+        
+        // Calculate average mastery
+        const masteryValues = kcStates.map(ks => ks.p_mastery || 0);
+        const averageMastery = masteryValues.reduce((sum, val) => sum + val, 0) / masteryValues.length;
+        
+        // Calculate mastery distribution
+        const masteryLevels = {
+          veryLow: 0,   // 0-0.2
+          low: 0,       // 0.2-0.4
+          medium: 0,    // 0.4-0.6
+          high: 0,      // 0.6-0.8
+          veryHigh: 0   // 0.8-1.0
+        };
+        
+        masteryValues.forEach(mastery => {
+          if (mastery < 0.2) masteryLevels.veryLow++;
+          else if (mastery < 0.4) masteryLevels.low++;
+          else if (mastery < 0.6) masteryLevels.medium++;
+          else if (mastery < 0.8) masteryLevels.high++;
+          else masteryLevels.veryHigh++;
+        });
+        
+        // Students without data are counted as very low
+        const studentsWithoutData = totalStudents - kcStates.length;
+        masteryLevels.veryLow += studentsWithoutData;
+        
+        return {
+          ...kc,
+          averageMastery,
+          totalStudents,
+          studentsWithData: kcStates.length,
+          masteryLevels
+        };
+      });
+      
       return {
         statusCode: 200,
         headers,
-        body: JSON.stringify(data || [])
+        body: JSON.stringify(enrichedKCs)
       };
       
     } catch (error) {
+      console.error('Server error in classroom KC endpoint:', error);
       return {
         statusCode: 500,
         headers,

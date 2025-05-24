@@ -54,10 +54,10 @@ const ClassroomView = () => {
         console.log('[ClassroomView] Performance data:', performanceResponse.data);
         setPerformance(performanceResponse.data);
         
-        // Fetch knowledge component performance
-        console.log('[ClassroomView] Fetching knowledge components...');
+        // Fetch knowledge component performance with real-time data
+        console.log('[ClassroomView] Fetching knowledge components with performance data...');
         const kcResponse = await axios.get(`/api/classrooms/${id}/knowledge-components`);
-        console.log('[ClassroomView] Knowledge components:', kcResponse.data);
+        console.log('[ClassroomView] Knowledge components with performance:', kcResponse.data);
         setKnowledgeComponents(kcResponse.data);
         
         console.log('[ClassroomView] All data loaded successfully!');
@@ -86,6 +86,23 @@ const ClassroomView = () => {
     
     fetchData();
   }, [id, teacherId]);
+  
+  // Auto-refresh knowledge component data every 30 seconds
+  useEffect(() => {
+    if (!id || loading) return;
+    
+    const interval = setInterval(async () => {
+      try {
+        console.log('[ClassroomView] Auto-refreshing KC performance data...');
+        const kcResponse = await axios.get(`/api/classrooms/${id}/knowledge-components`);
+        setKnowledgeComponents(kcResponse.data);
+      } catch (err) {
+        console.error('Auto-refresh failed:', err);
+      }
+    }, 30000); // 30 seconds
+    
+    return () => clearInterval(interval);
+  }, [id, loading]);
   
   if (loading) {
     return (
@@ -499,78 +516,109 @@ const ClassroomView = () => {
         </div>
         
         <div className="knowledge-components-section">
-          <h2>Knowledge Component Performance</h2>
-          <div className="chart-container">
+          <div className="section-header">
+            <h2>Knowledge Component Performance</h2>
+            <div className="refresh-indicator">
+              <span className="last-updated">Updates every 30s</span>
+              <div className="live-indicator"></div>
+            </div>
+          </div>
+          <div className="chart-container-compact">
             <Bar data={chartData} options={chartOptions} />
           </div>
           
-          <div className="kc-table">
-            <div className="table-header">
-              <div className="col-code">Code</div>
-              <div className="col-name">Name</div>
-              <div className="col-mastery">Average Mastery</div>
-              <div className="col-distribution">Mastery Distribution</div>
-              <div className="col-actions">Actions</div>
+          <div className="kc-table-compact">
+            <div className="table-header-compact">
+              <div className="kc-info-header">Knowledge Component</div>
+              <div className="kc-performance-header">Class Performance</div>
+              <div className="kc-actions-header">Actions</div>
             </div>
             
-            <div className="table-body">
-              {knowledgeComponents.map(kc => (
-                <div key={kc.id} className="table-row">
-                  <div className="col-code">{kc.curriculum_code}</div>
-                  <div className="col-name">{kc.name}</div>
-                  <div className="col-mastery">
-                    <div className="mastery-percentage">
-                      {((kc.averageMastery || 0) * 100).toFixed(0)}%
-                    </div>
-                    <div className="mastery-bar">
-                      <div 
-                        className="mastery-fill" 
-                        style={{ width: `${(kc.averageMastery || 0) * 100}%` }}
-                      ></div>
+            <div className="table-body-compact">
+              {knowledgeComponents.length > 0 ? knowledgeComponents.map(kc => (
+                <div key={kc.id} className="kc-row-compact">
+                  <div className="kc-info">
+                    <div className="kc-code">{kc.curriculum_code}</div>
+                    <div className="kc-name">{kc.name}</div>
+                    <div className="kc-stats">
+                      <span className="students-count">
+                        {kc.studentsWithData || 0}/{kc.totalStudents || 0} students
+                      </span>
                     </div>
                   </div>
-                  <div className="col-distribution">
-                    <div className="mastery-distribution">
+                  
+                  <div className="kc-performance">
+                    <div className="mastery-summary">
+                      <div className="mastery-percentage-compact">
+                        {((kc.averageMastery || 0) * 100).toFixed(0)}%
+                      </div>
+                      <div className="mastery-bar-compact">
+                        <div 
+                          className="mastery-fill-compact" 
+                          style={{ width: `${(kc.averageMastery || 0) * 100}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                    
+                    <div className="distribution-compact">
                       {kc.masteryLevels && kc.totalStudents > 0 ? (
                         <>
                           <div 
-                            className="dist-segment very-low" 
+                            className="dist-bar very-low" 
                             style={{ width: `${(kc.masteryLevels.veryLow || 0) / kc.totalStudents * 100}%` }}
-                            title={`Very Low: ${kc.masteryLevels.veryLow || 0} students`}
+                            title={`Very Low (0-20%): ${kc.masteryLevels.veryLow || 0} students`}
                           ></div>
                           <div 
-                            className="dist-segment low" 
+                            className="dist-bar low" 
                             style={{ width: `${(kc.masteryLevels.low || 0) / kc.totalStudents * 100}%` }}
-                            title={`Low: ${kc.masteryLevels.low || 0} students`}
+                            title={`Low (20-40%): ${kc.masteryLevels.low || 0} students`}
                           ></div>
                           <div 
-                            className="dist-segment medium" 
+                            className="dist-bar medium" 
                             style={{ width: `${(kc.masteryLevels.medium || 0) / kc.totalStudents * 100}%` }}
-                            title={`Medium: ${kc.masteryLevels.medium || 0} students`}
+                            title={`Medium (40-60%): ${kc.masteryLevels.medium || 0} students`}
                           ></div>
                           <div 
-                            className="dist-segment high" 
+                            className="dist-bar high" 
                             style={{ width: `${(kc.masteryLevels.high || 0) / kc.totalStudents * 100}%` }}
-                            title={`High: ${kc.masteryLevels.high || 0} students`}
+                            title={`High (60-80%): ${kc.masteryLevels.high || 0} students`}
                           ></div>
                           <div 
-                            className="dist-segment very-high" 
+                            className="dist-bar very-high" 
                             style={{ width: `${(kc.masteryLevels.veryHigh || 0) / kc.totalStudents * 100}%` }}
-                            title={`Very High: ${kc.masteryLevels.veryHigh || 0} students`}
+                            title={`Very High (80-100%): ${kc.masteryLevels.veryHigh || 0} students`}
                           ></div>
                         </>
                       ) : (
-                        <div className="no-data">No student data</div>
+                        <div className="no-data-compact">No data</div>
                       )}
                     </div>
+                    
+                    <div className="performance-summary">
+                      <span className="high-performers">
+                        {kc.masteryLevels ? (kc.masteryLevels.high + kc.masteryLevels.veryHigh) : 0} high
+                      </span>
+                      <span className="low-performers">
+                        {kc.masteryLevels ? (kc.masteryLevels.veryLow + kc.masteryLevels.low) : 0} need help
+                      </span>
+                    </div>
                   </div>
-                  <div className="col-actions">
-                    <Link to={`/teacher/knowledge-components/${kc.id}`} className="button small">
-                      View Details
+                  
+                  <div className="kc-actions">
+                    <Link to={`/teacher/knowledge-components/${kc.id}`} className="btn-view-details">
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                      Details
                     </Link>
                   </div>
                 </div>
-              ))}
+              )) : (
+                <div className="no-kcs-message">
+                  <p>No knowledge components found for this classroom's grade level.</p>
+                </div>
+              )}
             </div>
           </div>
         </div>

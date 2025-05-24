@@ -202,6 +202,54 @@
   min-width: 80px;
 }
 
+/* Radio button styles */
+.radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.radio-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 2px solid #e1e5e9;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.radio-option:hover {
+  border-color: #667eea;
+  background-color: #f7fafc;
+}
+
+.radio-option input[type="radio"] {
+  margin: 0;
+  cursor: pointer;
+}
+
+.radio-option input[type="radio"]:checked + span {
+  color: #667eea;
+  font-weight: 600;
+}
+
+.radio-option:has(input[type="radio"]:checked) {
+  border-color: #667eea;
+  background-color: #f0f4ff;
+}
+
+/* Login method indicator */
+.login-method {
+  background-color: #e6f7ff;
+  border-left: 4px solid #1890ff;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-style: italic;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .form-row {

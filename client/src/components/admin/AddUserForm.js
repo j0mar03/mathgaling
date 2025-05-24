@@ -5,12 +5,14 @@ const AddUserForm = ({ onUserAdded, onCancel }) => {
     const [formData, setFormData] = useState({
         role: 'student', // Default role
         name: '',
+        username: '', // For students
         email: '', // Will be used as auth_id
         password: '',
         grade_level: '',
         subject_taught: '',
         phone_number: ''
     });
+    const [useUsername, setUseUsername] = useState(true); // Default to username for students
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
 
@@ -24,25 +26,47 @@ const AddUserForm = ({ onUserAdded, onCancel }) => {
         setError('');
         setLoading(true);
 
-        const { role, name, email, password, ...otherData } = formData;
+        const { role, name, username, email, password, ...otherData } = formData;
 
         // Basic validation
-        if (!role || !name || !email || !password) {
-            setError('Role, Name, Email, and Password are required.');
+        if (!role || !name || !password) {
+            setError('Role, Name, and Password are required.');
             setLoading(false);
             return;
         }
+        
+        // Validate login credential based on role and preference
+        if (role === 'student' && useUsername) {
+            if (!username) {
+                setError('Username is required for student accounts.');
+                setLoading(false);
+                return;
+            }
+        } else {
+            if (!email) {
+                setError('Email is required.');
+                setLoading(false);
+                return;
+            }
+        }
 
-        const payload = {
+        let payload = {
             role,
             name,
-            email, // Backend expects email for auth_id
             password,
             // Include role-specific fields only if they are relevant and have values
             ...(role === 'student' && otherData.grade_level && { grade_level: otherData.grade_level }),
             ...(role === 'teacher' && otherData.subject_taught && { subject_taught: otherData.subject_taught }),
             ...(role === 'parent' && otherData.phone_number && { phone_number: otherData.phone_number }),
         };
+        
+        // Set login credential based on role and preference
+        if (role === 'student' && useUsername && username) {
+            payload.username = username;
+            payload.email = `${username}@student.mathgaling.com`; // Auto-generate email
+        } else {
+            payload.email = email;
+        }
 
         try {
             // Token is automatically included by axios defaults set in AuthContext
@@ -78,10 +102,62 @@ const AddUserForm = ({ onUserAdded, onCancel }) => {
                     <input type="text" id="name" name="name" value={formData.name} onChange={handleInputChange} disabled={loading} required />
                 </div>
 
-                <div className="form-group">
-                    <label htmlFor="email">Email (Login ID):</label>
-                    <input type="email" id="email" name="email" value={formData.email} onChange={handleInputChange} disabled={loading} required />
-                </div>
+                {/* Login Credential Field - depends on role */}
+                {formData.role === 'student' ? (
+                    <>
+                        <div className="form-group">
+                            <label>Login Method:</label>
+                            <div>
+                                <label>
+                                    <input
+                                        type="radio"
+                                        checked={useUsername}
+                                        onChange={() => setUseUsername(true)}
+                                        disabled={loading}
+                                    />
+                                    Username (Recommended)
+                                </label>
+                                <label style={{marginLeft: '15px'}}>
+                                    <input
+                                        type="radio"
+                                        checked={!useUsername}
+                                        onChange={() => setUseUsername(false)}
+                                        disabled={loading}
+                                    />
+                                    Email
+                                </label>
+                            </div>
+                        </div>
+                        
+                        {useUsername ? (
+                            <div className="form-group">
+                                <label htmlFor="username">Username:</label>
+                                <input 
+                                    type="text" 
+                                    id="username" 
+                                    name="username" 
+                                    value={formData.username} 
+                                    onChange={handleInputChange} 
+                                    disabled={loading} 
+                                    required
+                                    pattern="[a-zA-Z0-9]+"
+                                    title="Username can only contain letters and numbers"
+                                />
+                                <small>Student will log in with this username. Email will be auto-generated.</small>
+                            </div>
+                        ) : (
+                            <div className="form-group">
+                                <label htmlFor="email">Email:</label>
+                                <input type="email" id="email" name="email" value={formData.email} onChange={handleInputChange} disabled={loading} required />
+                            </div>
+                        )}
+                    </>
+                ) : (
+                    <div className="form-group">
+                        <label htmlFor="email">Email (Login ID):</label>
+                        <input type="email" id="email" name="email" value={formData.email} onChange={handleInputChange} disabled={loading} required />
+                    </div>
+                )}
 
                 <div className="form-group">
                     <label htmlFor="password">Password:</label>

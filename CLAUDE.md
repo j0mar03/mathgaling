@@ -100,6 +100,40 @@ Major overhaul of the authentication system:
 - **Auto-Detection**: Automatically detects username vs email based on @ symbol
 - **Username Storage**: Stores username in user object for display
 
+### 5. Database Requirements
+- **New Column**: Add `username` column to `students` table:
+  ```sql
+  ALTER TABLE students ADD COLUMN username VARCHAR(50) UNIQUE;
+  ```
+- **Backward Compatibility**: Existing students without username can still login with email
+- **Login Logic**: System tries username first, falls back to email for existing students
+
+### 6. Teacher Dashboard Updates
+- **CreateStudentModal**: Now supports both username and email creation methods
+- **Radio Selection**: Teachers can choose username (recommended) or email for new students
+- **Auto-generation**: Generates usernames and emails automatically
+- **Credentials Display**: Shows appropriate login method in preview
+
+### 7. Admin Panel Updates
+- **AddUserForm**: Updated to support username for student accounts
+- **Dual Mode**: Admin can create students with username or email
+- **Validation**: Proper validation for username format (alphanumeric only)
+
+### 8. Real-Time Knowledge Component Performance (Jan 2025)
+Enhanced the classroom Knowledge Components section with live data:
+
+- **Real-Time Calculations**: KC performance now calculates from actual student knowledge states
+- **Auto-Refresh**: Performance data updates every 30 seconds automatically
+- **Compact Design**: New compact table layout with visual mastery distributions
+- **Performance Metrics**: Shows average mastery, student counts, and mastery level distributions
+- **Visual Indicators**: Color-coded mastery bars and distribution charts
+- **API Enhancement**: Updated `/api/classrooms/:id/knowledge-components` to include:
+  - `averageMastery`: Real average from student knowledge states
+  - `totalStudents`: Total students in classroom
+  - `studentsWithData`: Students with knowledge state data
+  - `masteryLevels`: Distribution across 5 mastery levels (very low to very high)
+- **Responsive Design**: Mobile-friendly compact layout
+
 ## Memories
 - Fix math mastery
 - Add to memory
