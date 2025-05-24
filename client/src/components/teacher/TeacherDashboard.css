@@ -767,6 +767,170 @@
   letter-spacing: 0.03em;
 }
 
+/* Intervention Table Styles */
+.intervention-table-container {
+  margin-top: 16px;
+  overflow-x: auto;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.intervention-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.intervention-table thead {
+  background-color: #f8f9fa;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.intervention-table th {
+  padding: 10px 12px;
+  text-align: left;
+  font-weight: 600;
+  color: #495057;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.intervention-table tbody tr {
+  border-bottom: 1px solid #e9ecef;
+  transition: background-color 0.2s ease;
+}
+
+.intervention-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.intervention-table tbody tr.priority-high {
+  background-color: rgba(220, 53, 69, 0.05);
+}
+
+.intervention-table tbody tr.priority-medium {
+  background-color: rgba(253, 126, 20, 0.05);
+}
+
+.intervention-table tbody tr.priority-low {
+  background-color: rgba(40, 167, 69, 0.05);
+}
+
+.intervention-table td {
+  padding: 8px 12px;
+  vertical-align: middle;
+}
+
+.student-name {
+  font-weight: 600;
+  color: #2c3e50;
+}
+
+.student-grade {
+  text-align: center;
+  width: 60px;
+}
+
+.student-classroom {
+  color: #6c757d;
+  font-size: 0.85rem;
+}
+
+.mastery-display {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 80px;
+}
+
+.mastery-percentage {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.mastery-percentage.low {
+  color: #dc3545;
+}
+
+.mastery-percentage.medium {
+  color: #fd7e14;
+}
+
+.mastery-percentage.high {
+  color: #28a745;
+}
+
+.mastery-bar-mini {
+  width: 100%;
+  height: 4px;
+  background-color: #e9ecef;
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.mastery-fill-mini {
+  height: 100%;
+  background-color: #3498db;
+  transition: width 0.3s ease;
+}
+
+.priority-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.priority-badge.high {
+  background-color: #dc3545;
+  color: white;
+}
+
+.priority-badge.medium {
+  background-color: #fd7e14;
+  color: white;
+}
+
+.priority-badge.low {
+  background-color: #28a745;
+  color: white;
+}
+
+.action-buttons-compact {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+}
+
+.action-buttons-compact .icon-button {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  background-color: white;
+  color: #495057;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  font-size: 1rem;
+}
+
+.action-buttons-compact .icon-button:hover {
+  background-color: #f8f9fa;
+  border-color: #adb5bd;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
 .knowledge-components-section {
   background: white;
   border-radius: 8px;

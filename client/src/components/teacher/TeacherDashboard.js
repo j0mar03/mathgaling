@@ -9,6 +9,7 @@ import AssignPracticeModal from './AssignPracticeModal'; // Import AssignPractic
 import ConfirmAssignModal from './ConfirmAssignModal'; // Import ConfirmAssignModal
 import KnowledgeComponentsOverview from './KnowledgeComponentsOverview';
 import CreateStudentModal from './CreateStudentModal'; // Import new student creation modal
+import AddStudentToClassroomModal from './AddStudentToClassroomModal'; // Import add student to classroom modal
 import InterventionDashboard from './InterventionDashboard'; // Import intervention dashboard
 import './TeacherDashboard.css';
 
@@ -31,6 +32,8 @@ const TeacherDashboard = () => {
   const [selectedClassroomForStudent, setSelectedClassroomForStudent] = useState(null); // Selected classroom for new student
   const [showInterventionDashboard, setShowInterventionDashboard] = useState(false); // State for intervention dashboard view
   const [allStudents, setAllStudents] = useState([]); // All students across classrooms
+  const [showAddStudentModal, setShowAddStudentModal] = useState(false); // State for add student to classroom modal
+  const [selectedClassroomForAddStudent, setSelectedClassroomForAddStudent] = useState(null); // Selected classroom for adding students
   const { user, token } = useAuth(); // Get user and token from context
 
   // Use the authenticated user's ID
@@ -171,7 +174,7 @@ const TeacherDashboard = () => {
   
   // Sort by priority (high to low)
   interventionNeeded.sort((a, b) => {
-    const priorityOrder = { 'High': 3, 'Medium': 2, 'Low': 1 };
+    const priorityOrder = { 'high': 3, 'medium': 2, 'low': 1 };
     return priorityOrder[b.priority] - priorityOrder[a.priority];
   });
 
@@ -275,6 +278,49 @@ const TeacherDashboard = () => {
       alert(`Student created successfully!\n\nLogin Credentials:\nEmail: ${newStudent.credentials.email}\nPassword: ${newStudent.credentials.password}\n\nPlease save these credentials!`);
     } else {
       alert('Student created successfully!');
+    }
+  };
+  
+  // --- Add Student to Classroom Handlers ---
+  const handleAddStudentToClassroom = (classroomId) => {
+    setSelectedClassroomForAddStudent(classroomId);
+    setShowAddStudentModal(true);
+  };
+  
+  const handleCloseAddStudentModal = () => {
+    setShowAddStudentModal(false);
+    setSelectedClassroomForAddStudent(null);
+  };
+  
+  const handleAddStudentSuccess = async () => {
+    // Refresh classroom data
+    try {
+      console.log('[TeacherDashboard] Refreshing data after adding students...');
+      
+      // Fetch classrooms again
+      const classroomsResponse = await axios.get(`/api/teachers/${teacherId}/classrooms`);
+      setClassrooms(classroomsResponse.data);
+      
+      // Fetch performance data for each classroom
+      const performanceData = {};
+      const studentsArray = [];
+      for (const classroom of classroomsResponse.data) {
+        const performanceResponse = await axios.get(`/api/classrooms/${classroom.id}/performance`);
+        performanceData[classroom.id] = performanceResponse.data;
+        
+        performanceResponse.data.forEach(studentPerf => {
+          studentsArray.push({
+            ...studentPerf.student,
+            performance: studentPerf.performance,
+            intervention: studentPerf.intervention,
+            classroom: classroom
+          });
+        });
+      }
+      setClassroomPerformance(performanceData);
+      setAllStudents(studentsArray);
+    } catch (err) {
+      console.error('Error refreshing data:', err);
     }
   };
 
@@ -397,9 +443,9 @@ const TeacherDashboard = () => {
               <div className="intervention-summary">
                 <span className="intervention-count">{interventionNeeded.length} students need attention</span>
                 <div className="priority-counts">
-                  <span className="priority-count high">High: {interventionNeeded.filter(item => item.priority === 'High').length}</span>
-                  <span className="priority-count medium">Medium: {interventionNeeded.filter(item => item.priority === 'Medium').length}</span>
-                  <span className="priority-count low">Low: {interventionNeeded.filter(item => item.priority === 'Low').length}</span>
+                  <span className="priority-count high">High: {interventionNeeded.filter(item => item.priority === 'high').length}</span>
+                  <span className="priority-count medium">Medium: {interventionNeeded.filter(item => item.priority === 'medium').length}</span>
+                  <span className="priority-count low">Low: {interventionNeeded.filter(item => item.priority === 'low').length}</span>
                 </div>
               </div>
               <button 
@@ -410,90 +456,108 @@ const TeacherDashboard = () => {
               </button>
             </div>
             
-            <div className={`intervention-list ${showAllInterventions ? 'expanded' : ''}`}>
-              {interventionNeeded.map((item, index) => {
-                const masteryPercentage = item.student.performance?.averageMastery 
-                  ? (item.student.performance.averageMastery * 100).toFixed(0) 
-                  : "N/A";
-                const interventionScore = item.student.performance?.interventionScore 
-                  ? (item.student.performance.interventionScore * 100).toFixed(0)
-                  : "N/A";
-                
-                return (
-                  <div key={index} className={`intervention-item priority-${item.priority.toLowerCase()}`}>
-                    <div className="intervention-details">
-                      <h3>{item.student.name}</h3>
-                      <p>Grade {item.student.grade_level} • {item.classroom.name}</p>
-                      <div className="intervention-stats">
-                        <div className="stat-item">
-                          <span className="stat-label">Mastery</span>
-                          <span className={`stat-value ${masteryPercentage < 80 ? 'below-threshold' : ''}`}>
-                            {masteryPercentage}%
-                          </span>
-                        </div>
-                        <div className="stat-item">
-                          <span className="stat-label">Intervention Score</span>
-                          <span className={`stat-value ${interventionScore < 50 ? 'below-threshold' : ''}`}>
-                            {interventionScore}%
-                          </span>
-                        </div>
-                      </div>
-                      <div className="intervention-priority">
-                        <span className="priority-label">Priority:</span>
-                        <span className="priority-value">{item.priority}</span>
-                      </div>
-                    </div>
-                    <div className="intervention-actions">
-                      <div className="quick-actions">
-                        <button 
-                          className="action-button" 
-                          title="Assign additional practice"
-                          onClick={() => {
-                            setSelectedStudentForPractice(item.student);
-                            setShowAssignPracticeModal(true);
-                          }}
-                        >
-                          <span className="icon">📝</span>
-                        </button>
-                        <button 
-                          className="action-button" 
-                          title="Schedule 1:1 session"
-                          onClick={async () => {
-                            if (!token || !item.student?.id) {
-                              alert("Cannot schedule session. Authentication or student data missing.");
-                              return;
-                            }
-                            if (window.confirm(`Schedule a 1:1 session for ${item.student.name}?`)) {
-                              try {
-                                const today = new Date();
-                                const tomorrow = new Date(today);
-                                tomorrow.setDate(tomorrow.getDate() + 1);
-                                await axios.post(`/api/students/${item.student.id}/interventions/session`, {
-                                  studentId: item.student.id,
-                                  dateProposed: tomorrow.toISOString(),
-                                  type: '1:1',
-                                  reason: `Intervention for ${item.priority} priority issues (Score: ${interventionScore}%)`,
-                                  requestedBy: 'teacher'
-                                }, { headers: { Authorization: `Bearer ${token}` } });
-                                alert(`1:1 Session proposed for ${item.student.name} for tomorrow.`);
-                              } catch (err) {
-                                console.error('Error scheduling 1:1 session:', err);
-                                alert(`Failed to schedule 1:1 session for ${item.student.name}. ${err.response?.data?.message || ''}`);
-                              }
-                            }
-                          }}
-                        >
-                          <span className="icon">👤</span>
-                        </button>
-                      </div>
-                      <Link to={`/teacher/student/${item.student.id}`} className="button">
-                        View Details
-                      </Link>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+            {showAllInterventions && (
+              <div className="intervention-table-container">
+                <table className="intervention-table">
+                  <thead>
+                    <tr>
+                      <th>Student Name</th>
+                      <th>Grade</th>
+                      <th>Classroom</th>
+                      <th>Mastery</th>
+                      <th>Priority</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {interventionNeeded.map((item, index) => {
+                      const masteryPercentage = item.student.performance?.averageMastery 
+                        ? (item.student.performance.averageMastery * 100).toFixed(0) 
+                        : item.student.performance?.mathMastery
+                        ? (item.student.performance.mathMastery * 100).toFixed(0)
+                        : "0";
+                      
+                      return (
+                        <tr key={index} className={`priority-${item.priority}`}>
+                          <td className="student-name">{item.student.name}</td>
+                          <td className="student-grade">{item.student.grade_level}</td>
+                          <td className="student-classroom">{item.classroom.name}</td>
+                          <td className="student-mastery">
+                            <div className="mastery-display">
+                              <span className={`mastery-percentage ${parseInt(masteryPercentage) < 40 ? 'low' : parseInt(masteryPercentage) < 70 ? 'medium' : 'high'}`}>
+                                {masteryPercentage}%
+                              </span>
+                              <div className="mastery-bar-mini">
+                                <div 
+                                  className="mastery-fill-mini" 
+                                  style={{ width: `${masteryPercentage}%` }}
+                                ></div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="student-priority">
+                            <span className={`priority-badge ${item.priority}`}>
+                              {item.priority.charAt(0).toUpperCase() + item.priority.slice(1)}
+                            </span>
+                          </td>
+                          <td className="student-actions">
+                            <div className="action-buttons-compact">
+                              <button 
+                                className="icon-button" 
+                                title="Assign practice"
+                                onClick={() => {
+                                  setSelectedStudentForPractice(item.student);
+                                  setShowAssignPracticeModal(true);
+                                }}
+                              >
+                                📝
+                              </button>
+                              <button 
+                                className="icon-button" 
+                                title="Schedule session"
+                                onClick={async () => {
+                                  if (!token || !item.student?.id) {
+                                    alert("Cannot schedule session. Authentication or student data missing.");
+                                    return;
+                                  }
+                                  if (window.confirm(`Schedule a 1:1 session for ${item.student.name}?`)) {
+                                    try {
+                                      const today = new Date();
+                                      const tomorrow = new Date(today);
+                                      tomorrow.setDate(tomorrow.getDate() + 1);
+                                      await axios.post(`/api/students/${item.student.id}/interventions/session`, {
+                                        studentId: item.student.id,
+                                        dateProposed: tomorrow.toISOString(),
+                                        type: '1:1',
+                                        reason: `Intervention for ${item.priority} priority issues`,
+                                        requestedBy: 'teacher'
+                                      }, { headers: { Authorization: `Bearer ${token}` } });
+                                      alert(`1:1 Session proposed for ${item.student.name} for tomorrow.`);
+                                    } catch (err) {
+                                      console.error('Error scheduling 1:1 session:', err);
+                                      alert(`Failed to schedule 1:1 session for ${item.student.name}. ${err.response?.data?.message || ''}`);
+                                    }
+                                  }
+                                }}
+                              >
+                                👤
+                              </button>
+                              <Link 
+                                to={`/teacher/student/${item.student.id}`} 
+                                className="icon-button"
+                                title="View details"
+                              >
+                                👁️
+                              </Link>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -553,7 +617,7 @@ const TeacherDashboard = () => {
                   </Link>
                   <button 
                     className="button secondary small"
-                    onClick={() => handleCreateStudentClick(classroom.id)}
+                    onClick={() => handleAddStudentToClassroom(classroom.id)}
                   >
                     + Add Student
                   </button>
@@ -627,6 +691,16 @@ const TeacherDashboard = () => {
           onClose={handleCloseCreateStudentModal}
           onSuccess={handleCreateStudentSuccess}
           classroomId={selectedClassroomForStudent}
+        />
+      )}
+
+      {/* Add Student to Classroom Modal */}
+      {showAddStudentModal && selectedClassroomForAddStudent && (
+        <AddStudentToClassroomModal
+          onClose={handleCloseAddStudentModal}
+          onSuccess={handleAddStudentSuccess}
+          classroomId={selectedClassroomForAddStudent}
+          classroomName={classrooms.find(c => c.id === selectedClassroomForAddStudent)?.name || 'Classroom'}
         />
       )}
 
