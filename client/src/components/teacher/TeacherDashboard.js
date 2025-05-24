@@ -620,22 +620,6 @@ const TeacherDashboard = () => {
       )}
 
 
-      {/* --- Content Item Management Section --- */}
-      <div className="content-item-section" style={{ marginTop: '2rem', paddingTop: '1rem', borderTop: '1px solid #eee' }}>
-        <h2>Content Authoring</h2>
-        {showCiForm ? (
-          <ContentItemForm
-            itemToEdit={editingCi}
-            onSuccess={handleCiFormSuccess}
-            onClose={handleCiFormClose}
-          />
-        ) : (
-          <ContentItemList
-            onEdit={handleEditCiClick}
-            onCreate={handleCreateCiClick}
-          />
-        )}
-      </div>
 
       {/* Create Student Modal */}
       {showCreateStudentModal && (

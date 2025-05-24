@@ -3691,13 +3691,109 @@ exports.handler = async (event, context) => {
       const pathParts = path.split('/');
       const teacherId = pathParts[pathParts.indexOf('teachers') + 1];
       
-      // Mock KC mastery data
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // Get all knowledge components with student mastery data
+      const { data: knowledgeComponents, error: kcError } = await supabase
+        .from('knowledge_components')
+        .select('*')
+        .order('id');
+      
+      if (kcError) {
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to fetch knowledge components',
+            message: kcError.message
+          })
+        };
+      }
+      
+      // Get teacher's students through classrooms
+      const { data: classrooms, error: classroomError } = await supabase
+        .from('classrooms')
+        .select('id')
+        .eq('teacher_id', teacherId);
+      
+      if (classroomError) {
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to fetch classrooms',
+            message: classroomError.message
+          })
+        };
+      }
+      
+      const classroomIds = classrooms.map(c => c.id);
+      
+      // Get students in teacher's classrooms
+      const { data: classroomStudents, error: studentsError } = await supabase
+        .from('classroom_students')
+        .select('student_id')
+        .in('classroom_id', classroomIds);
+      
+      if (studentsError) {
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to fetch students',
+            message: studentsError.message
+          })
+        };
+      }
+      
+      const studentIds = [...new Set(classroomStudents.map(cs => cs.student_id))];
+      
+      // Get knowledge states for these students
+      const { data: knowledgeStates, error: ksError } = await supabase
+        .from('knowledge_states')
+        .select('*')
+        .in('student_id', studentIds);
+      
+      if (ksError) {
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to fetch knowledge states',
+            message: ksError.message
+          })
+        };
+      }
+      
+      // Calculate mastery for each KC
+      const kcWithMastery = knowledgeComponents.map(kc => {
+        const states = knowledgeStates.filter(ks => ks.knowledge_component_id === kc.id);
+        const totalStudents = studentIds.length;
+        const studentsWithData = states.length;
+        const averageMastery = states.length > 0 
+          ? states.reduce((sum, state) => sum + (state.p_mastery || 0), 0) / states.length 
+          : 0;
+        
+        // Count content items for this KC
+        const totalContentItems = 10; // Default estimate
+        
+        return {
+          ...kc,
+          totalStudents,
+          studentsWithData,
+          averageMastery,
+          totalContentItems,
+          difficulty: kc.difficulty || 3
+        };
+      });
+      
       return {
         statusCode: 200,
         headers,
-        body: JSON.stringify({
-          knowledgeComponents: []
-        })
+        body: JSON.stringify(kcWithMastery)
       };
       
     } catch (error) {
@@ -4145,7 +4241,7 @@ exports.handler = async (event, context) => {
           )
         `)
         .eq('student_id', studentId)
-        .order('timestamp', { ascending: false })
+        .order('createdAt', { ascending: false })
         .limit(20);
       
       // Calculate performance metrics
@@ -4499,7 +4595,7 @@ exports.handler = async (event, context) => {
         `)
         .eq('student_id', studentId)
         .gte('timestamp', oneWeekAgo.toISOString())
-        .order('timestamp', { ascending: false });
+        .order('createdAt', { ascending: false });
       
       // Calculate weekly stats
       const totalQuizzes = weeklyResponses?.length || 0;
