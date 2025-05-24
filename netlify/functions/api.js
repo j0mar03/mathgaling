@@ -3482,7 +3482,7 @@ exports.handler = async (event, context) => {
         const enrollments = classroomData.studentIds.map(studentId => ({
           classroom_id: classroom.id,
           student_id: studentId,
-          enrollment_date: new Date().toISOString()
+          joined_at: new Date().toISOString()
         }));
         
         console.log('[Netlify] Adding students to classroom:', enrollments);
@@ -3629,7 +3629,7 @@ exports.handler = async (event, context) => {
         .from('classroom_students')
         .select(`
           student_id,
-          enrollment_date,
+          joined_at,
           students (
             id,
             name,
@@ -3775,7 +3775,7 @@ exports.handler = async (event, context) => {
         .from('classroom_students')
         .select(`
           student_id,
-          enrollment_date,
+          joined_at,
           students (*)
         `)
         .eq('classroom_id', classroomId);
@@ -3801,7 +3801,7 @@ exports.handler = async (event, context) => {
       // Format response to return student objects
       const students = (data || []).map(enrollment => ({
         ...enrollment.students,
-        enrollmentDate: enrollment.enrollment_date
+        enrollmentDate: enrollment.joined_at
       }));
       
       return {
