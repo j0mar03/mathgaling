@@ -200,7 +200,18 @@ const StudentDetailView = () => {
       const id = state.knowledge_component_id || state.id;
       state.formatted_code = `G${grade}-KC${id}`;
     }
-    console.log(`Knowledge component: ${state.name}, Code: ${state.formatted_code}`);
+    // Debug: Check if we can get the name from other sources if state.name is undefined
+    if (!state.name) {
+      const kcName = (state.knowledge_components && state.knowledge_components.name) ||
+                    (state.KnowledgeComponent && state.KnowledgeComponent.name) ||
+                    (detailedPerformance.performanceByKC && 
+                     detailedPerformance.performanceByKC[state.knowledge_component_id] && 
+                     detailedPerformance.performanceByKC[state.knowledge_component_id].name);
+      
+      if (kcName) {
+        console.log(`Knowledge component KC-${state.knowledge_component_id}: Found name "${kcName}" from alternate source`);
+      }
+    }
   });
 
   const masteryChartData = {
@@ -792,12 +803,19 @@ const StudentDetailView = () => {
                       .sort((a, b) => (b.p_mastery || 0) - (a.p_mastery || 0))
                       .slice(0, 12); // Show top 12 for readability
 
+
                     // Prepare data for horizontal bar chart
                     const horizontalChartData = {
                       labels: sortedForHorizontal.map(state => {
-                        const name = state.name || 
-                                    (state.KnowledgeComponent ? state.KnowledgeComponent.name : null) || 
-                                    'Unknown Topic';
+                        // Get name from performanceByKC first (most reliable), then try other sources
+                        const name = (detailedPerformance.performanceByKC && 
+                                     detailedPerformance.performanceByKC[state.knowledge_component_id] && 
+                                     detailedPerformance.performanceByKC[state.knowledge_component_id].name) ||
+                                    (state.knowledge_components && state.knowledge_components.name) ||
+                                    (state.KnowledgeComponent && state.KnowledgeComponent.name) || 
+                                    state.name || 
+                                    `KC-${state.knowledge_component_id}`;
+                        
                         return name.length > 25 ? name.substring(0, 22) + '...' : name;
                       }),
                       datasets: [
@@ -858,9 +876,14 @@ const StudentDetailView = () => {
                             title: function(tooltipItems) {
                               const index = tooltipItems[0].dataIndex;
                               const state = sortedForHorizontal[index];
-                              return state.name || 
-                                    (state.KnowledgeComponent ? state.KnowledgeComponent.name : null) || 
-                                    'Unknown Topic';
+                              // Use the same improved name extraction logic
+                              return (detailedPerformance.performanceByKC && 
+                                     detailedPerformance.performanceByKC[state.knowledge_component_id] && 
+                                     detailedPerformance.performanceByKC[state.knowledge_component_id].name) ||
+                                    (state.knowledge_components && state.knowledge_components.name) ||
+                                    (state.KnowledgeComponent && state.KnowledgeComponent.name) || 
+                                    state.name || 
+                                    `KC-${state.knowledge_component_id}`;
                             },
                             label: function(context) {
                               return `Mastery: ${context.raw.toFixed(1)}%`;

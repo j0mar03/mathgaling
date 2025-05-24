@@ -139,3 +139,4 @@ Enhanced the classroom Knowledge Components section with live data:
 - Add to memory
 - Improved login system with role selection and username support for students
 - claude memory: simple add to memory
+- add to memory

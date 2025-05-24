@@ -5367,7 +5367,7 @@ exports.handler = async (event, context) => {
       // First verify student exists
       const { data: student, error: studentError } = await supabase
         .from('students')
-        .select('id, name, email')
+        .select('id, name, auth_id')
         .eq('id', studentId)
         .single();
         
