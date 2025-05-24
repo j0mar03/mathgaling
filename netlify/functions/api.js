@@ -772,6 +772,15 @@ exports.handler = async (event, context) => {
             if (parentData && parentData.length > 0) {
               authenticatedUser = parentData[0];
               userRole = 'parent';
+              
+              // Check if parent has any linked children
+              const { data: parentChildren } = await supabase
+                .from('parent_students')
+                .select('student_id')
+                .eq('parent_id', parentData[0].id);
+              
+              authenticatedUser.hasChildren = parentChildren && parentChildren.length > 0;
+              authenticatedUser.childrenCount = parentChildren ? parentChildren.length : 0;
             }
           }
         }
@@ -804,7 +813,9 @@ exports.handler = async (event, context) => {
             user: { 
               id: authenticatedUser.id, 
               auth_id: authenticatedUser.auth_id || loginEmail,
-              username: authenticatedUser.username
+              username: authenticatedUser.username,
+              hasChildren: authenticatedUser.hasChildren || null,
+              childrenCount: authenticatedUser.childrenCount || 0
             },
             role: userRole
           })

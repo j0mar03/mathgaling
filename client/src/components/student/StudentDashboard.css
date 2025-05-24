@@ -73,7 +73,7 @@
   border-radius: 20px;
   color: white;
   position: relative;
-  overflow: hidden;
+  overflow: visible; /* Changed from hidden to allow profile icon to extend outside */
 }
 
 .dashboard-header::before {
@@ -94,10 +94,10 @@
 
 .profile-icon {
   position: absolute;
-  top: 20px;
-  right: 20px;
-  width: 50px;
-  height: 50px;
+  top: 10px;
+  right: 10px;
+  width: 60px;
+  height: 60px;
   border-radius: 50%;
   background-color: white;
   color: #4ECDC4;
@@ -108,12 +108,51 @@
   cursor: pointer;
   transition: all 0.3s ease;
   font-size: 1.5rem;
-  z-index: 2;
+  z-index: 10;
+  padding: 5px;
 }
 
 .profile-icon:hover {
-  transform: scale(1.1) rotate(5deg);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  transform: scale(1.15) rotate(5deg);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+  background-color: #f8f9fa;
+}
+
+/* Notification Badge */
+.notification-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #FF6B6B;
+  color: white;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 11px;
+  font-weight: bold;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  pointer-events: none; /* Ensures badge doesn't block clicks */
+  animation: pulse 2s infinite;
+  z-index: 11;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 2px 8px rgba(255, 107, 107, 0.4);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  }
 }
 
 .dashboard-header h1 {
@@ -623,5 +662,11 @@
 .progress-button:focus-visible,
 .profile-icon:focus-visible {
   outline: 3px solid #4299e1;
-  outline-offset: 2px;
+  outline-offset: 4px;
+}
+
+/* Active state for better click feedback */
+.profile-icon:active {
+  transform: scale(0.95);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }

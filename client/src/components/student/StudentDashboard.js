@@ -562,24 +562,21 @@ const StudentDashboard = () => {
         {/* Welcome Header */}
         <header className="dashboard-header">
           {/* Messages Icon */}
-          <div className="profile-icon" onClick={() => navigate('/student/messages')}>
+          <div 
+            className="profile-icon" 
+            onClick={() => navigate('/student/messages')}
+            role="button"
+            tabIndex={0}
+            onKeyPress={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                navigate('/student/messages');
+              }
+            }}
+            title={`You have ${unreadMessages} unread message${unreadMessages !== 1 ? 's' : ''}`}
+          >
             ✉️
             {unreadMessages > 0 && (
-              <div style={{
-                position: 'absolute',
-                top: '-5px',
-                right: '-5px',
-                background: '#FF6B6B',
-                borderRadius: '50%',
-                width: '25px',
-                height: '25px',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                color: 'white',
-                fontSize: '12px',
-                fontWeight: 'bold'
-              }}>
+              <div className="notification-badge">
                 {unreadMessages}
               </div>
             )}

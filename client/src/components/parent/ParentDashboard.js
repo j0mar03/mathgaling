@@ -84,6 +84,41 @@ const ParentDashboard = () => {
     );
   }
   
+  // Handle case where parent has no children linked
+  if (children.length === 0) {
+    return (
+      <div className="parent-dashboard fullwidth">
+        <div className="dashboard-header">
+          <h1>Welcome, {parent?.name || 'Parent'}!</h1>
+          <p>Let's get started by linking your child's account</p>
+        </div>
+        
+        <div className="no-children-container">
+          <div className="no-children-card">
+            <div className="no-children-icon">👨‍👩‍👧‍👦</div>
+            <h2>No Children Linked Yet</h2>
+            <p className="no-children-message">
+              To view your child's learning progress, you need to link their student account first.
+            </p>
+            
+            <div className="link-child-instructions">
+              <h3>How to Link Your Child's Account:</h3>
+              <ol>
+                <li>Ask your child's teacher for their student username or email</li>
+                <li>Contact your school administrator to link the accounts</li>
+                <li>Once linked, you'll be able to track their progress here</li>
+              </ol>
+            </div>
+            
+            <div className="contact-info">
+              <p>Need help? Contact your child's teacher or school administrator.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
   return (
     <div className="parent-dashboard fullwidth">
       <div className="dashboard-header">
