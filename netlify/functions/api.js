@@ -3406,7 +3406,13 @@ exports.handler = async (event, context) => {
           name: classroomData.name,
           description: classroomData.description,
           teacher_id: classroomData.teacher_id,
-          createdAt: new Date().toISOString()
+          createdAt: new Date().toISOString(),
+          settings: {
+            allowSelfEnrollment: false,
+            maxStudents: 50,
+            gradeLevel: 3,
+            subject: 'Mathematics'
+          }
         })
         .select()
         .single();
@@ -3425,7 +3431,13 @@ exports.handler = async (event, context) => {
             name: classroomData.name,
             description: classroomData.description,
             teacher_id: classroomData.teacher_id,
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(),
+            settings: {
+              allowSelfEnrollment: false,
+              maxStudents: 50,
+              gradeLevel: 3,
+              subject: 'Mathematics'
+            }
           })
           .select()
           .single();
@@ -3453,7 +3465,13 @@ exports.handler = async (event, context) => {
               name: classroomData.name,
               description: classroomData.description,
               teacher_id: classroomData.teacher_id,
-              createdAt: new Date().toISOString()
+              createdAt: new Date().toISOString(),
+              settings: {
+                allowSelfEnrollment: false,
+                maxStudents: 50,
+                gradeLevel: 3,
+                subject: 'Mathematics'
+              }
             })
             .select()
             .single();
@@ -3569,7 +3587,7 @@ exports.handler = async (event, context) => {
       
       const { data, error } = await supabase
         .from('classrooms')
-        .select('*')
+        .select('id, name, description, teacher_id, grade_level, createdAt, updatedAt, settings')
         .eq('teacher_id', teacherId);
       
       if (error) {
@@ -3713,7 +3731,7 @@ exports.handler = async (event, context) => {
       
       const { data, error } = await supabase
         .from('classrooms')
-        .select('*')
+        .select('id, name, description, teacher_id, grade_level, createdAt, updatedAt, settings')
         .eq('id', classroomId)
         .single();
       
