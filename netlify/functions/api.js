@@ -3356,7 +3356,7 @@ exports.handler = async (event, context) => {
       const supabase = createClient(supabaseUrl, supabaseKey);
       
       // Create classroom
-      const { data: classroom, error } = await supabase
+      let { data: classroom, error } = await supabase
         .from('classrooms')
         .insert({
           name: classroomData.name,
@@ -3366,6 +3366,58 @@ exports.handler = async (event, context) => {
         })
         .select()
         .single();
+      
+      // Handle duplicate key error by retrying (common issue with Supabase sequences)
+      // This happens when the auto-increment sequence gets out of sync with actual data
+      if (error && error.code === '23505') {
+        console.log('[Netlify] Duplicate key error, retrying classroom creation...');
+        
+        // Add a small delay and retry - sometimes helps with sequence issues
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        const retryResult = await supabase
+          .from('classrooms')
+          .insert({
+            name: classroomData.name,
+            description: classroomData.description,
+            teacher_id: classroomData.teacher_id,
+            createdAt: new Date().toISOString()
+          })
+          .select()
+          .single();
+          
+        classroom = retryResult.data;
+        error = retryResult.error;
+        
+        // If still failing, try to get the max ID and increment manually
+        if (error && error.code === '23505') {
+          console.log('[Netlify] Still getting duplicate key, trying manual ID approach...');
+          
+          // Get the current max ID
+          const { data: maxResult } = await supabase
+            .from('classrooms')
+            .select('id')
+            .order('id', { ascending: false })
+            .limit(1);
+            
+          const nextId = maxResult && maxResult.length > 0 ? maxResult[0].id + 1 : 1;
+          
+          const manualResult = await supabase
+            .from('classrooms')
+            .insert({
+              id: nextId,
+              name: classroomData.name,
+              description: classroomData.description,
+              teacher_id: classroomData.teacher_id,
+              createdAt: new Date().toISOString()
+            })
+            .select()
+            .single();
+            
+          classroom = manualResult.data;
+          error = manualResult.error;
+        }
+      }
       
       if (error) {
         console.error('[Netlify] Classroom creation failed:', error);
