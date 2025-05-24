@@ -77,6 +77,30 @@ Maintain this URL structure: `/student/quiz/{id}?kc_id={kc_id}&mode=sequential&q
 - Add memory because of upcoming git push
 - Added memory placeholder
 
+## Recent Login System Improvements (Jan 2025)
+Major overhaul of the authentication system:
+
+### 1. Role-Based Login
+- **Feature**: Role selection screen (Student/Teacher/Parent) before login
+- **Components**: `LoginImproved.js` and `SignupImproved.js` replace old login/signup
+- **Student Login**: Uses username instead of email for child-friendly experience
+
+### 2. Username Support for Students
+- **Database**: Students can have a `username` field
+- **Login Flow**: Students login with username, internally converted to `{username}@student.mathgaling.com`
+- **API Updates**: `/api/auth/login` accepts both `email` and `username` parameters
+
+### 3. Visual Improvements
+- **Child-Friendly UI**: Larger fonts, colorful icons, friendly language for students
+- **Role-Specific Colors**: Each role has a unique color theme
+- **Accessibility**: WCAG compliant contrast, keyboard navigation, reduced motion support
+
+### 4. AuthContext Updates
+- **Method Signature**: `login(emailOrUsername, password, isStudent)`
+- **Auto-Detection**: Automatically detects username vs email based on @ symbol
+- **Username Storage**: Stores username in user object for display
+
 ## Memories
 - Fix math mastery
 - Add to memory
+- Improved login system with role selection and username support for students

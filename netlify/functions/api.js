@@ -426,7 +426,7 @@ exports.handler = async (event, context) => {
   if (path.includes('/auth/register') && httpMethod === 'POST') {
     try {
       const userData = JSON.parse(event.body);
-      console.log('Signup attempt for:', userData.email);
+      console.log('Signup attempt for:', userData.email || userData.username);
       
       // Initialize Supabase client
       // Netlify + Supabase conventions
@@ -435,9 +435,15 @@ exports.handler = async (event, context) => {
       
       const supabase = createClient(supabaseUrl, supabaseKey);
       
+      // For students with username, create a standardized email
+      let signupEmail = userData.email;
+      if (userData.username && !userData.email) {
+        signupEmail = `${userData.username}@student.mathgaling.com`;
+      }
+      
       // Create auth user in Supabase
       const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: userData.email,
+        email: signupEmail,
         password: userData.password
       });
       
@@ -469,7 +475,7 @@ exports.handler = async (event, context) => {
         const { data: existingUser } = await supabase
           .from(tableName)
           .select('*')
-          .eq('auth_id', userData.email)
+          .eq('auth_id', signupEmail)
           .single();
           
         if (existingUser) {
@@ -481,7 +487,7 @@ exports.handler = async (event, context) => {
             const { data, error } = await supabase
               .from('Admins')
               .insert({
-                auth_id: userData.email,
+                auth_id: signupEmail,
                 name: userData.name || 'New Admin'
               })
               .select()
@@ -493,7 +499,7 @@ exports.handler = async (event, context) => {
             const { data, error } = await supabase
               .from('teachers')
               .insert({
-                auth_id: userData.email,
+                auth_id: signupEmail,
                 name: userData.name || 'New Teacher',
                 subject: userData.subject || 'Mathematics'
               })
@@ -506,8 +512,9 @@ exports.handler = async (event, context) => {
             const { data, error } = await supabase
               .from('students')
               .insert({
-                auth_id: userData.email,
+                auth_id: signupEmail,
                 name: userData.name || 'New Student',
+                username: userData.username || null,
                 password: userData.password || 'temp123',
                 grade_level: parseInt(userData.grade_level) || 3
               })
@@ -520,7 +527,7 @@ exports.handler = async (event, context) => {
             const { data, error } = await supabase
               .from('parents')
               .insert({
-                auth_id: userData.email,
+                auth_id: signupEmail,
                 name: userData.name || 'New Parent'
               })
               .select()
@@ -570,8 +577,8 @@ exports.handler = async (event, context) => {
   // Auth login endpoint - /api/auth/login
   if (path.includes('/auth/login') && httpMethod === 'POST') {
     try {
-      const { email, password } = JSON.parse(event.body);
-      console.log('🔐 Login attempt for:', email);
+      const { email, password, username } = JSON.parse(event.body);
+      console.log('🔐 Login attempt for:', email || username);
       
       // Initialize Supabase client with debugging
       // Netlify + Supabase conventions
@@ -590,10 +597,18 @@ exports.handler = async (event, context) => {
       // First, let's check if there are any users in Supabase Auth
       console.log('🔍 Checking Supabase connection...');
       
+      // If username is provided (student login), convert to email format
+      let loginEmail = email;
+      if (username && !email) {
+        // For students, create a standardized email from username
+        loginEmail = `${username}@student.mathgaling.com`;
+        console.log('🎓 Student login with username:', username, '-> email:', loginEmail);
+      }
+      
       // Try Supabase authentication first
       try {
         const { data, error } = await supabase.auth.signInWithPassword({
-          email,
+          email: loginEmail,
           password
         });
         
@@ -609,13 +624,13 @@ exports.handler = async (event, context) => {
           
           // Get user role from database
           try {
-            console.log('🔍 Looking for user with email:', email);
+            console.log('🔍 Looking for user with email:', loginEmail);
             
             // Check admin
             const { data: adminData, error: adminError } = await supabase
               .from('Admins')
               .select('id, auth_id')
-              .eq('auth_id', email)
+              .eq('auth_id', loginEmail)
               .limit(1);
               
             console.log('🔍 Admin query result:', { adminData, adminError });
@@ -629,7 +644,7 @@ exports.handler = async (event, context) => {
               const { data: teacherData } = await supabase
                 .from('teachers')
                 .select('id, auth_id')
-                .eq('auth_id', email)
+                .eq('auth_id', loginEmail)
                 .limit(1);
                 
               if (teacherData && teacherData.length > 0) {
@@ -639,8 +654,8 @@ exports.handler = async (event, context) => {
                 // Check student
                 const { data: studentData } = await supabase
                   .from('students')
-                  .select('id, auth_id')
-                  .eq('auth_id', email)
+                  .select('id, auth_id, username')
+                  .eq('auth_id', loginEmail)
                   .limit(1);
                   
                 if (studentData && studentData.length > 0) {
@@ -651,7 +666,7 @@ exports.handler = async (event, context) => {
                   const { data: parentData } = await supabase
                     .from('parents')
                     .select('id, auth_id')
-                    .eq('auth_id', email)
+                    .eq('auth_id', loginEmail)
                     .limit(1);
                     
                   if (parentData && parentData.length > 0) {
@@ -668,7 +683,7 @@ exports.handler = async (event, context) => {
           // Create a simple JWT-like token with user data
           const tokenPayload = {
             id: userId,
-            auth_id: email,
+            auth_id: loginEmail,
             role: role,
             exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24) // 24 hours
           };
@@ -682,7 +697,7 @@ exports.handler = async (event, context) => {
             body: JSON.stringify({
               success: true,
               token: token,
-              user: { id: userId, auth_id: email },
+              user: { id: userId, auth_id: loginEmail },
               role
             })
           };
@@ -703,7 +718,7 @@ exports.handler = async (event, context) => {
       const { data: adminData } = await supabase
         .from('Admins')
         .select('id, name, auth_id')
-        .eq('auth_id', email)
+        .eq('auth_id', loginEmail)
         .limit(1);
         
       if (adminData && adminData.length > 0) {
@@ -714,19 +729,34 @@ exports.handler = async (event, context) => {
         const { data: teacherData } = await supabase
           .from('teachers')
           .select('id, name, auth_id, subject')
-          .eq('auth_id', email)
+          .eq('auth_id', loginEmail)
           .limit(1);
           
         if (teacherData && teacherData.length > 0) {
           authenticatedUser = teacherData[0];
           userRole = 'teacher';
         } else {
-          // Check student table
-          const { data: studentData } = await supabase
+          // Check student table - try both auth_id and username
+          let { data: studentData } = await supabase
             .from('students')
-            .select('id, name, auth_id, grade_level')
-            .eq('auth_id', email)
+            .select('id, name, auth_id, grade_level, username')
+            .eq('auth_id', loginEmail)
             .limit(1);
+          
+          // If not found by auth_id and we have a username, try username directly
+          if ((!studentData || studentData.length === 0) && username) {
+            const { data: studentByUsername } = await supabase
+              .from('students')
+              .select('id, name, auth_id, grade_level, username')
+              .eq('username', username)
+              .limit(1);
+            
+            if (studentByUsername && studentByUsername.length > 0) {
+              studentData = studentByUsername;
+              // Update loginEmail to match the actual auth_id
+              loginEmail = studentByUsername[0].auth_id;
+            }
+          }
             
           if (studentData && studentData.length > 0) {
             authenticatedUser = studentData[0];
@@ -736,7 +766,7 @@ exports.handler = async (event, context) => {
             const { data: parentData } = await supabase
               .from('parents')
               .select('id, name, auth_id')
-              .eq('auth_id', email)
+              .eq('auth_id', loginEmail)
               .limit(1);
               
             if (parentData && parentData.length > 0) {
@@ -757,7 +787,7 @@ exports.handler = async (event, context) => {
         // Create a simple JWT-like token with user data
         const tokenPayload = {
           id: authenticatedUser.id,
-          auth_id: authenticatedUser.auth_id,
+          auth_id: authenticatedUser.auth_id || loginEmail,
           role: userRole,
           exp: Math.floor(Date.now() / 1000) + (60 * 60 * 24) // 24 hours
         };
@@ -771,7 +801,11 @@ exports.handler = async (event, context) => {
           body: JSON.stringify({
             success: true,
             token: token,
-            user: { id: authenticatedUser.id, auth_id: authenticatedUser.auth_id },
+            user: { 
+              id: authenticatedUser.id, 
+              auth_id: authenticatedUser.auth_id || loginEmail,
+              username: authenticatedUser.username
+            },
             role: userRole
           })
         };
@@ -821,7 +855,7 @@ exports.handler = async (event, context) => {
           };
         }
         
-        if (email === 'student@example.com' && password === 'student123') {
+        if ((email === 'student@example.com' || username === 'student123') && password === 'student123') {
           const tokenPayload = {
             id: 777,
             auth_id: email,

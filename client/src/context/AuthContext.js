@@ -117,14 +117,19 @@ export const AuthProvider = ({ children }) => {
         };
     }, []); // Run this interceptor setup only once on mount
 
-    const login = async (email, password) => {
+    const login = async (emailOrUsername, password, isStudent = false) => {
+        // Determine if we're dealing with email or username
+        const isUsername = isStudent || !emailOrUsername.includes('@');
+        const loginData = isUsername 
+            ? { username: emailOrUsername, password }
+            : { email: emailOrUsername, password };
         // Development mode - enable mock authentication for easy testing and demos
         if (process.env.NODE_ENV !== 'production') {
             // Check for special development accounts
-            if (email === 'admin@example.com' && password === 'admin123') {
+            if (emailOrUsername === 'admin@example.com' && password === 'admin123') {
                 console.warn('⚠️ DEVELOPMENT MODE: Using mock admin authentication');
                 const mockToken = `dev-token-admin-${Date.now()}`;
-                const mockUser = { id: 999, auth_id: email, role: 'admin' };
+                const mockUser = { id: 999, auth_id: emailOrUsername, role: 'admin' };
                 
                 // Store in localStorage
                 localStorage.setItem('authToken', mockToken);
@@ -136,12 +141,12 @@ export const AuthProvider = ({ children }) => {
                 return { user: mockUser, role: 'admin', token: mockToken };
             }
             
-            if (email === 'teacher@example.com' && password === 'teacher123') {
+            if (emailOrUsername === 'teacher@example.com' && password === 'teacher123') {
                 console.warn('⚠️ DEVELOPMENT MODE: Using mock teacher authentication');
                 const mockToken = `dev-token-teacher-${Date.now()}`;
                 const mockUser = { 
                     id: 888, 
-                    auth_id: email, 
+                    auth_id: emailOrUsername, 
                     role: 'teacher',
                     classrooms: [
                         { id: 1, name: 'Grade 3A', description: 'Mock classroom' },
@@ -156,14 +161,16 @@ export const AuthProvider = ({ children }) => {
                 return { user: mockUser, role: 'teacher', token: mockToken };
             }
             
-            if (email === 'student@example.com' && password === 'student123') {
+            if ((emailOrUsername === 'student@example.com' || emailOrUsername === 'student123') && password === 'student123') {
                 console.warn('⚠️ DEVELOPMENT MODE: Using mock student authentication');
                 const mockToken = `dev-token-student-${Date.now()}`;
                 const mockUser = { 
                     id: 777, 
-                    auth_id: email, 
+                    auth_id: emailOrUsername === 'student123' ? 'student@example.com' : emailOrUsername, 
+                    username: emailOrUsername === 'student123' ? 'student123' : undefined,
                     role: 'student',
-                    grade_level: 3
+                    grade_level: 3,
+                    name: 'Juan Dela Cruz'
                 };
                 
                 localStorage.setItem('authToken', mockToken);
@@ -173,12 +180,12 @@ export const AuthProvider = ({ children }) => {
                 return { user: mockUser, role: 'student', token: mockToken };
             }
             
-            if (email === 'parent@example.com' && password === 'parent123') {
+            if (emailOrUsername === 'parent@example.com' && password === 'parent123') {
                 console.warn('⚠️ DEVELOPMENT MODE: Using mock parent authentication');
                 const mockToken = `dev-token-parent-${Date.now()}`;
                 const mockUser = { 
                     id: 666, 
-                    auth_id: email, 
+                    auth_id: emailOrUsername, 
                     role: 'parent',
                     students: [
                         { id: 101, name: 'Mock Child 1', grade: 3 },
@@ -196,7 +203,7 @@ export const AuthProvider = ({ children }) => {
         
         // Normal authentication flow for production or non-mock logins
         try {
-            const response = await axios.post('/api/auth/login', { email, password });
+            const response = await axios.post('/api/auth/login', loginData);
             
             // Check if response exists and has data
             if (!response || !response.data) {
@@ -217,7 +224,8 @@ export const AuthProvider = ({ children }) => {
             // Safely construct the user object with the role included
             const userWithRole = { 
                 id: user.id || 0, 
-                auth_id: user.auth_id || email, 
+                auth_id: user.auth_id || emailOrUsername, 
+                username: user.username,
                 role: role 
             };
             

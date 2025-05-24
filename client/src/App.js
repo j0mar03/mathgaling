@@ -18,7 +18,9 @@ import StudentInbox from './components/student/StudentInbox'; // Import StudentI
 import Header from './components/shared/Header';
 import Footer from './components/shared/Footer';
 import Login from './components/shared/Login';
+import LoginImproved from './components/shared/LoginImproved';
 import Signup from './components/shared/Signup'; // Import Signup component
+import SignupImproved from './components/shared/SignupImproved';
 import NotFound from './components/shared/NotFound';
 
 // Teacher Interface Components
@@ -92,9 +94,9 @@ function App() {
           <Routes>
             {/* Public routes */}
             {/* Pass the actual login function from context */}
-            <Route path="/login" element={user ? <Navigate to={`/${user.role}`} /> : <Login />} />
+            <Route path="/login" element={user ? <Navigate to={`/${user.role}`} /> : <LoginImproved />} />
             {/* Signup component might handle login via context after success */}
-            <Route path="/signup" element={user ? <Navigate to={`/${user.role}`} /> : <Signup />} />
+            <Route path="/signup" element={user ? <Navigate to={`/${user.role}`} /> : <SignupImproved />} />
             
             {/* Home route - redirect to login or dashboard */}
             <Route path="/" element={
