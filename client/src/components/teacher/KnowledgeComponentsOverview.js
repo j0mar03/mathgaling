@@ -90,12 +90,15 @@ const KnowledgeComponentsOverview = () => {
           headers: { Authorization: `Bearer ${token}` }
         });
         
-        // Store raw data
-        setKnowledgeComponents(response.data);
+        // Store raw data - handle both array and object with knowledgeComponents property
+        const kcData = Array.isArray(response.data) 
+          ? response.data 
+          : (response.data.knowledgeComponents || []);
+        setKnowledgeComponents(kcData);
         
         // Group by category
         const grouped = {};
-        response.data.forEach(kc => {
+        kcData.forEach(kc => {
           const category = getCategoryFromKC(kc);
           if (!grouped[category]) {
             grouped[category] = [];
