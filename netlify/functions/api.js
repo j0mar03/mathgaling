@@ -3561,6 +3561,8 @@ exports.handler = async (event, context) => {
     try {
       const pathParts = path.split('/');
       const teacherId = pathParts[pathParts.indexOf('teachers') + 1];
+      console.log(`[Netlify] GET /api/teachers/${teacherId}/classrooms - Starting request`);
+      console.log(`[Netlify] Full path: ${path}, Method: ${httpMethod}`);
       
       const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
       const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
@@ -3572,6 +3574,8 @@ exports.handler = async (event, context) => {
         .select('id, name, description, teacher_id, grade_level, createdAt, updatedAt')
         .eq('teacher_id', teacherId);
       
+      console.log(`[Netlify] Supabase query result:`, { data, error, teacherId });
+      
       if (error) {
         return {
           statusCode: 500,
@@ -3582,6 +3586,8 @@ exports.handler = async (event, context) => {
           })
         };
       }
+      
+      console.log(`[Netlify] Successfully returning ${(data || []).length} classrooms for teacher ${teacherId}`);
       
       return {
         statusCode: 200,
