@@ -35,6 +35,24 @@ const QuizView = () => {
   const [finalScoreCalculated, setFinalScoreCalculated] = useState(0); // Store final score for consistent display
 
   useEffect(() => {
+    // Reset state when location changes (new quiz)
+    setLoading(true);
+    setError(null);
+    setQuestions([]);
+    setCurrentQuestionIndex(0);
+    setSelectedOption(null);
+    setFillInAnswer('');
+    setSubmitted(false);
+    setCorrect(null);
+    setQuizCompleted(false);
+    setScore(0);
+    setAnsweredQuestions([]);
+    setNextKcIdForContinuation(null);
+    setSearchingNextTopic(false);
+    setNextTopicSearchComplete(false);
+    setActualKcMastery(0);
+    setTimeSpent(0);
+    
     const queryParams = new URLSearchParams(location.search);
     const kcId = queryParams.get('kc_id');
     const mode = queryParams.get('mode');
@@ -591,10 +609,12 @@ const QuizView = () => {
     // Set completion indicator for potential future returns to progress
     localStorage.setItem('quiz_completed', 'true');
     
-    // Navigate to the start of the next KC's sequence
+    // Navigate to the quiz with the next KC ID
     const nextUrl = `/student/quiz?kc_id=${nextKcIdForContinuation}&mode=sequential`;
     console.log(`Continuing to next topic. Navigating to: ${nextUrl}`);
-    navigate(nextUrl);
+    
+    // Force a page reload to ensure clean state for the new quiz
+    window.location.href = nextUrl;
   };
 
   if (loading) {

@@ -166,25 +166,7 @@ const StudentProgress = () => {
 
     window.addEventListener('focus', handleFocus);
     
-    // Add periodic refresh every 30 seconds, but only if user is active
-    let lastActivity = Date.now();
-    const activityEvents = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
-    
-    const updateActivity = () => {
-      lastActivity = Date.now();
-    };
-    
-    activityEvents.forEach(event => {
-      document.addEventListener(event, updateActivity, true);
-    });
-    
-    const refreshInterval = setInterval(() => {
-      // Only refresh if user was active in the last 2 minutes
-      if (Date.now() - lastActivity < 120000) {
-        console.log("[StudentProgress] Periodic refresh triggered");
-        handleFocus();
-      }
-    }, 30000);
+    // Removed automatic periodic refresh - only refresh on focus
     
     // Enhanced quiz completion check with retry mechanism
     const checkQuizCompletion = async () => {
@@ -256,10 +238,6 @@ const StudentProgress = () => {
     
     return () => {
       window.removeEventListener('focus', handleFocus);
-      clearInterval(refreshInterval);
-      activityEvents.forEach(event => {
-        document.removeEventListener(event, updateActivity, true);
-      });
     };
   }, [studentId, token]); // Dependency array includes studentId and token from context
   
@@ -596,8 +574,28 @@ const StudentProgress = () => {
       <div className="mastery-chart">
         <h2>Mastery by Topic {selectedArea !== 'all' && `- ${areaNames[selectedArea] || selectedArea}`}</h2>
         
-        {/* Topic Cards Grid */}
-        <div className="topic-cards-grid">
+        {/* Bar Chart View - Now at the top and visible by default */}
+        <div className="chart-container" style={{ marginBottom: '30px', height: '400px' }}>
+          <Bar data={chartData} options={chartOptions} />
+        </div>
+        
+        {/* Toggle button for Topic Cards */}
+        <div className="chart-toggle" style={{ marginBottom: '20px' }}>
+          <button 
+            onClick={() => {
+              const cardsGrid = document.querySelector('.topic-cards-grid');
+              const isHidden = cardsGrid.style.display === 'none';
+              cardsGrid.style.display = isHidden ? 'grid' : 'none';
+              event.target.textContent = isHidden ? '🎯 Hide Topic Cards' : '🎯 Show Topic Cards';
+            }}
+            className="toggle-chart-btn"
+          >
+            🎯 Show Topic Cards
+          </button>
+        </div>
+        
+        {/* Topic Cards Grid - Now hidden by default */}
+        <div className="topic-cards-grid" style={{ display: 'none' }}>
           {currentTopics.map((kc, index) => {
             const masteryPercentage = Math.round((kc.p_mastery || 0) * 100);
             const getTopicEmoji = (name) => {
@@ -684,23 +682,6 @@ const StudentProgress = () => {
           })}
         </div>
         
-        {/* Keep the bar chart as an alternative view */}
-        <div className="chart-toggle">
-          <button 
-            onClick={() => {
-              const chartContainer = document.querySelector('.chart-container');
-              const isHidden = chartContainer.style.display === 'none';
-              chartContainer.style.display = isHidden ? 'block' : 'none';
-            }}
-            className="toggle-chart-btn"
-          >
-            📊 Toggle Bar Chart View
-          </button>
-        </div>
-        
-        <div className="chart-container" style={{ display: 'none', marginTop: '20px' }}>
-          <Bar data={chartData} options={chartOptions} />
-        </div>
         
         {/* Pagination controls */}
         {combinedKCs.length > topicsPerPage && (
