@@ -5020,6 +5020,142 @@ exports.handler = async (event, context) => {
     }
   }
   
+  // GET /api/teachers/knowledge-components/:id - Get specific knowledge component for teacher
+  if (path.match(/\/teachers\/knowledge-components\/\d+$/) && httpMethod === 'GET') {
+    try {
+      const pathParts = path.split('/');
+      const kcId = pathParts[pathParts.length - 1];
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      const { data, error } = await supabase
+        .from('knowledge_components')
+        .select('*')
+        .eq('id', kcId)
+        .single();
+      
+      if (error) {
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to fetch knowledge component',
+            message: error.message
+          })
+        };
+      }
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify(data)
+      };
+      
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
+  // GET /api/teachers/knowledge-components/:id/classroom-performance - Get KC classroom performance
+  if (path.match(/\/teachers\/knowledge-components\/\d+\/classroom-performance$/) && httpMethod === 'GET') {
+    try {
+      const pathParts = path.split('/');
+      const kcId = pathParts[pathParts.indexOf('knowledge-components') + 1];
+      
+      // Mock classroom performance data for the KC
+      const mockPerformance = [
+        {
+          classroomId: 1,
+          classroomName: "Math Class A",
+          studentsCount: 15,
+          averageScore: 78,
+          strugglingStudents: 3,
+          masteryLevel: 'Developing'
+        },
+        {
+          classroomId: 2,
+          classroomName: "Math Class B", 
+          studentsCount: 12,
+          averageScore: 85,
+          strugglingStudents: 1,
+          masteryLevel: 'Proficient'
+        }
+      ];
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify(mockPerformance)
+      };
+      
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
+  // GET /api/teachers/knowledge-components/:id/content-items - Get KC content items
+  if (path.match(/\/teachers\/knowledge-components\/\d+\/content-items$/) && httpMethod === 'GET') {
+    try {
+      const pathParts = path.split('/');
+      const kcId = pathParts[pathParts.indexOf('knowledge-components') + 1];
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      const { data, error } = await supabase
+        .from('content_items')
+        .select('*')
+        .eq('knowledge_component_id', kcId)
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to fetch content items',
+            message: error.message
+          })
+        };
+      }
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify(data || [])
+      };
+      
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
   // Default response
   return {
     statusCode: 404,
