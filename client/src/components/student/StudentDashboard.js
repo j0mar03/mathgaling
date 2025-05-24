@@ -8,7 +8,24 @@ import './StudentDashboard.css'; // Import CSS file
 const KC_ICONS = {
   default: "🌟",
   "Representing Numbers from 1001 to 10,000": "🔢",
-  // Add more specific icons as KCs are defined
+  "Visualizing Numbers up to 10,000": "👁️",
+  "Place Value": "🏗️",
+  "Digit Values": "🔢",
+  "Number Words": "📝",
+  "Comparing Numbers": "⚖️",
+  "Rounding Numbers": "🎯",
+  "Ordering Numbers": "📊",
+  "Money Representation": "💰",
+  "Addition": "➕",
+  "Subtraction": "➖",
+  "Multiplication": "✖️",
+  "Division": "➗",
+  "Fractions": "🍕",
+  "Word Problems": "📖",
+  "Estimation": "🎯",
+  "Mental Math": "🧠",
+  "Properties": "📐",
+  "Patterns": "🔄"
 };
 
 // Filipino cultural elements and encouragements
@@ -220,6 +237,7 @@ const StudentDashboard = () => {
             } else {
               // This is the first non-mastered KC - where student should continue
               nextKC = kc;
+              console.log('[StudentDashboard] Found next KC where student left off:', nextKC);
               break;
             }
           }
@@ -249,11 +267,21 @@ const StudentDashboard = () => {
               description = `Magsimula sa: ${nextKC.name}`;
             }
             
+            // Get emoji based on KC name (with partial matching)
+            let emoji = KC_ICONS.default;
+            for (const [key, value] of Object.entries(KC_ICONS)) {
+              if (nextKC.name.toLowerCase().includes(key.toLowerCase()) || 
+                  key.toLowerCase().includes(nextKC.name.toLowerCase().split(' ')[0])) {
+                emoji = value;
+                break;
+              }
+            }
+            
             determinedStep = {
               id: nextKC.id,
               name: nextKC.name,
               description: description || `Let's learn all about: ${nextKC.name}!`,
-              emoji: KC_ICONS[nextKC.name] || KC_ICONS.default,
+              emoji: emoji,
               mastery: Math.round(masteryValue * 100),
               difficulty: nextKC.difficulty || 'medium',
               type: 'kc',
@@ -283,23 +311,33 @@ const StudentDashboard = () => {
         }
         
         // Fallback 1: If no step determined yet AND fetchedNextActivity exists
-        if (!determinedStep && fetchedNextActivity) {
-          let displayName = fetchedNextActivity.name;
-          let displayDescription = fetchedNextActivity.description || "Let's tackle this next challenge!";
+        if (!determinedStep && fetchedNextActivity && fetchedNextActivity.kc_id) {
+          console.log('[StudentDashboard] Using fetchedNextActivity from API:', fetchedNextActivity);
+          
+          let displayName = fetchedNextActivity.kc_name || fetchedNextActivity.name || "Your Next Learning Adventure!";
+          let displayDescription = fetchedNextActivity.message || fetchedNextActivity.description || "Let's continue learning!";
 
-          // If the activity type from backend is NOT 'kc' (meaning it's a general sequential quiz),
-          // use generic text that matches the button's general quiz target.
-          // This assumes fetchedNextActivity has a 'type' property.
-          if (fetchedNextActivity.type !== 'kc') { 
-            displayName = "Your Next Learning Adventure!"; 
-            displayDescription = "Ready for a mix of fun questions on your learning path?";
+          // Get emoji based on KC name (with partial matching)
+          let emoji = KC_ICONS.default;
+          for (const [key, value] of Object.entries(KC_ICONS)) {
+            if (displayName.toLowerCase().includes(key.toLowerCase()) || 
+                key.toLowerCase().includes(displayName.toLowerCase().split(' ')[0])) {
+              emoji = value;
+              break;
+            }
           }
 
           determinedStep = { 
-            ...fetchedNextActivity, 
+            ...fetchedNextActivity,
+            id: fetchedNextActivity.kc_id, // Ensure ID is set
             name: displayName, 
             description: displayDescription, 
-            isPrimary: true 
+            isPrimary: true,
+            actionType: 'continue',
+            buttonText: 'Ipagpatuloy',
+            emoji: emoji,
+            type: 'kc',
+            kc_id: fetchedNextActivity.kc_id // Explicitly set kc_id
           };
         }
         
@@ -317,6 +355,25 @@ const StudentDashboard = () => {
             isPrimary: true, 
           };
         }
+        
+        // Final fallback: If still no step determined, create a generic one
+        if (!determinedStep) {
+          console.log('[StudentDashboard] No determined step found, creating generic fallback');
+          determinedStep = {
+            id: 1, // Default to first KC
+            name: "Let's Start Learning!",
+            description: "Ready to begin your math adventure?",
+            emoji: "🎯",
+            mastery: 0,
+            difficulty: 'easy',
+            type: 'kc',
+            isPrimary: true,
+            actionType: 'start',
+            buttonText: 'Simulan'
+          };
+        }
+        
+        console.log('[StudentDashboard] Final determinedStep:', determinedStep);
         setCurrentLearningStep(determinedStep);
         
         // Fetch learning streak and daily progress
@@ -646,23 +703,21 @@ const StudentDashboard = () => {
             </div>
 
             <button
-              onClick={async () => {
-                try {
-                  // Don't include start=1 parameter to allow the system to determine the appropriate starting KC
-                  // based on the student's mastery level
-                  let quizUrl = '/student/quiz?mode=sequential&limit=8';
-                  if (currentLearningStep && currentLearningStep.id) {
-                    const response = await axios.get(`/api/kcs/${currentLearningStep.id}`, {
-                      headers: { Authorization: `Bearer ${token}` }
-                    });
-                    if (response.data) {
-                      quizUrl = `/student/quiz?kc_id=${currentLearningStep.id}&mode=sequential&limit=8`;
-                    }
-                  }
-                  navigate(quizUrl);
-                } catch (error) {
-                  navigate('/student/quiz?mode=sequential&limit=8');
+              onClick={() => {
+                // Use the KC ID from currentLearningStep if available
+                let quizUrl = '/student/quiz?mode=sequential&limit=8';
+                
+                if (currentLearningStep && currentLearningStep.kc_id) {
+                  // Use kc_id if available (from the kid-friendly-next-activity API)
+                  quizUrl = `/student/quiz?kc_id=${currentLearningStep.kc_id}&mode=sequential&limit=8`;
+                } else if (currentLearningStep && currentLearningStep.id) {
+                  // Use id as KC ID
+                  quizUrl = `/student/quiz?kc_id=${currentLearningStep.id}&mode=sequential&limit=8`;
                 }
+                
+                console.log('[StudentDashboard] Navigating to quiz with currentLearningStep:', currentLearningStep);
+                console.log('[StudentDashboard] Quiz URL:', quizUrl);
+                navigate(quizUrl);
               }}
               style={{
                 background: 'linear-gradient(135deg, #FF6B6B, #FF8E53)',
@@ -680,7 +735,7 @@ const StudentDashboard = () => {
               onMouseOver={(e) => e.target.style.transform = 'scale(1.05)'}
               onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
             >
-{currentLearningStep?.buttonText || 'Simulan'} na! ✨
+              {currentLearningStep?.buttonText || 'Ipagpatuloy'} na! ✨
             </button>
           </div>
         </section>

@@ -8,6 +8,8 @@ import AddClassroomModal from './AddClassroomModal'; // Import the new modal
 import AssignPracticeModal from './AssignPracticeModal'; // Import AssignPracticeModal
 import ConfirmAssignModal from './ConfirmAssignModal'; // Import ConfirmAssignModal
 import KnowledgeComponentsOverview from './KnowledgeComponentsOverview';
+import CreateStudentModal from './CreateStudentModal'; // Import new student creation modal
+import InterventionDashboard from './InterventionDashboard'; // Import intervention dashboard
 import './TeacherDashboard.css';
 
 const TeacherDashboard = () => {
@@ -25,6 +27,10 @@ const TeacherDashboard = () => {
   const [showConfirmAssignModal, setShowConfirmAssignModal] = useState(false); // State for ConfirmAssignModal
   const [dataForConfirmModal, setDataForConfirmModal] = useState({ student: null, items: [] }); // Data for ConfirmAssignModal
   const [showAllInterventions, setShowAllInterventions] = useState(false); // State for showing all interventions
+  const [showCreateStudentModal, setShowCreateStudentModal] = useState(false); // State for student creation modal
+  const [selectedClassroomForStudent, setSelectedClassroomForStudent] = useState(null); // Selected classroom for new student
+  const [showInterventionDashboard, setShowInterventionDashboard] = useState(false); // State for intervention dashboard view
+  const [allStudents, setAllStudents] = useState([]); // All students across classrooms
   const { user, token } = useAuth(); // Get user and token from context
 
   // Use the authenticated user's ID
@@ -49,13 +55,25 @@ const TeacherDashboard = () => {
         // Log the raw data received for classrooms again
         console.log("TeacherDashboard - RAW Received classrooms data:", JSON.stringify(classroomsResponse.data, null, 2));
         
-        // Fetch performance data for each classroom
+        // Fetch performance data for each classroom and collect all students
         const performanceData = {};
+        const studentsArray = [];
         for (const classroom of classroomsResponse.data) {
           const performanceResponse = await axios.get(`/api/classrooms/${classroom.id}/performance`);
           performanceData[classroom.id] = performanceResponse.data;
+          
+          // Collect students with classroom info
+          performanceResponse.data.forEach(studentPerf => {
+            studentsArray.push({
+              ...studentPerf.student,
+              performance: studentPerf.performance,
+              intervention: studentPerf.intervention,
+              classroom: classroom
+            });
+          });
         }
         setClassroomPerformance(performanceData);
+        setAllStudents(studentsArray);
         
         // Fetch knowledge component mastery data
         const kcMasteryResponse = await axios.get(`/api/teachers/${teacherId}/knowledge-component-mastery`);
@@ -187,11 +205,113 @@ const TeacherDashboard = () => {
     alert(`Classroom "${newClassroom.name}" created successfully!`); // Optional success message
   };
 
+  // --- Student Management Handlers ---
+  const handleCreateStudentClick = (classroomId = null) => {
+    setSelectedClassroomForStudent(classroomId);
+    setShowCreateStudentModal(true);
+  };
+
+  const handleCloseCreateStudentModal = () => {
+    setShowCreateStudentModal(false);
+    setSelectedClassroomForStudent(null);
+  };
+
+  const handleCreateStudentSuccess = async (newStudent) => {
+    // Refresh data to show the new student
+    const fetchData = async () => {
+      try {
+        const classroomsResponse = await axios.get(`/api/teachers/${teacherId}/classrooms`);
+        setClassrooms(classroomsResponse.data);
+        
+        // Refresh performance data
+        const performanceData = {};
+        const studentsArray = [];
+        for (const classroom of classroomsResponse.data) {
+          const performanceResponse = await axios.get(`/api/classrooms/${classroom.id}/performance`);
+          performanceData[classroom.id] = performanceResponse.data;
+          
+          performanceResponse.data.forEach(studentPerf => {
+            studentsArray.push({
+              ...studentPerf.student,
+              performance: studentPerf.performance,
+              intervention: studentPerf.intervention,
+              classroom: classroom
+            });
+          });
+        }
+        setClassroomPerformance(performanceData);
+        setAllStudents(studentsArray);
+      } catch (err) {
+        console.error('Error refreshing data:', err);
+      }
+    };
+    
+    await fetchData();
+    handleCloseCreateStudentModal();
+    
+    // Show credentials to teacher
+    if (newStudent.credentials) {
+      alert(`Student created successfully!\n\nLogin Credentials:\nEmail: ${newStudent.credentials.email}\nPassword: ${newStudent.credentials.password}\n\nPlease save these credentials!`);
+    } else {
+      alert('Student created successfully!');
+    }
+  };
+
+  // --- Intervention Handlers ---
+  const handleSendMessage = async (student, messageType) => {
+    try {
+      const messages = {
+        encouragement: {
+          subject: 'Keep Going! You\'re Doing Great! 🌟',
+          content: `Hi ${student.name}! I noticed you haven't been active lately. Remember, every small step counts! I'm here to help you succeed. Let's work together to reach your goals! 💪`
+        },
+        progress: {
+          subject: 'Great Progress! 🎉',
+          content: `Congratulations ${student.name}! You've been making excellent progress. Keep up the amazing work!`
+        }
+      };
+
+      const message = messages[messageType] || messages.encouragement;
+      
+      await axios.post('/api/messages', {
+        receiver_id: student.id,
+        receiver_type: 'student',
+        subject: message.subject,
+        content: message.content
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      alert(`Message sent to ${student.name}!`);
+    } catch (err) {
+      console.error('Error sending message:', err);
+      alert('Failed to send message. Please try again.');
+    }
+  };
+
   return (
     <div className="teacher-dashboard">
       <div className="dashboard-header">
-        <h1>Welcome, {teacher?.name || 'Teacher'}!</h1>
-        <p>Intelligent Tutoring System Dashboard</p>
+        <div className="header-content">
+          <div className="header-text">
+            <h1>Welcome, {teacher?.name || 'Teacher'}!</h1>
+            <p>Intelligent Tutoring System Dashboard</p>
+          </div>
+          <div className="header-actions">
+            <button 
+              className="action-button primary"
+              onClick={() => handleCreateStudentClick()}
+            >
+              <span>👤</span> Create Student
+            </button>
+            <button 
+              className="action-button secondary"
+              onClick={() => setShowInterventionDashboard(!showInterventionDashboard)}
+            >
+              <span>📊</span> {showInterventionDashboard ? 'Hide' : 'Show'} Intervention Dashboard
+            </button>
+          </div>
+        </div>
       </div>
       
       <div className="dashboard-summary">
@@ -213,7 +333,42 @@ const TeacherDashboard = () => {
         </div>
       </div>
       
-      {interventionNeeded.length > 0 && (
+      {showInterventionDashboard && (
+        <InterventionDashboard
+          students={allStudents}
+          onAssignPractice={(student, kcIds) => {
+            setSelectedStudentForPractice(student);
+            setShowAssignPracticeModal(true);
+          }}
+          onScheduleSession={async (student) => {
+            if (!token || !student?.id) {
+              alert("Cannot schedule session. Authentication or student data missing.");
+              return;
+            }
+            if (window.confirm(`Schedule a 1:1 session for ${student.name}?`)) {
+              try {
+                const today = new Date();
+                const tomorrow = new Date(today);
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                await axios.post(`/api/students/${student.id}/interventions/session`, {
+                  studentId: student.id,
+                  dateProposed: tomorrow.toISOString(),
+                  type: '1:1',
+                  reason: 'Teacher-initiated intervention session',
+                  requestedBy: 'teacher'
+                }, { headers: { Authorization: `Bearer ${token}` } });
+                alert(`1:1 Session proposed for ${student.name} for tomorrow.`);
+              } catch (err) {
+                console.error('Error scheduling 1:1 session:', err);
+                alert(`Failed to schedule 1:1 session for ${student.name}.`);
+              }
+            }
+          }}
+          onSendMessage={handleSendMessage}
+        />
+      )}
+      
+      {!showInterventionDashboard && interventionNeeded.length > 0 && (
         <div className="intervention-section">
           <h2>Students Needing Intervention</h2>
           <div className="intervention-dropdown">
@@ -371,9 +526,17 @@ const TeacherDashboard = () => {
                     <span className="stat-label">Interventions</span>
                   </div>
                 </div>
-                <Link to={`/teacher/classroom/${classroom.id}`} className="button">
-                  View Classroom
-                </Link>
+                <div className="classroom-actions">
+                  <Link to={`/teacher/classroom/${classroom.id}`} className="button">
+                    View Classroom
+                  </Link>
+                  <button 
+                    className="button secondary small"
+                    onClick={() => handleCreateStudentClick(classroom.id)}
+                  >
+                    + Add Student
+                  </button>
+                </div>
               </div>
             );
           })}
@@ -452,6 +615,15 @@ const TeacherDashboard = () => {
           />
         )}
       </div>
+
+      {/* Create Student Modal */}
+      {showCreateStudentModal && (
+        <CreateStudentModal
+          onClose={handleCloseCreateStudentModal}
+          onSuccess={handleCreateStudentSuccess}
+          classroomId={selectedClassroomForStudent}
+        />
+      )}
 
     </div>
   );

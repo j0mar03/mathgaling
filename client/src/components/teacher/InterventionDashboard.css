@@ -1,0 +1,379 @@
+.intervention-dashboard {
+  padding: 2rem;
+  background-color: #f5f6fa;
+  border-radius: 8px;
+  margin-top: 2rem;
+}
+
+.intervention-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.intervention-header h2 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 1.8rem;
+}
+
+.intervention-controls {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.filter-group,
+.sort-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.filter-group label,
+.sort-group label {
+  font-weight: 500;
+  color: #7f8c8d;
+}
+
+.filter-group select,
+.sort-group select {
+  padding: 0.5rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background-color: white;
+  cursor: pointer;
+}
+
+/* Summary Cards */
+.intervention-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.summary-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  transition: transform 0.2s;
+}
+
+.summary-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.summary-card h3 {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.summary-card p {
+  margin: 0.5rem 0 0 0;
+  color: #7f8c8d;
+  font-size: 0.9rem;
+}
+
+.summary-card.high h3 {
+  color: #e74c3c;
+}
+
+.summary-card.medium h3 {
+  color: #f39c12;
+}
+
+.summary-card.low h3 {
+  color: #27ae60;
+}
+
+.summary-card.inactive h3 {
+  color: #95a5a6;
+}
+
+/* Intervention Grid */
+.intervention-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+}
+
+.intervention-card {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  cursor: pointer;
+  transition: all 0.3s;
+  border-left: 4px solid transparent;
+}
+
+.intervention-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.intervention-card.priority-high {
+  border-left-color: #e74c3c;
+}
+
+.intervention-card.priority-medium {
+  border-left-color: #f39c12;
+}
+
+.intervention-card.priority-low {
+  border-left-color: #27ae60;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.card-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #2c3e50;
+}
+
+.priority-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: bold;
+}
+
+.card-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #ecf0f1;
+}
+
+.card-stats .stat {
+  text-align: center;
+}
+
+.stat-label {
+  display: block;
+  font-size: 0.75rem;
+  color: #7f8c8d;
+  margin-bottom: 0.25rem;
+}
+
+.stat-value {
+  display: block;
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #2c3e50;
+}
+
+.card-reasons {
+  margin-bottom: 1rem;
+}
+
+.card-reasons h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.9rem;
+  color: #7f8c8d;
+}
+
+.card-reasons ul {
+  margin: 0;
+  padding-left: 1.5rem;
+  font-size: 0.85rem;
+  color: #34495e;
+}
+
+.card-reasons li {
+  margin-bottom: 0.25rem;
+}
+
+.card-actions {
+  margin-top: 1rem;
+}
+
+.card-actions h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.9rem;
+  color: #7f8c8d;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.action-btn {
+  padding: 0.5rem;
+  border: none;
+  border-radius: 4px;
+  background-color: #ecf0f1;
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: all 0.2s;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.action-btn:hover {
+  transform: scale(1.1);
+}
+
+.action-btn.practice {
+  background-color: #3498db;
+}
+
+.action-btn.session {
+  background-color: #9b59b6;
+}
+
+.action-btn.message {
+  background-color: #1abc9c;
+}
+
+.action-btn.review {
+  background-color: #e67e22;
+}
+
+/* Intervention Detail Modal */
+.intervention-detail {
+  max-width: 700px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.intervention-detail-content {
+  padding: 1rem 0;
+}
+
+.detail-section {
+  margin-bottom: 2rem;
+}
+
+.detail-section h3 {
+  margin: 0 0 1rem 0;
+  color: #2c3e50;
+  font-size: 1.3rem;
+}
+
+.overview-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+}
+
+.stat-item label {
+  font-weight: 500;
+  color: #7f8c8d;
+}
+
+.stat-item span {
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.struggling-topics {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.topic-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background-color: #fee;
+  border-radius: 4px;
+  border-left: 3px solid #e74c3c;
+}
+
+.topic-name {
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.topic-mastery {
+  font-weight: bold;
+  color: #e74c3c;
+}
+
+.recommendations {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.recommendation-item {
+  padding: 1rem;
+  background-color: #e8f5e9;
+  border-radius: 4px;
+  border-left: 3px solid #27ae60;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.recommendation-item h4 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 1rem;
+}
+
+.action-button.primary {
+  padding: 0.5rem 1rem;
+  background-color: #27ae60;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.action-button.primary:hover {
+  background-color: #229954;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .intervention-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .intervention-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .card-stats {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+}

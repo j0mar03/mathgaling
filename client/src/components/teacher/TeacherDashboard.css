@@ -1,5 +1,72 @@
 /* Teacher Dashboard Styles */
 
+/* Dashboard Header */
+.dashboard-header {
+  background: linear-gradient(135deg, #4a6fa5, #3d5a87);
+  color: white;
+  padding: 2rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.header-text h1 {
+  margin: 0 0 0.5rem 0;
+  font-size: 2rem;
+}
+
+.header-text p {
+  margin: 0;
+  opacity: 0.9;
+}
+
+.header-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.action-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.action-button.primary {
+  background-color: #27ae60;
+  color: white;
+}
+
+.action-button.primary:hover {
+  background-color: #229954;
+  transform: translateY(-1px);
+}
+
+.action-button.secondary {
+  background-color: #3498db;
+  color: white;
+}
+
+.action-button.secondary:hover {
+  background-color: #2980b9;
+  transform: translateY(-1px);
+}
+
 /* Common Styles */
 .loading, .error-container {
   text-align: center;
@@ -2128,4 +2195,56 @@
 
 .error-container button:hover {
   background-color: #3a5a8c;
+}
+
+/* Classroom Actions */
+.classroom-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.classroom-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.classroom-card .classroom-stats {
+  flex: 1;
+}
+
+/* Modal Overlay */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 8px;
+  padding: 2rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  position: relative;
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
