@@ -5210,7 +5210,7 @@ exports.handler = async (event, context) => {
         .from('content_items')
         .select('*')
         .eq('knowledge_component_id', kcId)
-        .order('created_at', { ascending: false });
+        .order('createdAt', { ascending: false });
       
       if (error) {
         return {

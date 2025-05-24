@@ -55,10 +55,12 @@ const StudentDetailView = () => {
         const performanceByKC = {};
         if (performance.knowledgeStates) {
           performance.knowledgeStates.forEach(state => {
-            const kc = state.knowledge_components || {};
+            const kc = state.knowledge_components || state.KnowledgeComponent || {};
+            console.log('Processing knowledge state:', state);
+            console.log('Knowledge component data:', kc);
             performanceByKC[state.knowledge_component_id] = {
-              name: kc.name || 'Unknown',
-              curriculum_code: kc.curriculum_code || `KC-${state.knowledge_component_id}`,
+              name: kc.name || state.name || 'Unknown',
+              curriculum_code: kc.curriculum_code || state.curriculum_code || `KC-${state.knowledge_component_id}`,
               mastery: state.p_mastery || 0,
               correctRate: 0, // Will be calculated from responses
               totalResponses: 0, // Will be calculated from responses
@@ -71,7 +73,10 @@ const StudentDetailView = () => {
         // Calculate response stats per KC
         if (performance.recentActivity) {
           performance.recentActivity.forEach(response => {
-            const kcId = response.content_items?.knowledge_component_id;
+            // Handle both nested and flat content_items structure
+            const kcId = response.content_items?.knowledge_component_id || 
+                         response.ContentItem?.knowledge_component_id ||
+                         response.knowledge_component_id;
             if (kcId && performanceByKC[kcId]) {
               performanceByKC[kcId].totalResponses++;
               if (response.correct) {
