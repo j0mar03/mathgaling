@@ -5,6 +5,7 @@ import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Toolti
 import { Bar } from 'react-chartjs-2';
 import { useAuth } from '../../context/AuthContext'; // Import useAuth
 import './TeacherDashboard.css';
+import './ClassroomView.css';
 
 // Register ChartJS components
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
@@ -175,10 +176,10 @@ const ClassroomView = () => {
     return a.student.name.localeCompare(b.student.name);
   });
 
-  const handleRemoveStudent = async (studentIdToRemove) => {
+  const handleRemoveStudent = async (studentIdToRemove, studentName) => {
     if (isProcessing) return; // Prevent multiple clicks
 
-    if (window.confirm(`Are you sure you want to remove student ID ${studentIdToRemove} from this classroom?`)) {
+    if (window.confirm(`Are you sure you want to remove ${studentName} from this classroom?`)) {
       setIsProcessing(true);
       setError(null);
       try {
@@ -425,12 +426,24 @@ const ClassroomView = () => {
                   <div className="col-grade">{student.student.grade_level}</div>
                   <div className="col-mastery">
                     <div className="mastery-percentage">
-                      {(student.performance?.mathMastery * 100 || student.performance?.averageMastery * 100 || 0).toFixed(0)}%
+                      {student.performance?.mathMastery != null 
+                        ? (student.performance.mathMastery * 100).toFixed(0) + '%'
+                        : student.performance?.averageMastery != null
+                        ? (student.performance.averageMastery * 100).toFixed(0) + '%'
+                        : 'N/A'}
                     </div>
                     <div className="mastery-bar">
                       <div 
                         className="mastery-fill" 
-                        style={{ width: `${student.performance?.mathMastery * 100 || student.performance?.averageMastery * 100 || 0}%` }}
+                        style={{ 
+                          width: `${
+                            student.performance?.mathMastery != null
+                              ? student.performance.mathMastery * 100
+                              : student.performance?.averageMastery != null
+                              ? student.performance.averageMastery * 100
+                              : 0
+                          }%` 
+                        }}
                       ></div>
                     </div>
                   </div>
@@ -454,9 +467,8 @@ const ClassroomView = () => {
                    </Link>
                    <button
                      className="button small danger"
-                     onClick={() => handleRemoveStudent(student.student.id)}
+                     onClick={() => handleRemoveStudent(student.student.id, student.student.name)}
                      disabled={isProcessing}
-                     style={{marginLeft: '5px'}}
                    >
                      Remove
                    </button>

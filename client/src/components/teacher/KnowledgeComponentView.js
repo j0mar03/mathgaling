@@ -88,17 +88,20 @@ const KnowledgeComponentView = () => {
   }
   
   // Prepare data for mastery distribution chart
+  const hasMasteryData = classroomPerformance?.masteryDistribution && 
+    Object.values(classroomPerformance.masteryDistribution).some(val => val > 0);
+  
   const masteryDistributionData = {
     labels: ['Very Low (0-20%)', 'Low (20-40%)', 'Medium (40-60%)', 'High (60-80%)', 'Very High (80-100%)'],
     datasets: [
       {
         label: 'Students',
         data: [
-          classroomPerformance.masteryDistribution?.veryLow || 0,
-          classroomPerformance.masteryDistribution?.low || 0,
-          classroomPerformance.masteryDistribution?.medium || 0,
-          classroomPerformance.masteryDistribution?.high || 0,
-          classroomPerformance.masteryDistribution?.veryHigh || 0
+          classroomPerformance?.masteryDistribution?.veryLow || 0,
+          classroomPerformance?.masteryDistribution?.low || 0,
+          classroomPerformance?.masteryDistribution?.medium || 0,
+          classroomPerformance?.masteryDistribution?.high || 0,
+          classroomPerformance?.masteryDistribution?.veryHigh || 0
         ],
         backgroundColor: [
           'rgba(255, 99, 132, 0.7)',
@@ -174,7 +177,7 @@ const KnowledgeComponentView = () => {
           <div className="kc-stats">
             <div className="stat">
               <span className="stat-value">
-                {(classroomPerformance.averageMastery * 100).toFixed(0)}%
+                {classroomPerformance.averageMastery ? (classroomPerformance.averageMastery * 100).toFixed(0) + '%' : 'N/A'}
               </span>
               <span className="stat-label">Avg. Mastery</span>
             </div>
@@ -213,7 +216,7 @@ const KnowledgeComponentView = () => {
               </div>
               <div className="detail-item">
                 <h3>Difficulty</h3>
-                <p>{knowledgeComponent?.difficulty}/5</p>
+                <p>{knowledgeComponent?.difficulty ? `${knowledgeComponent.difficulty}/5` : 'N/A'}</p>
               </div>
               <div className="detail-item">
                 <h3>Prerequisites</h3>
@@ -229,7 +232,13 @@ const KnowledgeComponentView = () => {
           <div className="mastery-distribution">
             <h2>Mastery Distribution</h2>
             <div className="chart-container">
-              <Pie data={masteryDistributionData} options={chartOptions} />
+              {hasMasteryData ? (
+                <Pie data={masteryDistributionData} options={chartOptions} />
+              ) : (
+                <div className="no-data-message">
+                  No mastery data available yet
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -255,17 +264,17 @@ const KnowledgeComponentView = () => {
                       <div className="col-name">{student.student_name}</div>
                       <div className="col-mastery">
                         <div className="mastery-percentage">
-                          {(student.mastery * 100).toFixed(0)}%
+                          {student.mastery != null ? (student.mastery * 100).toFixed(0) + '%' : 'N/A'}
                         </div>
                         <div className="mastery-bar">
                           <div 
                             className="mastery-fill" 
-                            style={{ width: `${student.mastery * 100}%` }}
+                            style={{ width: `${student.mastery != null ? student.mastery * 100 : 0}%` }}
                           ></div>
                         </div>
                       </div>
                       <div className="col-correct">
-                        {(student.correctRate * 100).toFixed(0)}%
+                        {student.correctRate != null ? (student.correctRate * 100).toFixed(0) + '%' : 'N/A'}
                         <span className="response-count">
                           ({student.correctResponses}/{student.totalResponses})
                         </span>
@@ -372,7 +381,7 @@ const KnowledgeComponentView = () => {
                   <h3>{misconception.title}</h3>
                   <p>{misconception.description}</p>
                   <div className="misconception-stats">
-                    <span>Frequency: {(misconception.frequency * 100).toFixed(0)}% of students</span>
+                    <span>Frequency: {misconception.frequency != null ? (misconception.frequency * 100).toFixed(0) + '%' : 'N/A'} of students</span>
                     <span>Impact: {misconception.impact}/5</span>
                   </div>
                   <div className="remediation">
