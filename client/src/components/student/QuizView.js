@@ -190,6 +190,8 @@ const QuizView = () => {
               } else if (nextActivityResponse.data && (nextActivityResponse.data.completed_sequence || nextActivityResponse.data.all_mastered)) {
                 console.log(`[Completion Effect] 🎉 Sequence completed! All KCs mastered for this grade level.`);
                 nextKcId = null;
+              } else {
+                console.log(`[Completion Effect] ⚠️ No next KC found in response:`, nextActivityResponse.data);
               }
             } catch (err) {
               console.warn("[Completion Effect] Error fetching next KC in sequence:", err.message);
@@ -688,6 +690,8 @@ const QuizView = () => {
               {/* Continue to Next Topic Button (if available) */}
               {(() => {
                 const performedWell = (actualPerformance >= 0.75 || scorePercentage >= 0.75);
+                
+                console.log(`[QuizComplete] Button logic - performedWell: ${performedWell}, searchingNextTopic: ${searchingNextTopic}, nextTopicSearchComplete: ${nextTopicSearchComplete}, nextKcIdForContinuation: ${nextKcIdForContinuation}`);
                 
                 // Show loading state while searching
                 if (performedWell && searchingNextTopic) {

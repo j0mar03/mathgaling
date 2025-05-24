@@ -93,7 +93,12 @@ const StudentProgress = () => {
         // Fetch detailed performance (which includes responses)
         // Call the student-specific endpoint with auth header
         const performanceResponse = await axios.get(`/api/students/me/detailed-performance`, { headers });
-        if (performanceResponse.data.recentResponses) {
+        console.log('[Progress] Performance response:', performanceResponse.data);
+        
+        // Fix: The API returns recentActivity within performance object
+        if (performanceResponse.data?.performance?.recentActivity) {
+          setResponses(performanceResponse.data.performance.recentActivity);
+        } else if (performanceResponse.data?.recentResponses) {
           setResponses(performanceResponse.data.recentResponses);
         }
         
@@ -142,7 +147,9 @@ const StudentProgress = () => {
             
             // Also refresh recent activity
             const performanceResponse = await axios.get(`/api/students/me/detailed-performance?_t=${Date.now()}`, { headers });
-            if (performanceResponse.data.recentResponses) {
+            if (performanceResponse.data?.performance?.recentActivity) {
+              setResponses(performanceResponse.data.performance.recentActivity);
+            } else if (performanceResponse.data?.recentResponses) {
               setResponses(performanceResponse.data.recentResponses);
             }
             
@@ -218,7 +225,9 @@ const StudentProgress = () => {
             setAllKnowledgeComponents(gradeKCsResponse.data);
             
             const performanceResponse = await axios.get(`/api/students/me/detailed-performance?_t=${timestamp}&fresh=true`, { headers });
-            if (performanceResponse.data.recentResponses) {
+            if (performanceResponse.data?.performance?.recentActivity) {
+              setResponses(performanceResponse.data.performance.recentActivity);
+            } else if (performanceResponse.data?.recentResponses) {
               setResponses(performanceResponse.data.recentResponses);
             }
             
@@ -801,11 +810,11 @@ const StudentProgress = () => {
             {responses.slice(0, 5).map(response => (
               <div key={response.id} className="activity-item">
                 <div className="activity-content">
-                  <h4>{response.content}</h4>
+                  <h4>{response.content_items?.content || response.content || 'Question'}</h4>
                   <p>Your answer: {response.answer}</p>
                 </div>
-                <div className={`activity-result ${response.correct ? 'correct' : 'incorrect'}`}>
-                  {response.correct ? 'Tama! (Correct)' : 'Mali (Incorrect)'}
+                <div className={`activity-result ${response.is_correct || response.correct ? 'correct' : 'incorrect'}`}>
+                  {(response.is_correct || response.correct) ? 'Tama! (Correct)' : 'Mali (Incorrect)'}
                 </div>
               </div>
             ))}

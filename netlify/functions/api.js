@@ -1955,20 +1955,106 @@ exports.handler = async (event, context) => {
     try {
       const pathParts = path.split('/');
       const studentId = pathParts[pathParts.indexOf('students') + 1];
+      const queryParams = new URLSearchParams(event.queryStringParameters || {});
+      const currentKcCode = queryParams.get('current_kc_curriculum_code');
       
-      // Mock next activity data
+      console.log(`[Netlify] Kid-friendly next activity for student ${studentId}, current KC: ${currentKcCode}`);
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // Get student's grade level
+      const { data: student } = await supabase
+        .from('students')
+        .select('grade_level')
+        .eq('id', studentId)
+        .single();
+        
+      if (!student) {
+        return {
+          statusCode: 404,
+          headers,
+          body: JSON.stringify({ error: 'Student not found' })
+        };
+      }
+      
+      // Get all KCs for the student's grade level
+      const { data: gradeKCs } = await supabase
+        .from('knowledge_components')
+        .select('*')
+        .eq('grade_level', student.grade_level)
+        .order('curriculum_code');
+        
+      if (!gradeKCs || gradeKCs.length === 0) {
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({
+            type: 'quiz',
+            kc_id: null,
+            message: 'No more topics available',
+            completed_sequence: true
+          })
+        };
+      }
+      
+      // Find current KC index
+      let nextKC = null;
+      if (currentKcCode) {
+        const currentIndex = gradeKCs.findIndex(kc => kc.curriculum_code === currentKcCode);
+        console.log(`[Netlify] Current KC index: ${currentIndex} out of ${gradeKCs.length}`);
+        
+        if (currentIndex >= 0 && currentIndex < gradeKCs.length - 1) {
+          nextKC = gradeKCs[currentIndex + 1];
+        } else if (currentIndex === gradeKCs.length - 1) {
+          // Last KC in sequence
+          return {
+            statusCode: 200,
+            headers,
+            body: JSON.stringify({
+              type: 'quiz',
+              kc_id: null,
+              message: 'Congratulations! You completed all topics!',
+              completed_sequence: true,
+              all_mastered: true
+            })
+          };
+        }
+      } else {
+        // No current KC, return the first one
+        nextKC = gradeKCs[0];
+      }
+      
+      if (nextKC) {
+        console.log(`[Netlify] Next KC: ${nextKC.name} (${nextKC.curriculum_code})`);
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({
+            type: 'quiz',
+            kc_id: nextKC.id,
+            kc_name: nextKC.name,
+            curriculum_code: nextKC.curriculum_code,
+            message: `Ready for ${nextKC.name}?`
+          })
+        };
+      }
+      
+      // Default response
       return {
         statusCode: 200,
         headers,
         body: JSON.stringify({
           type: 'quiz',
-          kcId: 1,
-          kcName: 'Addition and Subtraction',
-          message: 'Ready for a fun math quiz?'
+          kc_id: null,
+          message: 'No next topic found'
         })
       };
       
     } catch (error) {
+      console.error('[Netlify] Kid-friendly next activity error:', error);
       return {
         statusCode: 500,
         headers,
