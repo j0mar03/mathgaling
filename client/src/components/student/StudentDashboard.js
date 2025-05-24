@@ -557,534 +557,204 @@ const StudentDashboard = () => {
   };
 
   return (
-    <div className="student-dashboard" style={{
-      maxWidth: '1200px',
-      margin: '0 auto',
-      padding: '20px',
-      fontFamily: '"Comic Sans MS", "Bubblegum Sans", cursive'
-    }}>
-      {/* Welcome Header */}
-      <header className="dashboard-header" style={{
-        background: 'linear-gradient(135deg, #FFD700, #FFA500)',
-        borderRadius: '20px',
-        padding: '20px',
-        marginBottom: '30px',
-        boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
-        textAlign: 'center',
-        position: 'relative' // Added for absolute positioning of messages icon
-      }}>
-        {/* Messages Icon */}
-        <div 
-          onClick={() => navigate('/student/messages')}
-          style={{
-            position: 'absolute',
-            top: '20px',
-            right: '20px',
-            background: 'rgba(255,255,255,0.9)',
-            borderRadius: '50%',
-            width: '50px',
-            height: '50px',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            cursor: 'pointer',
-            boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
-          }}
-        >
-          <span style={{ fontSize: '24px' }}>✉️</span>
-          {unreadMessages > 0 && (
-            <div style={{
-              position: 'absolute',
-              top: '-5px',
-              right: '-5px',
-              background: '#FF6B6B',
-              borderRadius: '50%',
-              width: '25px',
-              height: '25px',
-              display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              color: 'white',
-              fontSize: '14px',
-              fontWeight: 'bold'
-            }}>
-              {unreadMessages}
-            </div>
-          )}
-        </div>
-
-        <h1 style={{
-          fontSize: '2.5em',
-          color: '#fff',
-          textShadow: '2px 2px 4px rgba(0,0,0,0.2)',
-          marginBottom: '10px'
-        }}>
-          👋 Kamusta, {student?.name || 'Kaibigan'}!
-        </h1>
-        <p style={{
-          fontSize: '1.2em',
-          color: '#fff',
-          marginBottom: '15px'
-        }}>
-          Grade {student?.grade_level || '3'} Math Adventure
-        </p>
-        
-        {/* Learning Streak */}
-        <div style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          gap: '20px',
-          marginBottom: '15px'
-        }}>
-          <div style={{
-            background: 'rgba(255,255,255,0.9)',
-            padding: '10px 20px',
-            borderRadius: '15px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px'
-          }}>
-            <span style={{ fontSize: '24px' }}>🔥</span>
-            <span style={{ fontSize: '1.2em', color: '#FF6B6B' }}>
-              {learningStreak} Days Streak!
-            </span>
+    <div className="student-dashboard-container">
+      <div className="student-dashboard">
+        {/* Welcome Header */}
+        <header className="dashboard-header">
+          {/* Messages Icon */}
+          <div className="profile-icon" onClick={() => navigate('/student/messages')}>
+            ✉️
+            {unreadMessages > 0 && (
+              <div style={{
+                position: 'absolute',
+                top: '-5px',
+                right: '-5px',
+                background: '#FF6B6B',
+                borderRadius: '50%',
+                width: '25px',
+                height: '25px',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                color: 'white',
+                fontSize: '12px',
+                fontWeight: 'bold'
+              }}>
+                {unreadMessages}
+              </div>
+            )}
           </div>
-        </div>
 
-        {/* Daily Progress */}
-        <div style={{
-          background: 'rgba(255,255,255,0.9)',
-          padding: '15px',
-          borderRadius: '15px',
-          marginTop: '15px'
-        }}>
-          <p style={{ marginBottom: '10px', color: '#333' }}>
-            Today's Progress: {exercisesCompleted}/{dailyGoal} topics
+          <h1>
+            👋 Kamusta, {student?.name || 'Kaibigan'}!
+          </h1>
+          <p className="subtitle">
+            Grade {student?.grade_level || '3'} Math Adventure
           </p>
-          <div style={{
-            height: '20px',
-            background: '#E0E0E0',
-            borderRadius: '10px',
-            overflow: 'hidden'
-          }}>
-            <div style={{
-              height: '100%',
-              width: `${(exercisesCompleted / dailyGoal) * 100}%`,
-              background: 'linear-gradient(90deg, #4CAF50, #8BC34A)',
-              borderRadius: '10px',
-              transition: 'width 0.3s ease'
-            }}></div>
+          <p className="encouragement-text">
+            Ready for today's math adventure? Let's learn something amazing!
+          </p>
+        
+          <button className="progress-button" onClick={() => navigate('/student/progress')}>
+            View My Progress
+          </button>
+        </header>
+        
+        {/* Progress Stats Section */}
+        <div className="progress-stats">
+          <div className="streak-container">
+            <span className="streak-icon">🔥</span>
+            <span className="streak-count">{learningStreak} Days</span>
           </div>
-        </div>
-      </header>
-
-      {/* Main Learning Section */}
-      {currentLearningStep && currentLearningStep.isPrimary && (
-        <section style={{
-          background: '#fff',
-          borderRadius: '20px',
-          padding: '25px',
-          marginBottom: '30px',
-          boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
-          border: '3px solid #FFD700'
-        }}>
-          <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-            <h2 style={{
-              fontSize: '2em',
-              color: '#FF6B6B',
-              marginBottom: '10px'
-            }}>
-              🚀 Your Next Math Adventure! 🚀
-            </h2>
-            <p style={{ fontSize: '1.2em', color: '#666' }}>
-              Let's learn together, {student?.name || 'Kaibigan'}!
+          
+          <div className="daily-progress">
+            <div className="progress-bar">
+              <div 
+                className="progress-fill" 
+                style={{ width: `${Math.min((exercisesCompleted / dailyGoal) * 100, 100)}%` }}
+              ></div>
+            </div>
+            <p className="progress-text">
+              Today's Progress: {exercisesCompleted}/{dailyGoal} topics completed
             </p>
           </div>
-
-          <div style={{
-            background: '#f8f9fa',
-            borderRadius: '15px',
-            padding: '20px',
-            border: '2px dashed #FFD700'
-          }}>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '20px',
-              marginBottom: '20px'
-            }}>
-              <div style={{ fontSize: '48px' }}>
-                {currentLearningStep.emoji || '🌟'}
-              </div>
-              <div>
-                <h3 style={{
-                  fontSize: '1.5em',
-                  color: '#333',
-                  marginBottom: '10px'
-                }}>
-                  {currentLearningStep.name}
-                </h3>
-                <p style={{ color: '#666' }}>
-                  {currentLearningStep.description}
-                </p>
-              </div>
-            </div>
-
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              marginBottom: '20px',
-              flexWrap: 'wrap',
-              gap: '15px'
-            }}>
-              <div style={{
-                background: '#fff',
-                padding: '10px 20px',
-                borderRadius: '10px',
-                boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
-              }}>
-                <span style={{ color: '#666' }}>Level: </span>
-                <span style={{
-                  color: currentLearningStep.difficulty === 'easy' ? '#4CAF50' :
-                         currentLearningStep.difficulty === 'medium' ? '#2196F3' : '#FF9800',
-                  fontWeight: 'bold'
-                }}>
-                  {currentLearningStep.difficulty === 'easy' ? 'Madali 😊' :
-                   currentLearningStep.difficulty === 'medium' ? 'Katamtaman 💪' : 
-                   'Mahirap 🌟'}
-                </span>
-              </div>
-
-              <div style={{
-                background: '#fff',
-                padding: '10px 20px',
-                borderRadius: '10px',
-                boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
-              }}>
-                <span style={{ color: '#666' }}>Your Power: </span>
-                <span style={{ color: '#FF6B6B', fontWeight: 'bold' }}>
-                  {currentLearningStep.mastery}%
-                </span>
-              </div>
-            </div>
-
-            <button
-              onClick={() => {
-                // Handle different action types
-                if (currentLearningStep?.type === 'explore' || !currentLearningStep?.id) {
-                  // If no specific KC, go to mastery dashboard to explore all topics
-                  navigate('/student/mastery-dashboard');
-                } else {
-                  // Use the KC ID from currentLearningStep if available
-                  let quizUrl = '/student/quiz?mode=sequential&limit=8';
-                  
-                  if (currentLearningStep && currentLearningStep.kc_id) {
-                    // Use kc_id if available (from the kid-friendly-next-activity API)
-                    quizUrl = `/student/quiz?kc_id=${currentLearningStep.kc_id}&mode=sequential&limit=8`;
-                  } else if (currentLearningStep && currentLearningStep.id) {
-                    // Use id as KC ID
-                    quizUrl = `/student/quiz?kc_id=${currentLearningStep.id}&mode=sequential&limit=8`;
-                  }
-                  
-                  console.log('[StudentDashboard] Navigating to quiz with currentLearningStep:', currentLearningStep);
-                  console.log('[StudentDashboard] Quiz URL:', quizUrl);
-                  navigate(quizUrl);
-                }
-              }}
-              style={{
-                background: 'linear-gradient(135deg, #FF6B6B, #FF8E53)',
-                color: 'white',
-                padding: '15px 30px',
-                borderRadius: '30px',
-                border: 'none',
-                fontSize: '1.2em',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                width: '100%',
-                boxShadow: '0 4px 15px rgba(255,107,107,0.3)',
-                transition: 'transform 0.2s ease'
-              }}
-              onMouseOver={(e) => e.target.style.transform = 'scale(1.05)'}
-              onMouseOut={(e) => e.target.style.transform = 'scale(1)'}
-            >
-              {currentLearningStep?.buttonText || 'Ipagpatuloy'} na! ✨
-            </button>
-          </div>
-        </section>
-      )}
-
-      {/* Fun Practice Section */}
-      <section style={{
-        background: '#fff',
-        borderRadius: '20px',
-        padding: '25px',
-        marginBottom: '30px',
-        boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
-      }}>
-        <h2 style={{
-          textAlign: 'center',
-          fontSize: '2em',
-          color: '#FF6B6B',
-          marginBottom: '20px'
-        }}>
-          🎮 Fun Math Games 🎮
-        </h2>
-
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-          gap: '20px'
-        }}>
-          {/* Math Challenge Card */}
-          <div style={{
-            background: 'linear-gradient(135deg, #4CAF50, #8BC34A)',
-            borderRadius: '15px',
-            padding: '20px',
-            textAlign: 'center',
-            color: 'white',
-            boxShadow: '0 4px 15px rgba(76,175,80,0.3)'
-          }}>
-            <div style={{ fontSize: '48px', marginBottom: '15px' }}>🎯</div>
-            <h3 style={{ fontSize: '1.5em', marginBottom: '10px' }}>Math Challenge</h3>
-            <p style={{ marginBottom: '20px' }}>Try fun math questions!</p>
-            <button
-              onClick={handleStartChallenge}
-              style={{
-                background: 'white',
-                color: '#4CAF50',
-                padding: '12px 25px',
-                borderRadius: '25px',
-                border: 'none',
-                fontSize: '1.1em',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                width: '100%',
-                boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
-              }}
-            >
-              Start Challenge 🚀
-            </button>
-          </div>
-
-          {/* Book Quiz Card */}
-          <div style={{
-            background: 'linear-gradient(135deg, #2196F3, #03A9F4)',
-            borderRadius: '15px',
-            padding: '20px',
-            textAlign: 'center',
-            color: 'white',
-            boxShadow: '0 4px 15px rgba(33,150,243,0.3)'
-          }}>
-            <div style={{ fontSize: '48px', marginBottom: '15px' }}>📚</div>
-            <h3 style={{ fontSize: '1.5em', marginBottom: '10px' }}>Book Questions</h3>
-            <p style={{ marginBottom: '20px' }}>Practice with your textbook!</p>
-            <button
-              onClick={handleStartBookQuiz}
-              style={{
-                background: 'white',
-                color: '#2196F3',
-                padding: '12px 25px',
-                borderRadius: '25px',
-                border: 'none',
-                fontSize: '1.1em',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                width: '100%',
-                boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
-              }}
-            >
-              Start Quiz 📝
-            </button>
-          </div>
-
-          {/* Progress Card */}
-          <div style={{
-            background: 'linear-gradient(135deg, #9C27B0, #E91E63)',
-            borderRadius: '15px',
-            padding: '20px',
-            textAlign: 'center',
-            color: 'white',
-            boxShadow: '0 4px 15px rgba(156,39,176,0.3)'
-          }}>
-            <div style={{ fontSize: '48px', marginBottom: '15px' }}>📊</div>
-            <h3 style={{ fontSize: '1.5em', marginBottom: '10px' }}>My Progress</h3>
-            <p style={{ marginBottom: '20px' }}>See how you're doing!</p>
-            <button
-              onClick={() => navigate('/student/progress')}
-              style={{
-                background: 'white',
-                color: '#9C27B0',
-                padding: '12px 25px',
-                borderRadius: '25px',
-                border: 'none',
-                fontSize: '1.1em',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                width: '100%',
-                boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
-              }}
-            >
-              View Progress 📈
-            </button>
-          </div>
         </div>
-      </section>
 
-      {/* Show All Topics Button */}
-      <div style={{ textAlign: 'center', marginBottom: '30px' }}>
-        <button
-          onClick={() => setShowAllTopics(!showAllTopics)}
-          style={{
-            background: showAllTopics ? '#FF6B6B' : '#4CAF50',
-            color: 'white',
-            padding: '12px 25px',
-            borderRadius: '25px',
-            border: 'none',
-            fontSize: '1.1em',
-            fontWeight: 'bold',
-            cursor: 'pointer',
-            boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
-          }}
-        >
-          {showAllTopics ? 'Itago ang Lahat ng Paksa 📚' : 'Ipakita ang Lahat ng Paksa 📚'}
-        </button>
-      </div>
-
-      {/* All Topics Section */}
-      {showAllTopics && (
-        <section style={{
-          background: '#fff',
-          borderRadius: '20px',
-          padding: '25px',
-          boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
-        }}>
-          <h2 style={{
-            textAlign: 'center',
-            fontSize: '2em',
-            color: '#FF6B6B',
-            marginBottom: '20px'
-          }}>
-            Lahat ng Math Topics 📚
-          </h2>
-          
-          {modules.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '20px' }}>
-              <p style={{ fontSize: '1.2em', color: '#666' }}>
-                No topics available yet. Please check back later!
-              </p>
+        {/* Main Learning Section */}
+        {currentLearningStep && currentLearningStep.isPrimary && (
+          <section className="learning-path-focus">
+            <div className="focus-header">
+              <h2>🌟 Your Next Adventure</h2>
+              <p>Ready to learn something amazing?</p>
             </div>
-          ) : (
-            /* Quarter Sections */
-            ['Quarter 1', 'Quarter 2', 'Quarter 3', 'Quarter 4'].map((quarter, index) => {
-              // Filter modules for this quarter
-              const quarterModules = modules.filter(module => module.quarter === index + 1);
-              
-              // Skip rendering this quarter if no modules
-              if (quarterModules.length === 0) return null;
-              
-              return (
-                <div key={quarter} style={{ marginBottom: '30px' }}>
-                  <h3 style={{
-                    fontSize: '1.8em',
-                    color: '#333',
-                    marginBottom: '20px',
-                    padding: '15px',
-                    background: 'linear-gradient(135deg, #FFD700, #FFA500)',
-                    borderRadius: '15px',
-                    textAlign: 'center',
-                    boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
-                    fontWeight: 'bold',
-                    textTransform: 'uppercase'
-                  }}>
-                    {quarter}
-                  </h3>
+            <div className="focus-card">
+              <div className="focus-emoji">{currentLearningStep?.emoji || '🎯'}</div>
+              <div className="focus-content">
+                <h3>{currentLearningStep?.name || "Let's Learn!"}</h3>
+                <p className="focus-description">
+                  {currentLearningStep?.description || "Ready for your next math adventure?"}
+                </p>
+                
+                <div className="focus-details">
+                  <div className="detail-item">
+                    <div className="detail-label">Level</div>
+                    <div className="detail-value">
+                      {currentLearningStep.difficulty === 'easy' ? 'Easy 😊' :
+                       currentLearningStep.difficulty === 'medium' ? 'Medium 💪' : 
+                       'Hard 🌟'}
+                    </div>
+                  </div>
                   
-                  {/* Module Cards */}
-                  <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-                    gap: '20px',
-                    padding: '10px'
-                  }}>
-                    {quarterModules.map(module => (
-                      <div key={module.id} style={{
-                        background: '#f8f9fa',
-                        borderRadius: '15px',
-                        padding: '20px',
-                        boxShadow: '0 2px 5px rgba(0,0,0,0.1)'
-                      }}>
-                        <h4 style={{
-                          fontSize: '1.2em',
-                          color: '#333',
-                          marginBottom: '15px'
-                        }}>
-                          {module.name}
-                        </h4>
-                        
-                        {/* Knowledge Components */}
-                        {module.knowledgeComponents && module.knowledgeComponents.length > 0 ? (
-                          module.knowledgeComponents.map(kc => (
-                            <div key={kc.id} style={{
-                              background: 'white',
-                              borderRadius: '10px',
-                              padding: '15px',
-                              marginBottom: '10px',
-                              boxShadow: '0 2px 5px rgba(0,0,0,0.05)'
-                            }}>
-                              <h5 style={{
-                                fontSize: '1em',
-                                color: '#666',
-                                marginBottom: '10px'
-                              }}>
-                                {kc.name}
-                              </h5>
-                              
-                              <div style={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                                marginBottom: '10px'
-                              }}>
-                                <span style={{ color: '#666' }}>
-                                  Power: {Math.round((kc.mastery || 0) * 100)}%
-                                </span>
-                                <button
-                                  onClick={() => navigate(`/student/practice-quiz?kc_id=${kc.id}`)}
-                                  style={{
-                                    background: '#4CAF50',
-                                    color: 'white',
-                                    padding: '8px 15px',
-                                    borderRadius: '15px',
-                                    border: 'none',
-                                    fontSize: '0.9em',
-                                    cursor: 'pointer'
-                                  }}
-                                >
-                                  Practice! ✏️
-                                </button>
-                              </div>
-                            </div>
-                          ))
-                        ) : (
-                          <div style={{ 
-                            textAlign: 'center', 
-                            padding: '10px',
-                            color: '#666',
-                            fontStyle: 'italic'
-                          }}>
-                            No topics available in this module yet.
-                          </div>
-                        )}
-                      </div>
-                    ))}
+                  <div className="detail-item">
+                    <div className="detail-label">Mastery</div>
+                    <div className="detail-value">{currentLearningStep.mastery}%</div>
                   </div>
                 </div>
-              );
-            })
-          )}
+                
+                <div className="action-buttons">
+                  <button
+                    className="action-button practice-button"
+                    onClick={() => {
+                      // Handle different action types
+                      if (currentLearningStep?.type === 'explore' || !currentLearningStep?.id) {
+                        // If no specific KC, go to mastery dashboard to explore all topics
+                        navigate('/student/mastery-dashboard');
+                      } else {
+                        // Use the KC ID from currentLearningStep if available
+                        let quizUrl = '/student/quiz?mode=sequential&limit=8';
+                        
+                        if (currentLearningStep && currentLearningStep.kc_id) {
+                          // Use kc_id if available (from the kid-friendly-next-activity API)
+                          quizUrl = `/student/quiz?kc_id=${currentLearningStep.kc_id}&mode=sequential&limit=8`;
+                        } else if (currentLearningStep && currentLearningStep.id) {
+                          // Use id as KC ID
+                          quizUrl = `/student/quiz?kc_id=${currentLearningStep.id}&mode=sequential&limit=8`;
+                        }
+                        
+                        console.log('[StudentDashboard] Navigating to quiz with currentLearningStep:', currentLearningStep);
+                        console.log('[StudentDashboard] Quiz URL:', quizUrl);
+                        navigate(quizUrl);
+                      }
+                    }}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                    </svg>
+                    {currentLearningStep?.buttonText || 'Continue'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Quick Stats */}
+        <div className="quick-stats">
+          <div className="stat-card">
+            <div className="stat-icon">🎯</div>
+            <div className="stat-value">{exercisesCompleted}</div>
+            <div className="stat-label">Completed</div>
+          </div>
+          
+          <div className="stat-card">
+            <div className="stat-icon">🔥</div>
+            <div className="stat-value">{learningStreak}</div>
+            <div className="stat-label">Day Streak</div>
+          </div>
+          
+          <div className="stat-card">
+            <div className="stat-icon">⭐</div>
+            <div className="stat-value">{Math.round((exercisesCompleted / Math.max(totalTopics, 1)) * 100)}%</div>
+            <div className="stat-label">Progress</div>
+          </div>
+          
+          <div className="stat-card">
+            <div className="stat-icon">🎮</div>
+            <div className="stat-value">{dailyGoal - exercisesCompleted > 0 ? dailyGoal - exercisesCompleted : 0}</div>
+            <div className="stat-label">To Goal</div>
+          </div>
+        </div>
+        
+        {/* Fun Practice Section */}
+        <section className="learning-path-focus">
+          <div className="focus-header">
+            <h2>🎮 Fun Math Games</h2>
+            <p>Choose your adventure and have fun learning!</p>
+          </div>
+          
+          <div className="action-buttons">
+            <button
+              className="action-button quiz-button"
+              onClick={handleStartChallenge}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Math Challenge
+            </button>
+            
+            <button
+              className="action-button mastery-button"
+              onClick={handleStartBookQuiz}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+              </svg>
+              Book Questions
+            </button>
+            
+            <button
+              className="action-button practice-button"
+              onClick={() => navigate('/student/progress')}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              View Progress
+            </button>
+          </div>
         </section>
-      )}
+      </div>
     </div>
   );
 };
