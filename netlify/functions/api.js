@@ -3345,9 +3345,10 @@ exports.handler = async (event, context) => {
   }
   
   // POST /api/teachers/classrooms - Create classroom
-  if (path.includes('/teachers/classrooms') && httpMethod === 'POST') {
+  if (path === '/api/teachers/classrooms' && httpMethod === 'POST') {
     try {
       const classroomData = JSON.parse(event.body);
+      console.log('[Netlify] Creating classroom with data:', classroomData);
       
       const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
       const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
@@ -3367,6 +3368,7 @@ exports.handler = async (event, context) => {
         .single();
       
       if (error) {
+        console.error('[Netlify] Classroom creation failed:', error);
         return {
           statusCode: 500,
           headers,
@@ -3376,6 +3378,8 @@ exports.handler = async (event, context) => {
           })
         };
       }
+      
+      console.log('[Netlify] Classroom created successfully:', classroom);
       
       // Add students to classroom if provided
       if (classroomData.studentIds && classroomData.studentIds.length > 0) {
@@ -3457,7 +3461,7 @@ exports.handler = async (event, context) => {
   }
   
   // GET /api/teachers/:id/classrooms - Get teacher's classrooms
-  if (path.includes('/teachers/') && path.includes('/classrooms') && httpMethod === 'GET') {
+  if (path.match(/\/teachers\/\d+\/classrooms$/) && httpMethod === 'GET') {
     try {
       const pathParts = path.split('/');
       const teacherId = pathParts[pathParts.indexOf('teachers') + 1];

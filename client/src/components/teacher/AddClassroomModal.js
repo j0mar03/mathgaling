@@ -5,12 +5,13 @@ import './TeacherDashboard.css'; // Reuse styles or create a new CSS file if nee
 // Removed non-existent CSS import: import './AddClassroomModal.css';
 const AddClassroomModal = ({ onClose, onSuccess }) => {
   const [classroomName, setClassroomName] = useState('');
+  const [description, setDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const [eligibleStudents, setEligibleStudents] = useState([]); // State for student list
   const [selectedStudentIds, setSelectedStudentIds] = useState([]); // State for selected students
   const [loadingStudents, setLoadingStudents] = useState(true); // State for loading students
-  const { user } = useAuth(); // Get user to extract teacherId
+  const { user, token } = useAuth(); // Get user and token
 
   // Fetch eligible students when the modal mounts
   useEffect(() => {
@@ -19,7 +20,9 @@ const AddClassroomModal = ({ onClose, onSuccess }) => {
       setError(null); // Clear previous errors
       try {
         // Use the new backend endpoint
-        const response = await axios.get('/api/teachers/eligible-students');
+        const response = await axios.get('/api/teachers/eligible-students', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
         setEligibleStudents(response.data);
       } catch (err) {
         console.error('Error fetching eligible students:', err);
@@ -59,14 +62,18 @@ const AddClassroomModal = ({ onClose, onSuccess }) => {
       // Assuming the endpoint requires the teacherId in the URL
       // Adjust endpoint if needed - assuming it uses authenticated user ID implicitly now
       // Send selectedStudentIds along with the name
-      const response = await axios.post(`/api/teachers/classrooms`, { // Endpoint might not need teacherId if using auth
+      const response = await axios.post(`/api/teachers/classrooms`, {
         name: classroomName.trim(),
+        description: description.trim() || `${classroomName.trim()} - Created by ${user.name || 'Teacher'}`,
+        teacher_id: user.id, // Add the teacher_id that the API expects
         studentIds: selectedStudentIds, // Send the array of selected student IDs
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
       });
 
       // Call the onSuccess callback passed from the parent (TeacherDashboard)
       // with the newly created classroom data
-      onSuccess(response.data);
+      onSuccess(response.data.classroom || response.data);
 
     } catch (err) {
       console.error('Error creating classroom:', err);
@@ -90,6 +97,18 @@ const AddClassroomModal = ({ onClose, onSuccess }) => {
               onChange={(e) => setClassroomName(e.target.value)}
               placeholder="e.g., Grade 3 - Section A"
               required
+              disabled={isSubmitting}
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="description">Description (Optional):</label>
+            <textarea
+              id="description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Brief description of the classroom..."
+              rows="3"
               disabled={isSubmitting}
             />
           </div>
