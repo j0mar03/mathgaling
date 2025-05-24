@@ -1741,6 +1741,53 @@ exports.handler = async (event, context) => {
   
   // Student endpoints
   
+  // GET /api/students - Get all students
+  if (path === '/api/students' && httpMethod === 'GET') {
+    try {
+      console.log('[Netlify] Fetching all students');
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // Fetch all students
+      const { data: students, error } = await supabase
+        .from('students')
+        .select('*')
+        .order('name');
+      
+      if (error) {
+        console.error('Error fetching students:', error);
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to fetch students',
+            message: error.message
+          })
+        };
+      }
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify(students || [])
+      };
+      
+    } catch (error) {
+      console.error('Error in GET /api/students:', error);
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
   // GET /api/students/kcs/sequence - Get sequence of quiz questions for KC
   // This endpoint MUST come before the generic /api/students/:id endpoints
   if ((path.includes('/students/kcs/sequence') || path.includes('kcs/sequence')) && httpMethod === 'GET') {

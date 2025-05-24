@@ -13,8 +13,10 @@ const AddStudentToClassroomModal = ({ onClose, onSuccess, classroomId, classroom
   const { token } = useAuth();
 
   useEffect(() => {
-    fetchAvailableStudents();
-  }, [classroomId]);
+    if (classroomId && token) {
+      fetchAvailableStudents();
+    }
+  }, [classroomId, token]);
 
   const fetchAvailableStudents = async () => {
     try {
@@ -30,17 +32,41 @@ const AddStudentToClassroomModal = ({ onClose, onSuccess, classroomId, classroom
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      // Filter out students already in the classroom
-      const classroomStudentIds = classroomStudentsResponse.data.map(s => s.student.id);
+      console.log('[AddStudentModal] All students:', studentsResponse.data);
+      console.log('[AddStudentModal] Classroom students:', classroomStudentsResponse.data);
+      
+      // Handle different response formats - check if the response has a nested structure
+      const classroomStudents = classroomStudentsResponse.data || [];
+      const classroomStudentIds = classroomStudents.map(item => {
+        // Handle both formats: direct student object or nested in a student property
+        return item.student ? item.student.id : item.id;
+      });
+      
       const available = studentsResponse.data.filter(student => 
         !classroomStudentIds.includes(student.id)
       );
+      
+      console.log('[AddStudentModal] Available students:', available);
       
       setAvailableStudents(available);
       setLoading(false);
     } catch (err) {
       console.error('Error fetching available students:', err);
-      setError('Failed to load available students');
+      console.error('Error details:', {
+        message: err.message,
+        response: err.response?.data,
+        status: err.response?.status
+      });
+      
+      // Provide more specific error messages
+      if (err.response?.status === 404) {
+        setError('Students endpoint not found. Please ensure the API is properly configured.');
+      } else if (err.response?.status === 401) {
+        setError('Authentication failed. Please log in again.');
+      } else {
+        setError(err.response?.data?.error || 'Failed to load available students. Please try again.');
+      }
+      
       setLoading(false);
     }
   };
