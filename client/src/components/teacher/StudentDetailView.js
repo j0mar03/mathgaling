@@ -769,8 +769,129 @@ const StudentDetailView = () => {
                   </p>
                 </div>
               </div>
+              
+              {/* Vertical Bar Chart (existing) */}
               <div className="chart-container">
                 <Bar data={masteryChartData} options={masteryChartOptions} />
+              </div>
+              
+              {/* Horizontal Bar Chart - Mastery by Topic (from Student Progress) */}
+              <div style={{ marginTop: '30px' }}>
+                <h3>Mastery by Topic (Student's View)</h3>
+                <div className="chart-container" style={{ height: '400px', marginBottom: '20px' }}>
+                  {(() => {
+                    // Get color based on mastery level (same as student progress)
+                    const getMasteryColor = (mastery) => {
+                      if (mastery >= 0.8) return 'rgba(46, 204, 113, 0.7)'; // Green for high mastery
+                      if (mastery >= 0.5) return 'rgba(52, 152, 219, 0.7)'; // Blue for medium mastery
+                      return 'rgba(231, 76, 60, 0.7)'; // Red for low mastery
+                    };
+
+                    // Sort knowledge states by mastery level (same as student progress)
+                    const sortedForHorizontal = [...detailedPerformance.knowledgeStates]
+                      .sort((a, b) => (b.p_mastery || 0) - (a.p_mastery || 0))
+                      .slice(0, 12); // Show top 12 for readability
+
+                    // Prepare data for horizontal bar chart
+                    const horizontalChartData = {
+                      labels: sortedForHorizontal.map(state => {
+                        const name = state.name || 
+                                    (state.KnowledgeComponent ? state.KnowledgeComponent.name : null) || 
+                                    'Unknown Topic';
+                        return name.length > 25 ? name.substring(0, 22) + '...' : name;
+                      }),
+                      datasets: [
+                        {
+                          label: 'Mastery Level (%)',
+                          data: sortedForHorizontal.map(state => (state.p_mastery || 0) * 100),
+                          backgroundColor: sortedForHorizontal.map(state => getMasteryColor(state.p_mastery || 0)),
+                          borderColor: sortedForHorizontal.map(state => getMasteryColor(state.p_mastery || 0).replace('0.7', '1')),
+                          borderWidth: 1,
+                        },
+                      ],
+                    };
+
+                    const horizontalChartOptions = {
+                      indexAxis: 'y', // Horizontal bar chart
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      scales: {
+                        x: {
+                          beginAtZero: true,
+                          max: 100,
+                          title: {
+                            display: true,
+                            text: 'Mastery Level (%)',
+                            font: {
+                              size: 14,
+                              weight: 'bold'
+                            }
+                          },
+                          grid: {
+                            display: true,
+                            color: 'rgba(0, 0, 0, 0.1)'
+                          }
+                        },
+                        y: {
+                          title: {
+                            display: true,
+                            text: 'Topics',
+                            font: {
+                              size: 14,
+                              weight: 'bold'
+                            }
+                          },
+                          ticks: {
+                            font: {
+                              size: 12
+                            },
+                            color: '#2c3e50'
+                          }
+                        }
+                      },
+                      plugins: {
+                        legend: {
+                          display: false
+                        },
+                        tooltip: {
+                          callbacks: {
+                            title: function(tooltipItems) {
+                              const index = tooltipItems[0].dataIndex;
+                              const state = sortedForHorizontal[index];
+                              return state.name || 
+                                    (state.KnowledgeComponent ? state.KnowledgeComponent.name : null) || 
+                                    'Unknown Topic';
+                            },
+                            label: function(context) {
+                              return `Mastery: ${context.raw.toFixed(1)}%`;
+                            },
+                            afterLabel: function(context) {
+                              const index = context.dataIndex;
+                              const state = sortedForHorizontal[index];
+                              return state.KnowledgeComponent?.description || '';
+                            }
+                          },
+                          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                          titleFont: {
+                            size: 14,
+                            weight: 'bold'
+                          },
+                          bodyFont: {
+                            size: 13
+                          },
+                          padding: 10,
+                          cornerRadius: 6
+                        }
+                      }
+                    };
+
+                    return <Bar data={horizontalChartData} options={horizontalChartOptions} />;
+                  })()}
+                </div>
+                <p style={{ fontSize: '0.9rem', color: '#6c757d', fontStyle: 'italic' }}>
+                  This horizontal chart shows the same mastery data as students see in their progress view.
+                  Only showing top 12 topics for readability.
+                </p>
               </div>
             </>
           ) : (

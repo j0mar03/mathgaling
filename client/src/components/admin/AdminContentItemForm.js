@@ -138,36 +138,42 @@ function AdminContentItemForm({ itemToEdit, knowledgeComponents, onSuccess, onCl
     }
 
     try {
-      const submitData = new FormData();
-      submitData.append('knowledge_component_id', knowledgeComponentId);
-
       // If editing a single item
       if (itemToEdit) {
         const question = questions[0];
         if (!question.type || !question.content) {
           throw new Error('Type and Content are required for the question.');
         }
-        Object.keys(question).forEach(key => {
-          if (key !== 'imageFile' && key !== 'imagePreview' && question[key] !== undefined && question[key] !== null) {
-            submitData.append(key, question[key]);
-          }
-        });
-        if (question.removeImage) {
-          submitData.append('removeImage', 'true');
-        }
-        if (question.imageFile) {
-          submitData.append('image', question.imageFile);
-        }
         
-        const response = await axios.put(`/api/admin/content-items/${itemToEdit.id}`, submitData, {
+        // For updates, send JSON data instead of FormData (images handled separately)
+        const updateData = {
+          knowledge_component_id: knowledgeComponentId,
+          type: question.type,
+          content: question.content,
+          difficulty: question.difficulty || '',
+          language: question.language || 'English',
+          options: question.options || '',
+          correct_answer: question.correct_answer || '',
+          explanation: question.explanation || '',
+          metadata: {
+            hint: question.hint || '',
+            imageUrl: question.imagePreview && !question.removeImage ? question.imagePreview : null
+          }
+        };
+
+        console.log('Sending update data:', updateData);
+        
+        const response = await axios.put(`/api/admin/content-items/${itemToEdit.id}`, updateData, {
           headers: {
             'Authorization': `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data'
+            'Content-Type': 'application/json'
           }
         });
         onSuccess(response.data);
 
       } else { // Creating new items (potentially multiple)
+        const submitData = new FormData();
+        submitData.append('knowledge_component_id', knowledgeComponentId);
         const questionsPayload = [];
         questions.forEach((q, index) => {
           if (!q.type || !q.content) {
@@ -185,7 +191,7 @@ function AdminContentItemForm({ itemToEdit, knowledgeComponents, onSuccess, onCl
         });
         submitData.append('questions', JSON.stringify(questionsPayload));
 
-        const response = await axios.post('/api/admin/content-items/bulk', submitData, { // Changed endpoint for bulk
+        const response = await axios.post('/api/admin/content-items', submitData, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'multipart/form-data'

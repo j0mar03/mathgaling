@@ -3384,27 +3384,59 @@ exports.handler = async (event, context) => {
   if (path.match(/\/api\/admin\/content-items\/\d+$/) && httpMethod === 'PUT') {
     try {
       const contentId = path.split('/').pop();
-      const updateData = JSON.parse(event.body);
+      
+      let updateData;
+      try {
+        updateData = JSON.parse(event.body);
+      } catch (parseError) {
+        console.error('Failed to parse request body as JSON:', parseError);
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({
+            error: 'Invalid JSON in request body',
+            message: parseError.message
+          })
+        };
+      }
       
       const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
       const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
       
       const supabase = createClient(supabaseUrl, supabaseKey);
       
+      // Prepare the update data, ensuring options is properly formatted
+      const cleanUpdateData = { ...updateData };
+      
+      // Handle options field - ensure it's properly formatted JSON
+      if (cleanUpdateData.options && typeof cleanUpdateData.options === 'string') {
+        try {
+          cleanUpdateData.options = JSON.parse(cleanUpdateData.options);
+        } catch (err) {
+          console.error('Failed to parse options as JSON:', err);
+          // If it fails to parse, treat it as a string array split by newlines or commas
+          cleanUpdateData.options = cleanUpdateData.options.split(/[,\n]/).map(opt => opt.trim()).filter(opt => opt);
+        }
+      }
+      
+      console.log('Updating content item:', contentId, 'with data:', cleanUpdateData);
+      
       const { data, error } = await supabase
         .from('content_items')
-        .update(updateData)
+        .update(cleanUpdateData)
         .eq('id', contentId)
         .select()
         .single();
       
       if (error) {
+        console.error('Supabase update error:', error);
         return {
           statusCode: 500,
           headers,
           body: JSON.stringify({
             error: 'Failed to update content item',
-            message: error.message
+            message: error.message,
+            details: error
           })
         };
       }
@@ -3420,6 +3452,7 @@ exports.handler = async (event, context) => {
       };
       
     } catch (error) {
+      console.error('PUT content-items error:', error);
       return {
         statusCode: 500,
         headers,
@@ -5294,6 +5327,119 @@ exports.handler = async (event, context) => {
       
     } catch (error) {
       console.error('[Netlify] Grade KCs endpoint error:', error);
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
+  // POST /api/students/:id/contact - Send message to student
+  if (path.includes('/students/') && path.includes('/contact') && httpMethod === 'POST') {
+    try {
+      const pathParts = path.split('/');
+      const studentId = pathParts[pathParts.indexOf('students') + 1];
+      
+      const requestData = JSON.parse(event.body);
+      const { message, studentName } = requestData;
+      
+      if (!message || !message.trim()) {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({
+            error: 'Message is required'
+          })
+        };
+      }
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      console.log(`[Netlify] Teacher sending message to student ${studentId}:`, message);
+      
+      // First verify student exists
+      const { data: student, error: studentError } = await supabase
+        .from('students')
+        .select('id, name, email')
+        .eq('id', studentId)
+        .single();
+        
+      if (studentError || !student) {
+        console.error('[Netlify] Student lookup error:', studentError);
+        return {
+          statusCode: 404,
+          headers,
+          body: JSON.stringify({
+            error: 'Student not found',
+            message: studentError?.message || 'Student not found'
+          })
+        };
+      }
+      
+      // Create message record
+      const { data: messageRecord, error: messageError } = await supabase
+        .from('messages')
+        .insert({
+          recipient_id: studentId,
+          recipient_type: 'student',
+          sender_type: 'teacher',
+          subject: `Message from your teacher`,
+          content: message,
+          read: false,
+          created_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+        
+      if (messageError) {
+        console.error('[Netlify] Message creation error:', messageError);
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to send message',
+            message: messageError.message
+          })
+        };
+      }
+      
+      // Create notification for the student
+      const { error: notificationError } = await supabase
+        .from('notifications')
+        .insert({
+          recipient_id: studentId,
+          recipient_type: 'student',
+          type: 'message',
+          title: 'New message from your teacher',
+          content: `You have received a new message from your teacher.`,
+          read: false,
+          created_at: new Date().toISOString()
+        });
+        
+      if (notificationError) {
+        console.warn('[Netlify] Notification creation failed (non-critical):', notificationError);
+      }
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          success: true,
+          message: 'Message sent successfully',
+          messageId: messageRecord.id,
+          sentTo: student.name
+        })
+      };
+      
+    } catch (error) {
+      console.error('[Netlify] Contact student error:', error);
       return {
         statusCode: 500,
         headers,
