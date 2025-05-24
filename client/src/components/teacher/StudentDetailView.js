@@ -48,7 +48,70 @@ const StudentDetailView = () => {
       try {
         // Fetch detailed student performance (with cache busting for Supabase)
         const performanceResponse = await axios.get(`/api/students/${id}/detailed-performance?_t=${Date.now()}`);
-        setDetailedPerformance(performanceResponse.data);
+        // Process the performance data to match component expectations
+        const performance = performanceResponse.data.performance;
+        
+        // Create performanceByKC from knowledgeStates
+        const performanceByKC = {};
+        if (performance.knowledgeStates) {
+          performance.knowledgeStates.forEach(state => {
+            const kc = state.knowledge_components || {};
+            performanceByKC[state.knowledge_component_id] = {
+              name: kc.name || 'Unknown',
+              curriculum_code: kc.curriculum_code || `KC-${state.knowledge_component_id}`,
+              mastery: state.p_mastery || 0,
+              correctRate: 0, // Will be calculated from responses
+              totalResponses: 0, // Will be calculated from responses
+              correctResponses: 0,
+              averageTime: 0
+            };
+          });
+        }
+        
+        // Calculate response stats per KC
+        if (performance.recentActivity) {
+          performance.recentActivity.forEach(response => {
+            const kcId = response.content_items?.knowledge_component_id;
+            if (kcId && performanceByKC[kcId]) {
+              performanceByKC[kcId].totalResponses++;
+              if (response.correct) {
+                performanceByKC[kcId].correctResponses++;
+              }
+              performanceByKC[kcId].averageTime += response.time_spent || 0;
+            }
+          });
+          
+          // Calculate averages
+          Object.keys(performanceByKC).forEach(kcId => {
+            const kc = performanceByKC[kcId];
+            if (kc.totalResponses > 0) {
+              kc.correctRate = kc.correctResponses / kc.totalResponses;
+              kc.averageTime = kc.averageTime / kc.totalResponses;
+            }
+          });
+        }
+        
+        // Add missing properties
+        const detailedPerformance = {
+          ...performance,
+          performanceByKC,
+          knowledgeStates: performance.knowledgeStates || [],
+          recentResponses: performance.recentActivity || [],
+          engagementMetrics: [],
+          overallMetrics: {
+            averageMastery: performance.knowledgeStates && performance.knowledgeStates.length > 0
+              ? performance.knowledgeStates.reduce((sum, state) => sum + (state.p_mastery || 0), 0) / performance.knowledgeStates.length
+              : 0,
+            correctRate: performance.totalQuizzesTaken > 0 
+              ? performance.correctAnswers / performance.totalQuizzesTaken 
+              : 0,
+            totalResponses: performance.totalQuizzesTaken || 0,
+            correctResponses: performance.correctAnswers || 0,
+            engagement: 0.5 // Default engagement
+          }
+        };
+        
+        setDetailedPerformance(detailedPerformance);
         setStudent(performanceResponse.data.student);
         
         setLoading(false);

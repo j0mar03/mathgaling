@@ -4150,7 +4150,7 @@ exports.handler = async (event, context) => {
       
       // Calculate performance metrics
       const totalResponses = recentResponses?.length || 0;
-      const correctResponses = (recentResponses || []).filter(r => r.is_correct).length;
+      const correctResponses = (recentResponses || []).filter(r => r.correct).length;
       const averageAccuracy = totalResponses > 0 ? (correctResponses / totalResponses) * 100 : 0;
       
       return {
