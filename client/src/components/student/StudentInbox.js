@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
+import { useAuth } from '../../context/AuthContext';
 import './StudentDashboard.css';
 
 const StudentInbox = () => {
@@ -9,24 +10,40 @@ const StudentInbox = () => {
   const [error, setError] = useState(null);
   const [selectedMessage, setSelectedMessage] = useState(null);
   const [messageViewOpen, setMessageViewOpen] = useState(false);
+  const { token } = useAuth();
 
   useEffect(() => {
     const fetchMessages = async () => {
       try {
         setLoading(true);
-        const response = await axios.get('/api/messages/inbox');
-        setMessages(response.data);
+        
+        if (!token) {
+          setError('Authentication required. Please log in again.');
+          setLoading(false);
+          return;
+        }
+        
+        const response = await axios.get('/api/messages/inbox', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        // Ensure response.data is an array
+        const messageData = Array.isArray(response.data) ? response.data : 
+                           response.data?.messages ? response.data.messages : [];
+        
+        setMessages(messageData);
         setError(null);
       } catch (err) {
         console.error('Error fetching messages:', err);
         setError('Failed to load messages. Please try again later.');
+        setMessages([]); // Ensure messages is always an array
       } finally {
         setLoading(false);
       }
     };
 
     fetchMessages();
-  }, []);
+  }, [token]);
 
   const handleMessageClick = (message) => {
     setSelectedMessage(message);
@@ -40,12 +57,16 @@ const StudentInbox = () => {
 
   const markMessageAsRead = async (messageId) => {
     try {
-      await axios.put(`/api/messages/${messageId}/read`);
+      await axios.put(`/api/messages/${messageId}/read`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       
       // Update the local state to mark the message as read
-      setMessages(prevMessages => prevMessages.map(msg => 
-        msg.id === messageId ? { ...msg, read: true } : msg
-      ));
+      setMessages(prevMessages => Array.isArray(prevMessages) ? 
+        prevMessages.map(msg => 
+          msg.id === messageId ? { ...msg, read: true } : msg
+        ) : []
+      );
     } catch (err) {
       console.error('Error marking message as read:', err);
       // Continue showing the message even if marking as read fails

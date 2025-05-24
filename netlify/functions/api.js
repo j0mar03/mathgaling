@@ -2526,20 +2526,135 @@ exports.handler = async (event, context) => {
     }
   }
   
-  // GET /api/messages/inbox - Get messages
+  // GET /api/messages/inbox - Get messages for authenticated user
   if (path.includes('/messages/inbox') && httpMethod === 'GET') {
     try {
-      // Mock messages data
+      // Get user info from Authorization header
+      const authHeader = event.headers.authorization || event.headers.Authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return {
+          statusCode: 401,
+          headers,
+          body: JSON.stringify({ error: 'Authorization required' })
+        };
+      }
+
+      // For now, we'll get the student ID from the token or assume a student
+      // TODO: Properly decode JWT token to get user info
+      const studentId = 20; // This should come from the decoded JWT token
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      console.log(`[Netlify] Fetching messages for student ${studentId}`);
+      
+      // Fetch messages for the student
+      const { data: messages, error: messagesError } = await supabase
+        .from('messages')
+        .select(`
+          id,
+          from_user_id,
+          from_user_type,
+          to_user_id,
+          to_user_type,
+          message,
+          read,
+          sent_at,
+          createdAt
+        `)
+        .eq('to_user_id', studentId)
+        .eq('to_user_type', 'student')
+        .order('sent_at', { ascending: false });
+        
+      if (messagesError) {
+        console.error('[Netlify] Error fetching messages:', messagesError);
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to fetch messages',
+            message: messagesError.message
+          })
+        };
+      }
+      
+      // Add from_name to messages (for display purposes)
+      const enrichedMessages = (messages || []).map(msg => ({
+        ...msg,
+        from_name: msg.from_user_type === 'teacher' ? 'Your Teacher' : 
+                   msg.from_user_type === 'admin' ? 'Administrator' : 'System'
+      }));
+      
+      console.log(`[Netlify] Found ${enrichedMessages.length} messages for student ${studentId}`);
+      
+      // Return array directly (not wrapped in object)
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify(enrichedMessages)
+      };
+      
+    } catch (error) {
+      console.error('[Netlify] Messages inbox error:', error);
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
+  // PUT /api/messages/:id/read - Mark message as read
+  if (path.includes('/messages/') && path.includes('/read') && httpMethod === 'PUT') {
+    try {
+      const messageId = path.split('/')[3]; // Extract message ID from path
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      console.log(`[Netlify] Marking message ${messageId} as read`);
+      
+      const { data, error } = await supabase
+        .from('messages')
+        .update({ 
+          read: true,
+          updatedAt: new Date().toISOString()
+        })
+        .eq('id', messageId)
+        .select()
+        .single();
+        
+      if (error) {
+        console.error('[Netlify] Error marking message as read:', error);
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to mark message as read',
+            message: error.message
+          })
+        };
+      }
+      
       return {
         statusCode: 200,
         headers,
         body: JSON.stringify({
-          messages: [],
-          unreadCount: 0
+          success: true,
+          message: 'Message marked as read',
+          data: data
         })
       };
       
     } catch (error) {
+      console.error('[Netlify] Mark message as read error:', error);
       return {
         statusCode: 500,
         headers,
@@ -5701,33 +5816,129 @@ exports.handler = async (event, context) => {
       const pathParts = path.split('/');
       const kcId = pathParts[pathParts.indexOf('knowledge-components') + 1];
       
-      // Mock classroom performance data for the KC
-      const mockPerformance = [
-        {
-          classroomId: 1,
-          classroomName: "Math Class A",
-          studentsCount: 15,
-          averageScore: 78,
-          strugglingStudents: 3,
-          masteryLevel: 'Developing'
-        },
-        {
-          classroomId: 2,
-          classroomName: "Math Class B", 
-          studentsCount: 12,
-          averageScore: 85,
-          strugglingStudents: 1,
-          masteryLevel: 'Proficient'
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      console.log(`[Netlify] Fetching classroom performance for KC ${kcId}`);
+      
+      // Get all students who have knowledge states for this KC
+      const { data: knowledgeStates, error: ksError } = await supabase
+        .from('knowledge_states')
+        .select(`
+          *,
+          students!inner (
+            id,
+            name,
+            grade_level
+          )
+        `)
+        .eq('knowledge_component_id', kcId);
+        
+      if (ksError) {
+        console.error('[Netlify] Error fetching knowledge states:', ksError);
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to fetch knowledge states',
+            message: ksError.message
+          })
+        };
+      }
+      
+      // Get responses for this KC to calculate correct rates
+      const { data: responses, error: respError } = await supabase
+        .from('responses')
+        .select(`
+          *,
+          content_items!inner (
+            knowledge_component_id
+          )
+        `)
+        .eq('content_items.knowledge_component_id', kcId);
+        
+      if (respError) {
+        console.error('[Netlify] Error fetching responses:', respError);
+      }
+      
+      // Calculate performance metrics
+      const studentPerformanceMap = {};
+      
+      // Initialize with knowledge states
+      (knowledgeStates || []).forEach(state => {
+        if (!studentPerformanceMap[state.student_id]) {
+          studentPerformanceMap[state.student_id] = {
+            student_id: state.student_id,
+            student_name: state.students?.name || 'Unknown Student',
+            mastery: state.p_mastery || 0,
+            totalResponses: 0,
+            correctResponses: 0,
+            correctRate: 0,
+            averageTime: 0,
+            totalTime: 0
+          };
         }
-      ];
+      });
+      
+      // Calculate response metrics
+      (responses || []).forEach(response => {
+        if (studentPerformanceMap[response.student_id]) {
+          studentPerformanceMap[response.student_id].totalResponses++;
+          if (response.is_correct) {
+            studentPerformanceMap[response.student_id].correctResponses++;
+          }
+          studentPerformanceMap[response.student_id].totalTime += (response.time_spent || 0);
+        }
+      });
+      
+      // Calculate final metrics
+      const studentPerformance = Object.values(studentPerformanceMap).map(student => {
+        if (student.totalResponses > 0) {
+          student.correctRate = student.correctResponses / student.totalResponses;
+          student.averageTime = student.totalTime / student.totalResponses;
+        }
+        return student;
+      });
+      
+      // Calculate mastery distribution
+      const masteryDistribution = {
+        veryLow: 0,   // 0-0.2
+        low: 0,       // 0.2-0.4
+        medium: 0,    // 0.4-0.6
+        high: 0,      // 0.6-0.8
+        veryHigh: 0   // 0.8-1.0
+      };
+      
+      let totalMastery = 0;
+      studentPerformance.forEach(student => {
+        totalMastery += student.mastery;
+        
+        if (student.mastery < 0.2) masteryDistribution.veryLow++;
+        else if (student.mastery < 0.4) masteryDistribution.low++;
+        else if (student.mastery < 0.6) masteryDistribution.medium++;
+        else if (student.mastery < 0.8) masteryDistribution.high++;
+        else masteryDistribution.veryHigh++;
+      });
+      
+      const averageMastery = studentPerformance.length > 0 ? totalMastery / studentPerformance.length : 0;
+      
+      console.log(`[Netlify] Found ${studentPerformance.length} students for KC ${kcId}`);
       
       return {
         statusCode: 200,
         headers,
-        body: JSON.stringify(mockPerformance)
+        body: JSON.stringify({
+          averageMastery,
+          totalStudents: studentPerformance.length,
+          masteryDistribution,
+          studentPerformance
+        })
       };
       
     } catch (error) {
+      console.error('[Netlify] KC classroom performance error:', error);
       return {
         statusCode: 500,
         headers,
