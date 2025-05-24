@@ -5396,7 +5396,9 @@ exports.handler = async (event, context) => {
           to_user_type: 'student',
           message: message,
           read: false,
-          sent_at: new Date().toISOString()
+          sent_at: new Date().toISOString(),
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
         })
         .select()
         .single();
