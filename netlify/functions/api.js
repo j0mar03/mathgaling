@@ -3822,6 +3822,78 @@ exports.handler = async (event, context) => {
     }
   }
   
+  // POST /api/classrooms/:id/students - Add students to classroom
+  if (path.includes('/classrooms/') && path.includes('/students') && httpMethod === 'POST') {
+    try {
+      const pathParts = path.split('/');
+      const classroomId = pathParts[pathParts.indexOf('classrooms') + 1];
+      const { studentIds } = JSON.parse(event.body || '{}');
+      
+      console.log('[Netlify] Adding students to classroom:', { classroomId, studentIds });
+      
+      if (!studentIds || !Array.isArray(studentIds) || studentIds.length === 0) {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({
+            error: 'Invalid request',
+            message: 'studentIds array is required'
+          })
+        };
+      }
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // Create enrollment records
+      const enrollments = studentIds.map(studentId => ({
+        classroom_id: parseInt(classroomId),
+        student_id: parseInt(studentId),
+        joined_at: new Date().toISOString()
+      }));
+      
+      const { data, error } = await supabase
+        .from('classroom_students')
+        .insert(enrollments);
+        
+      if (error) {
+        console.error('[Netlify] Failed to add students to classroom:', error);
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to add students',
+            message: error.message
+          })
+        };
+      }
+      
+      console.log('[Netlify] Successfully added students to classroom');
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          success: true,
+          message: `Successfully added ${studentIds.length} students to classroom`
+        })
+      };
+      
+    } catch (error) {
+      console.error('[Netlify] Error adding students to classroom:', error);
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
   // GET /api/classrooms/:id/knowledge-components - Get KCs for classroom grade level
   if (path.includes('/classrooms/') && path.includes('/knowledge-components') && httpMethod === 'GET') {
     try {
