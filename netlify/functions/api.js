@@ -6035,6 +6035,339 @@ exports.handler = async (event, context) => {
     }
   }
   
+  // POST /api/admin/parent-student-links - Link a parent to a student
+  if (path === '/api/admin/parent-student-links' && httpMethod === 'POST') {
+    try {
+      const { parent_id, student_id } = JSON.parse(body);
+      
+      if (!parent_id || !student_id) {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({
+            error: 'Missing required fields',
+            message: 'Both parent_id and student_id are required'
+          })
+        };
+      }
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // Check if link already exists
+      const { data: existingLink } = await supabase
+        .from('parent_students')
+        .select('*')
+        .eq('parent_id', parent_id)
+        .eq('student_id', student_id)
+        .single();
+      
+      if (existingLink) {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({
+            error: 'Link already exists',
+            message: 'This parent is already linked to this student'
+          })
+        };
+      }
+      
+      // Create the link
+      const { data, error } = await supabase
+        .from('parent_students')
+        .insert({
+          parent_id: parseInt(parent_id),
+          student_id: parseInt(student_id)
+        });
+      
+      if (error) {
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to create link',
+            message: error.message
+          })
+        };
+      }
+      
+      return {
+        statusCode: 201,
+        headers,
+        body: JSON.stringify({
+          success: true,
+          message: 'Parent-student link created successfully'
+        })
+      };
+      
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
+  // DELETE /api/admin/parent-student-links/:parentId/:studentId - Unlink a parent from a student
+  if (path.match(/\/admin\/parent-student-links\/\d+\/\d+$/) && httpMethod === 'DELETE') {
+    try {
+      const pathParts = path.split('/');
+      const parentId = pathParts[pathParts.length - 2];
+      const studentId = pathParts[pathParts.length - 1];
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      const { error } = await supabase
+        .from('parent_students')
+        .delete()
+        .eq('parent_id', parentId)
+        .eq('student_id', studentId);
+      
+      if (error) {
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to remove link',
+            message: error.message
+          })
+        };
+      }
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          success: true,
+          message: 'Parent-student link removed successfully'
+        })
+      };
+      
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
+  // GET /api/students/:id/parents - Get parents linked to a student
+  if (path.match(/\/students\/\d+\/parents$/) && httpMethod === 'GET') {
+    try {
+      const pathParts = path.split('/');
+      const studentId = pathParts[pathParts.indexOf('students') + 1];
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // Get parent-student relationships with parent details
+      const { data, error } = await supabase
+        .from('parent_students')
+        .select(`
+          parent_id,
+          parents (*)
+        `)
+        .eq('student_id', studentId);
+      
+      if (error) {
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to fetch parents',
+            message: error.message
+          })
+        };
+      }
+      
+      // Extract parent objects
+      const parents = (data || []).map(rel => rel.parents);
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify(parents)
+      };
+      
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
+  // POST /api/teacher/parent-student-links - Teacher links a parent to a student
+  if (path === '/api/teacher/parent-student-links' && httpMethod === 'POST') {
+    try {
+      const { parent_id, student_id, classroom_id } = JSON.parse(body);
+      
+      if (!parent_id || !student_id) {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({
+            error: 'Missing required fields',
+            message: 'Both parent_id and student_id are required'
+          })
+        };
+      }
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // Verify teacher has access to this student (through classroom)
+      if (classroom_id) {
+        const { data: classroomStudent } = await supabase
+          .from('classroom_students')
+          .select('*')
+          .eq('classroom_id', classroom_id)
+          .eq('student_id', student_id)
+          .single();
+        
+        if (!classroomStudent) {
+          return {
+            statusCode: 403,
+            headers,
+            body: JSON.stringify({
+              error: 'Access denied',
+              message: 'This student is not in your classroom'
+            })
+          };
+        }
+      }
+      
+      // Check if link already exists
+      const { data: existingLink } = await supabase
+        .from('parent_students')
+        .select('*')
+        .eq('parent_id', parent_id)
+        .eq('student_id', student_id)
+        .single();
+      
+      if (existingLink) {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({
+            error: 'Link already exists',
+            message: 'This parent is already linked to this student'
+          })
+        };
+      }
+      
+      // Create the link
+      const { data, error } = await supabase
+        .from('parent_students')
+        .insert({
+          parent_id: parseInt(parent_id),
+          student_id: parseInt(student_id)
+        });
+      
+      if (error) {
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to create link',
+            message: error.message
+          })
+        };
+      }
+      
+      return {
+        statusCode: 201,
+        headers,
+        body: JSON.stringify({
+          success: true,
+          message: 'Parent-student link created successfully'
+        })
+      };
+      
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
+  // DELETE /api/teacher/parent-student-links/:parentId/:studentId - Teacher unlinks a parent from a student
+  if (path.match(/\/teacher\/parent-student-links\/\d+\/\d+$/) && httpMethod === 'DELETE') {
+    try {
+      const pathParts = path.split('/');
+      const parentId = pathParts[pathParts.length - 2];
+      const studentId = pathParts[pathParts.length - 1];
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      const { error } = await supabase
+        .from('parent_students')
+        .delete()
+        .eq('parent_id', parentId)
+        .eq('student_id', studentId);
+      
+      if (error) {
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to remove link',
+            message: error.message
+          })
+        };
+      }
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          success: true,
+          message: 'Parent-student link removed successfully'
+        })
+      };
+      
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
   // Default response
   return {
     statusCode: 404,

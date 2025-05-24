@@ -6,6 +6,7 @@ import { Bar } from 'react-chartjs-2';
 import { useAuth } from '../../context/AuthContext'; // Import useAuth
 import './TeacherDashboard.css';
 import './ClassroomView.css';
+import LinkParentToStudentModal from './LinkParentToStudentModal'; // Import Link Parent Modal
 
 // Register ChartJS components
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
@@ -22,6 +23,8 @@ const ClassroomView = () => {
   const [showAddStudentInput, setShowAddStudentInput] = useState(false); // State for add student input
   const [eligibleStudents, setEligibleStudents] = useState([]); // State for eligible students
   const [selectedStudents, setSelectedStudents] = useState([]); // State for selected students
+  const [linkingStudent, setLinkingStudent] = useState(null); // State for student being linked to parent
+  const [showLinkParentModal, setShowLinkParentModal] = useState(false); // State for link parent modal
   const { user } = useAuth();
   const teacherId = user?.id; // Use logged-in teacher's ID
   
@@ -218,6 +221,16 @@ const ClassroomView = () => {
       }
     }
   };
+  
+  const handleLinkParent = (student) => {
+    setLinkingStudent(student);
+    setShowLinkParentModal(true);
+  };
+  
+  const handleCloseLinkParentModal = () => {
+    setLinkingStudent(null);
+    setShowLinkParentModal(false);
+  };
 
   // Toggle visibility of the add student modal and fetch eligible students
   const handleAddStudentClick = async () => {
@@ -305,6 +318,18 @@ const ClassroomView = () => {
 
   return (
     <div className="classroom-view">
+      {/* Parent-Student Linking Modal */}
+      {showLinkParentModal && linkingStudent && (
+        <LinkParentToStudentModal
+          student={linkingStudent}
+          classroomId={id}
+          onClose={handleCloseLinkParentModal}
+          onLinked={() => {
+            // Optionally refresh data if needed
+            handleCloseLinkParentModal();
+          }}
+        />
+      )}
       <div className="classroom-header">
         <div className="header-content">
           <h1>{classroom?.name || 'Classroom'}</h1>
@@ -496,6 +521,16 @@ const ClassroomView = () => {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                           </svg>
                         </Link>
+                        <button
+                          className="icon-button parent"
+                          onClick={() => handleLinkParent(student.student)}
+                          disabled={isProcessing}
+                          title="Link Parent"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                          </svg>
+                        </button>
                         <button
                           className="icon-button remove"
                           onClick={() => handleRemoveStudent(student.student.id, student.student.name)}

@@ -10,6 +10,7 @@ import KnowledgeComponentList from './KnowledgeComponentList'; // Import KC List
 import KnowledgeComponentForm from './KnowledgeComponentForm'; // Import KC Form
 import AdminPDFUploader from './AdminPDFUploader'; // Import PDF Uploader component
 import AdminContentItemList from './AdminContentItemList'; // Import Content Item List component
+import LinkParentStudentModal from './LinkParentStudentModal'; // Import Link Parent-Student Modal
 
 const AdminDashboard = () => {
     const [users, setUsers] = useState([]);
@@ -135,6 +136,17 @@ const AdminDashboard = () => {
             }
         }
     };
+    
+    const handleLinkChildren = (parent) => {
+        setLinkingParent(parent);
+        setShowLinkModal(true);
+        setError('');
+    };
+    
+    const handleCloseLinkModal = () => {
+        setLinkingParent(null);
+        setShowLinkModal(false);
+    };
 
 
     // --- KC Management Handlers ---
@@ -230,6 +242,15 @@ const AdminDashboard = () => {
                 </Link>
             </div>
 
+            {/* Parent-Student Linking Modal */}
+            {showLinkModal && linkingParent && (
+                <LinkParentStudentModal
+                    parent={linkingParent}
+                    onClose={handleCloseLinkModal}
+                    onLinked={fetchUsers}
+                />
+            )}
+            
             {/* --- User Management Section --- */}
             {activeTab === 'users' && (
             <section className="admin-section">
@@ -295,6 +316,9 @@ const AdminDashboard = () => {
                                         </td>
                                         <td>
                                             <button onClick={() => handleEditUser(u)} className="admin-button">Edit</button>
+                                            {u.role === 'parent' && (
+                                                <button onClick={() => handleLinkChildren(u)} className="admin-button">Link Children</button>
+                                            )}
                                             <button onClick={() => handleDeleteUser(u.id, u.role)} className="admin-button danger">Delete</button>
                                         </td>
                                     </tr>

@@ -1,0 +1,160 @@
+/* Link Parent to Student Modal Styles (Teacher View) */
+
+.link-parent-modal {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+    max-width: 650px;
+    width: 100%;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.student-info-section {
+    background: #f0f7ff;
+    padding: 15px 25px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+    border: 1px solid #d0e2ff;
+}
+
+.student-info-section p {
+    margin: 5px 0;
+    color: #2d3748;
+}
+
+.no-parents {
+    color: #6c757d;
+    font-style: italic;
+    padding: 20px;
+    text-align: center;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.linked-parent {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    background: #e8f4f8;
+    border: 1px solid #b8daff;
+    border-radius: 8px;
+    margin-bottom: 8px;
+}
+
+.parent-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.parent-name {
+    font-weight: 600;
+    color: #2d3748;
+    font-size: 0.95rem;
+}
+
+.parent-email {
+    font-size: 0.85rem;
+    color: #6c757d;
+}
+
+.parents-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 250px;
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+.parent-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 15px;
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.parent-item:hover {
+    background: #e9ecef;
+}
+
+.parent-item.linked {
+    background: #e8f4f8;
+    border-color: #b8daff;
+}
+
+.no-results {
+    text-align: center;
+    color: #6c757d;
+    padding: 20px;
+    font-style: italic;
+}
+
+.info-section {
+    margin-top: 20px;
+    padding: 15px;
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 8px;
+}
+
+.info-text {
+    margin: 0;
+    color: #856404;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+/* Reuse most styles from admin modal */
+.modal-overlay,
+.modal-header,
+.close-button,
+.error-message,
+.modal-content,
+.linked-section h3,
+.available-section h3,
+.linked-list,
+.unlink-button,
+.search-input,
+.link-button,
+.modal-footer,
+.done-button {
+    /* These will inherit from LinkParentStudentModal.css if both are loaded */
+}
+
+/* Specific overrides for teacher view */
+.link-parent-modal .modal-header {
+    background: #e8f4f8;
+    border-bottom-color: #b8daff;
+}
+
+.link-parent-modal .done-button {
+    background: #17a2b8;
+}
+
+.link-parent-modal .done-button:hover {
+    background: #138496;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .link-parent-modal {
+        max-height: 90vh;
+    }
+    
+    .student-info-section {
+        padding: 12px 20px;
+    }
+    
+    .parents-list {
+        max-height: 200px;
+    }
+}
