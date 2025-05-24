@@ -489,42 +489,48 @@ const ClassroomView = () => {
                   <div className="col-name">{kc.name}</div>
                   <div className="col-mastery">
                     <div className="mastery-percentage">
-                      {(kc.averageMastery * 100).toFixed(0)}%
+                      {((kc.averageMastery || 0) * 100).toFixed(0)}%
                     </div>
                     <div className="mastery-bar">
                       <div 
                         className="mastery-fill" 
-                        style={{ width: `${kc.averageMastery * 100}%` }}
+                        style={{ width: `${(kc.averageMastery || 0) * 100}%` }}
                       ></div>
                     </div>
                   </div>
                   <div className="col-distribution">
                     <div className="mastery-distribution">
-                      <div 
-                        className="dist-segment very-low" 
-                        style={{ width: `${kc.masteryLevels.veryLow / kc.totalStudents * 100}%` }}
-                        title={`Very Low: ${kc.masteryLevels.veryLow} students`}
-                      ></div>
-                      <div 
-                        className="dist-segment low" 
-                        style={{ width: `${kc.masteryLevels.low / kc.totalStudents * 100}%` }}
-                        title={`Low: ${kc.masteryLevels.low} students`}
-                      ></div>
-                      <div 
-                        className="dist-segment medium" 
-                        style={{ width: `${kc.masteryLevels.medium / kc.totalStudents * 100}%` }}
-                        title={`Medium: ${kc.masteryLevels.medium} students`}
-                      ></div>
-                      <div 
-                        className="dist-segment high" 
-                        style={{ width: `${kc.masteryLevels.high / kc.totalStudents * 100}%` }}
-                        title={`High: ${kc.masteryLevels.high} students`}
-                      ></div>
-                      <div 
-                        className="dist-segment very-high" 
-                        style={{ width: `${kc.masteryLevels.veryHigh / kc.totalStudents * 100}%` }}
-                        title={`Very High: ${kc.masteryLevels.veryHigh} students`}
-                      ></div>
+                      {kc.masteryLevels && kc.totalStudents > 0 ? (
+                        <>
+                          <div 
+                            className="dist-segment very-low" 
+                            style={{ width: `${(kc.masteryLevels.veryLow || 0) / kc.totalStudents * 100}%` }}
+                            title={`Very Low: ${kc.masteryLevels.veryLow || 0} students`}
+                          ></div>
+                          <div 
+                            className="dist-segment low" 
+                            style={{ width: `${(kc.masteryLevels.low || 0) / kc.totalStudents * 100}%` }}
+                            title={`Low: ${kc.masteryLevels.low || 0} students`}
+                          ></div>
+                          <div 
+                            className="dist-segment medium" 
+                            style={{ width: `${(kc.masteryLevels.medium || 0) / kc.totalStudents * 100}%` }}
+                            title={`Medium: ${kc.masteryLevels.medium || 0} students`}
+                          ></div>
+                          <div 
+                            className="dist-segment high" 
+                            style={{ width: `${(kc.masteryLevels.high || 0) / kc.totalStudents * 100}%` }}
+                            title={`High: ${kc.masteryLevels.high || 0} students`}
+                          ></div>
+                          <div 
+                            className="dist-segment very-high" 
+                            style={{ width: `${(kc.masteryLevels.veryHigh || 0) / kc.totalStudents * 100}%` }}
+                            title={`Very High: ${kc.masteryLevels.veryHigh || 0} students`}
+                          ></div>
+                        </>
+                      ) : (
+                        <div className="no-data">No student data</div>
+                      )}
                     </div>
                   </div>
                   <div className="col-actions">
