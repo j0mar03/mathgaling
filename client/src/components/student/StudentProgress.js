@@ -582,7 +582,7 @@ const StudentProgress = () => {
         {/* Toggle button for Topic Cards */}
         <div className="chart-toggle" style={{ marginBottom: '20px' }}>
           <button 
-            onClick={() => {
+            onClick={(event) => {
               const cardsGrid = document.querySelector('.topic-cards-grid');
               const isHidden = cardsGrid.style.display === 'none';
               cardsGrid.style.display = isHidden ? 'grid' : 'none';
