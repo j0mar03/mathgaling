@@ -62,6 +62,8 @@ const StudentDashboard = () => {
   const [totalTopics, setTotalTopics] = useState(0);
   const [recommendedTopics, setRecommendedTopics] = useState([]);
   const [unreadMessages, setUnreadMessages] = useState(0);
+  const [viewMode, setViewMode] = useState('desktop'); // New state for view toggle
+  const [isCompactView, setIsCompactView] = useState(false); // New state for compact mode
   const { user, token } = useAuth(); // Get user AND token from context
   const navigate = useNavigate();
 
@@ -557,8 +559,35 @@ const StudentDashboard = () => {
   };
 
   return (
-    <div className="student-dashboard-container">
+    <div className={`student-dashboard-container ${isCompactView ? 'compact' : ''} ${viewMode}`}>
       <div className="student-dashboard">
+        {/* View Toggle Controls */}
+        <div className="view-controls">
+          <div className="view-toggle">
+            <button 
+              className={`toggle-btn ${viewMode === 'mobile' ? 'active' : ''}`}
+              onClick={() => setViewMode('mobile')}
+              title="Mobile View"
+            >
+              📱
+            </button>
+            <button 
+              className={`toggle-btn ${viewMode === 'desktop' ? 'active' : ''}`}
+              onClick={() => setViewMode('desktop')}
+              title="Desktop View"
+            >
+              🖥️
+            </button>
+          </div>
+          <button 
+            className={`compact-toggle ${isCompactView ? 'active' : ''}`}
+            onClick={() => setIsCompactView(!isCompactView)}
+            title="Toggle Compact View"
+          >
+            {isCompactView ? '📋' : '📄'}
+          </button>
+        </div>
+
         {/* Welcome Header */}
         <header className="dashboard-header">
           {/* Messages Icon */}
@@ -585,68 +614,78 @@ const StudentDashboard = () => {
           <h1>
             👋 Kamusta, {student?.name || 'Kaibigan'}!
           </h1>
-          <p className="subtitle">
-            Grade {student?.grade_level || '3'} Math Adventure
-          </p>
-          <p className="encouragement-text">
-            Ready for today's math adventure? Let's learn something amazing!
-          </p>
+          {!isCompactView && (
+            <>
+              <p className="subtitle">
+                Grade {student?.grade_level || '3'} Math Adventure
+              </p>
+              <p className="encouragement-text">
+                Ready for today's math adventure? Let's learn something amazing!
+              </p>
+            </>
+          )}
         
           <button className="progress-button" onClick={() => navigate('/student/progress')}>
-            View My Progress
+            {isCompactView ? 'Progress' : 'View My Progress'}
           </button>
         </header>
         
         {/* Progress Stats Section */}
-        <div className="progress-stats">
-          <div className="streak-container">
-            <span className="streak-icon">🔥</span>
-            <span className="streak-count">{learningStreak} Days</span>
-          </div>
-          
-          <div className="daily-progress">
-            <div className="progress-bar">
-              <div 
-                className="progress-fill" 
-                style={{ width: `${Math.min((exercisesCompleted / dailyGoal) * 100, 100)}%` }}
-              ></div>
+        {!isCompactView && (
+          <div className="progress-stats">
+            <div className="streak-container">
+              <span className="streak-icon">🔥</span>
+              <span className="streak-count">{learningStreak} Days</span>
             </div>
-            <p className="progress-text">
-              Today's Progress: {exercisesCompleted}/{dailyGoal} topics completed
-            </p>
+            
+            <div className="daily-progress">
+              <div className="progress-bar">
+                <div 
+                  className="progress-fill" 
+                  style={{ width: `${Math.min((exercisesCompleted / dailyGoal) * 100, 100)}%` }}
+                ></div>
+              </div>
+              <p className="progress-text">
+                Today's Progress: {exercisesCompleted}/{dailyGoal} topics completed
+              </p>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Main Learning Section */}
         {currentLearningStep && currentLearningStep.isPrimary && (
           <section className="learning-path-focus">
             <div className="focus-header">
-              <h2>🌟 Your Next Adventure</h2>
-              <p>Ready to learn something amazing?</p>
+              <h2>{isCompactView ? '🎯 Start' : '🌟 Your Next Adventure'}</h2>
+              {!isCompactView && <p>Ready to learn something amazing?</p>}
             </div>
             <div className="focus-card">
               <div className="focus-emoji">{currentLearningStep?.emoji || '🎯'}</div>
               <div className="focus-content">
                 <h3>{currentLearningStep?.name || "Let's Learn!"}</h3>
-                <p className="focus-description">
-                  {currentLearningStep?.description || "Ready for your next math adventure?"}
-                </p>
+                {!isCompactView && (
+                  <p className="focus-description">
+                    {currentLearningStep?.description || "Ready for your next math adventure?"}
+                  </p>
+                )}
                 
-                <div className="focus-details">
-                  <div className="detail-item">
-                    <div className="detail-label">Level</div>
-                    <div className="detail-value">
-                      {currentLearningStep.difficulty === 'easy' ? 'Easy 😊' :
-                       currentLearningStep.difficulty === 'medium' ? 'Medium 💪' : 
-                       'Hard 🌟'}
+                {!isCompactView && (
+                  <div className="focus-details">
+                    <div className="detail-item">
+                      <div className="detail-label">Level</div>
+                      <div className="detail-value">
+                        {currentLearningStep.difficulty === 'easy' ? 'Easy 😊' :
+                         currentLearningStep.difficulty === 'medium' ? 'Medium 💪' : 
+                         'Hard 🌟'}
+                      </div>
+                    </div>
+                    
+                    <div className="detail-item">
+                      <div className="detail-label">Mastery</div>
+                      <div className="detail-value">{currentLearningStep.mastery}%</div>
                     </div>
                   </div>
-                  
-                  <div className="detail-item">
-                    <div className="detail-label">Mastery</div>
-                    <div className="detail-value">{currentLearningStep.mastery}%</div>
-                  </div>
-                </div>
+                )}
                 
                 <div className="action-buttons">
                   <button
@@ -677,7 +716,7 @@ const StudentDashboard = () => {
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                     </svg>
-                    {currentLearningStep?.buttonText || 'Continue'}
+                    {isCompactView ? 'Start' : (currentLearningStep?.buttonText || 'Continue')}
                   </button>
                 </div>
               </div>
@@ -687,36 +726,54 @@ const StudentDashboard = () => {
 
         {/* Quick Stats */}
         <div className="quick-stats">
-          <div className="stat-card">
-            <div className="stat-icon">🎯</div>
-            <div className="stat-value">{exercisesCompleted}</div>
-            <div className="stat-label">Completed</div>
-          </div>
-          
-          <div className="stat-card">
-            <div className="stat-icon">🔥</div>
-            <div className="stat-value">{learningStreak}</div>
-            <div className="stat-label">Day Streak</div>
-          </div>
-          
-          <div className="stat-card">
-            <div className="stat-icon">⭐</div>
-            <div className="stat-value">{Math.round((exercisesCompleted / Math.max(totalTopics, 1)) * 100)}%</div>
-            <div className="stat-label">Progress</div>
-          </div>
-          
-          <div className="stat-card">
-            <div className="stat-icon">🎮</div>
-            <div className="stat-value">{dailyGoal - exercisesCompleted > 0 ? dailyGoal - exercisesCompleted : 0}</div>
-            <div className="stat-label">To Goal</div>
-          </div>
+          {isCompactView ? (
+            <>
+              <div className="stat-card">
+                <div className="stat-icon">🎯</div>
+                <div className="stat-value">{exercisesCompleted}</div>
+                <div className="stat-label">Done</div>
+              </div>
+              
+              <div className="stat-card">
+                <div className="stat-icon">🔥</div>
+                <div className="stat-value">{learningStreak}</div>
+                <div className="stat-label">Streak</div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="stat-card">
+                <div className="stat-icon">🎯</div>
+                <div className="stat-value">{exercisesCompleted}</div>
+                <div className="stat-label">Completed</div>
+              </div>
+              
+              <div className="stat-card">
+                <div className="stat-icon">🔥</div>
+                <div className="stat-value">{learningStreak}</div>
+                <div className="stat-label">Day Streak</div>
+              </div>
+              
+              <div className="stat-card">
+                <div className="stat-icon">⭐</div>
+                <div className="stat-value">{Math.round((exercisesCompleted / Math.max(totalTopics, 1)) * 100)}%</div>
+                <div className="stat-label">Progress</div>
+              </div>
+              
+              <div className="stat-card">
+                <div className="stat-icon">🎮</div>
+                <div className="stat-value">{dailyGoal - exercisesCompleted > 0 ? dailyGoal - exercisesCompleted : 0}</div>
+                <div className="stat-label">To Goal</div>
+              </div>
+            </>
+          )}
         </div>
         
         {/* Fun Practice Section */}
         <section className="learning-path-focus">
           <div className="focus-header">
-            <h2>🎮 Fun Math Games</h2>
-            <p>Choose your adventure and have fun learning!</p>
+            <h2>{isCompactView ? '🎮 Games' : '🎮 Fun Math Games'}</h2>
+            {!isCompactView && <p>Choose your adventure and have fun learning!</p>}
           </div>
           
           <div className="action-buttons">
@@ -724,31 +781,37 @@ const StudentDashboard = () => {
               className="action-button quiz-button"
               onClick={handleStartChallenge}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              Math Challenge
+              {!isCompactView && (
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              )}
+              {isCompactView ? 'Challenge' : 'Math Challenge'}
             </button>
             
             <button
               className="action-button mastery-button"
               onClick={handleStartBookQuiz}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-              </svg>
-              Book Questions
+              {!isCompactView && (
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                </svg>
+              )}
+              {isCompactView ? 'Books' : 'Book Questions'}
             </button>
             
-            <button
-              className="action-button practice-button"
-              onClick={() => navigate('/student/progress')}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-              View Progress
-            </button>
+            {!isCompactView && (
+              <button
+                className="action-button practice-button"
+                onClick={() => navigate('/student/progress')}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                View Progress
+              </button>
+            )}
           </div>
         </section>
       </div>

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
-import './StudentDashboard.css';
+import './StudentInbox.css';
 
 const StudentInbox = () => {
   const [loading, setLoading] = useState(true);

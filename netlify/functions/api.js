@@ -6371,6 +6371,225 @@ exports.handler = async (event, context) => {
     }
   }
   
+  // GET /api/messages/inbox - Get current user's inbox messages
+  if (path.includes('/messages/inbox') && httpMethod === 'GET') {
+    try {
+      // Extract user info from Authorization header
+      const authHeader = event.headers.authorization || event.headers.Authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return {
+          statusCode: 401,
+          headers,
+          body: JSON.stringify({ error: 'Authentication required' })
+        };
+      }
+      
+      const token = authHeader.substring(7);
+      let userId, userType;
+      
+      try {
+        // Simple token decode - in production, you'd verify the JWT signature
+        const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+        userId = payload.id;
+        userType = payload.role;
+      } catch (err) {
+        return {
+          statusCode: 401,
+          headers,
+          body: JSON.stringify({ error: 'Invalid token' })
+        };
+      }
+      
+      if (!userId || !userType) {
+        return {
+          statusCode: 401,
+          headers,
+          body: JSON.stringify({ error: 'Authentication required' })
+        };
+      }
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // Find all messages where this user is the recipient
+      const { data: messages, error } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('to_user_id', userId)
+        .eq('to_user_type', userType)
+        .order('sent_at', { ascending: false }); // Most recent first
+      
+      if (error) {
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to fetch messages',
+            message: error.message
+          })
+        };
+      }
+      
+      // Fetch sender names to display
+      const enrichedMessages = await Promise.all((messages || []).map(async (message) => {
+        let fromName = 'Unknown';
+        
+        // Fetch sender name based on from_user_type
+        if (message.from_user_type === 'teacher') {
+          const { data: teacher } = await supabase
+            .from('teachers')
+            .select('name')
+            .eq('id', message.from_user_id)
+            .single();
+          if (teacher) {
+            fromName = teacher.name;
+          }
+        } else if (message.from_user_type === 'student') {
+          const { data: student } = await supabase
+            .from('students')
+            .select('name')
+            .eq('id', message.from_user_id)
+            .single();
+          if (student) {
+            fromName = student.name;
+          }
+        }
+        
+        return {
+          ...message,
+          from_name: fromName
+        };
+      }));
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify(enrichedMessages)
+      };
+      
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
+  // PUT /api/messages/:id/read - Mark a message as read
+  if (path.match(/\/messages\/\d+\/read$/) && httpMethod === 'PUT') {
+    try {
+      // Extract user info from Authorization header
+      const authHeader = event.headers.authorization || event.headers.Authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return {
+          statusCode: 401,
+          headers,
+          body: JSON.stringify({ error: 'Authentication required' })
+        };
+      }
+      
+      const token = authHeader.substring(7);
+      let userId, userType;
+      
+      try {
+        // Simple token decode - in production, you'd verify the JWT signature
+        const payload = JSON.parse(Buffer.from(token.split('.')[1], 'base64').toString());
+        userId = payload.id;
+        userType = payload.role;
+      } catch (err) {
+        return {
+          statusCode: 401,
+          headers,
+          body: JSON.stringify({ error: 'Invalid token' })
+        };
+      }
+      
+      const pathParts = path.split('/');
+      const messageId = parseInt(pathParts[pathParts.indexOf('messages') + 1], 10);
+      
+      if (isNaN(messageId)) {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({ error: 'Invalid Message ID' })
+        };
+      }
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // Find the message first
+      const { data: message, error: fetchError } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('id', messageId)
+        .single();
+      
+      if (fetchError || !message) {
+        return {
+          statusCode: 404,
+          headers,
+          body: JSON.stringify({ error: 'Message not found' })
+        };
+      }
+      
+      // Check if the current user is the recipient of this message
+      if (message.to_user_id !== userId || message.to_user_type !== userType) {
+        return {
+          statusCode: 403,
+          headers,
+          body: JSON.stringify({ 
+            error: 'You do not have permission to mark this message as read' 
+          })
+        };
+      }
+      
+      // Update the message as read
+      const { error: updateError } = await supabase
+        .from('messages')
+        .update({ read: true })
+        .eq('id', messageId);
+      
+      if (updateError) {
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to mark message as read',
+            message: updateError.message
+          })
+        };
+      }
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({ 
+          success: true, 
+          message: 'Message marked as read'
+        })
+      };
+      
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
   // Default response
   return {
     statusCode: 404,
@@ -6392,7 +6611,9 @@ exports.handler = async (event, context) => {
         '/api/content/:id',
         '/api/teachers/:id', 
         '/api/parents/:id', 
-        '/api/classrooms/:id'
+        '/api/classrooms/:id',
+        '/api/messages/inbox',
+        '/api/messages/:id/read'
       ]
     })
   };

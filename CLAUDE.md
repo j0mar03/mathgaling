@@ -73,70 +73,85 @@ Key issues resolved in the quiz system:
 ### Quiz Navigation Pattern:
 Maintain this URL structure: `/student/quiz/{id}?kc_id={kc_id}&mode=sequential&qnum={num}&correct={count}`
 
+## Parent-Student Linking System (Jan 2025)
+
+### Current Issue Being Debugged:
+- **Problem**: 500 error when linking parent to student
+- **Test Case**: Trying to link parent_id=1 to student_id=21 in classroom_id=30
+- **Database Status**: Both parent 1 and student 21 exist in database
+- **Manual SQL Insert**: Works with parent_id=1 and student_id=6
+- **Frontend sends**: parent_id=1, student_id=21, classroom_id=30
+
+### Tables Required:
+1. **parent_students** (junction table)
+   - parent_id (FK to parents.id)
+   - student_id (FK to students.id)
+   - PRIMARY KEY (parent_id, student_id)
+
+2. **classroom_students** (for teacher verification)
+   - classroom_id (FK to classrooms.id)
+   - student_id (FK to students.id)
+
+### API Endpoints:
+- POST `/api/admin/parent-student-links` - Admin creates link
+- DELETE `/api/admin/parent-student-links/:parentId/:studentId` - Admin removes link
+- POST `/api/teacher/parent-student-links` - Teacher creates link (with classroom verification)
+- DELETE `/api/teacher/parent-student-links/:parentId/:studentId` - Teacher removes link
+- GET `/api/students/:id/parents` - Get parents of a student
+- GET `/api/parents/:id/children` - Get children of a parent
+
+### Components Created:
+- `/client/src/components/admin/LinkParentStudentModal.js` - Admin linking interface
+- `/client/src/components/teacher/LinkParentToStudentModal.js` - Teacher linking interface
+- Both have corresponding CSS files
+
+### Parent Dashboard:
+- Shows "No Children Linked" message when parent has no linked children
+- Provides instructions on how to get linked through teacher/admin
+
+### Debug Scripts Created:
+- `/scripts/fix-parent-linking-corrected.sql` - Creates tables and fixes permissions
+- `/scripts/undo-rls-changes.sql` - Removes Row Level Security that was blocking inserts
+- `/scripts/debug-parent-student-link.sql` - Helps debug linking issues
+- `/scripts/check-student-21.sql` - Checks specific student existence
+
+### Next Steps to Debug:
+1. Check the API response error message in browser Network tab
+2. Run debug-parent-student-link.sql to see if link already exists
+3. Verify classroom_students table has entry for student 21 in classroom 30
+
 ## Git Push Preparation
 - Add memory because of upcoming git push
 - Added memory placeholder
 
-## Recent Login System Improvements (Jan 2025)
-Major overhaul of the authentication system:
+## Student Messages System (Jan 2025)
 
-### 1. Role-Based Login
-- **Feature**: Role selection screen (Student/Teacher/Parent) before login
-- **Components**: `LoginImproved.js` and `SignupImproved.js` replace old login/signup
-- **Student Login**: Uses username instead of email for child-friendly experience
+### Fixed Student Messages Issue:
+- **Problem**: Student messages page (/student/messages) was only accepting/showing one message instead of multiple
+- **Root Cause**: Message endpoints were missing from Netlify function API
+- **Fix**: Added complete message functionality to /netlify/functions/api.js
+  - GET /api/messages/inbox - Returns all messages for authenticated user
+  - PUT /api/messages/:id/read - Marks message as read
+  - Properly handles JWT token authentication
+  - Fetches sender names from appropriate user tables
+  - Returns messages in chronological order (newest first)
 
-### 2. Username Support for Students
-- **Database**: Students can have a `username` field
-- **Login Flow**: Students login with username, internally converted to `{username}@student.mathgaling.com`
-- **API Updates**: `/api/auth/login` accepts both `email` and `username` parameters
+### Message API Implementation:
+- Uses Supabase database queries to fetch multiple messages
+- Enriches message data with sender names (from teachers/students tables)
+- Proper authentication and authorization checks
+- Error handling for invalid tokens, missing messages, permission checks
 
-### 3. Visual Improvements
-- **Child-Friendly UI**: Larger fonts, colorful icons, friendly language for students
-- **Role-Specific Colors**: Each role has a unique color theme
-- **Accessibility**: WCAG compliant contrast, keyboard navigation, reduced motion support
-
-### 4. AuthContext Updates
-- **Method Signature**: `login(emailOrUsername, password, isStudent)`
-- **Auto-Detection**: Automatically detects username vs email based on @ symbol
-- **Username Storage**: Stores username in user object for display
-
-### 5. Database Requirements
-- **New Column**: Add `username` column to `students` table:
-  ```sql
-  ALTER TABLE students ADD COLUMN username VARCHAR(50) UNIQUE;
-  ```
-- **Backward Compatibility**: Existing students without username can still login with email
-- **Login Logic**: System tries username first, falls back to email for existing students
-
-### 6. Teacher Dashboard Updates
-- **CreateStudentModal**: Now supports both username and email creation methods
-- **Radio Selection**: Teachers can choose username (recommended) or email for new students
-- **Auto-generation**: Generates usernames and emails automatically
-- **Credentials Display**: Shows appropriate login method in preview
-
-### 7. Admin Panel Updates
-- **AddUserForm**: Updated to support username for student accounts
-- **Dual Mode**: Admin can create students with username or email
-- **Validation**: Proper validation for username format (alphanumeric only)
-
-### 8. Real-Time Knowledge Component Performance (Jan 2025)
-Enhanced the classroom Knowledge Components section with live data:
-
-- **Real-Time Calculations**: KC performance now calculates from actual student knowledge states
-- **Auto-Refresh**: Performance data updates every 30 seconds automatically
-- **Compact Design**: New compact table layout with visual mastery distributions
-- **Performance Metrics**: Shows average mastery, student counts, and mastery level distributions
-- **Visual Indicators**: Color-coded mastery bars and distribution charts
-- **API Enhancement**: Updated `/api/classrooms/:id/knowledge-components` to include:
-  - `averageMastery`: Real average from student knowledge states
-  - `totalStudents`: Total students in classroom
-  - `studentsWithData`: Students with knowledge state data
-  - `masteryLevels`: Distribution across 5 mastery levels (very low to very high)
-- **Responsive Design**: Mobile-friendly compact layout
+### Student Dashboard Improvements (Jan 2025):
+- **Updated Design**: Removed gradient backgrounds for cleaner, more professional look
+- **Added View Toggles**: Mobile/Desktop view toggle and Compact mode toggle
+- **Simplified Interface**: Reduced visual clutter while maintaining all functionality
+- **Better User Experience**: Easier navigation and cleaner visual hierarchy
 
 ## Memories
 - Fix math mastery
 - Add to memory
-- Improved login system with role selection and username support for students
-- claude memory: simple add to memory
-- add to memory
+- Parent-student linking implementation with admin and teacher interfaces
+- Currently debugging 500 error on parent-student link creation
+- Student messages system fully implemented and working with multiple messages
+- Student dashboard redesigned for better usability
