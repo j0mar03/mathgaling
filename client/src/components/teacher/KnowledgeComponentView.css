@@ -1,0 +1,373 @@
+/* Knowledge Component View Styles */
+
+.knowledge-component-view {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem;
+  background-color: #f8f9fa;
+  min-height: 100vh;
+}
+
+/* Header Section */
+.kc-header {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  color: white;
+  padding: 2.5rem;
+  border-radius: 12px;
+  margin-bottom: 2rem;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+}
+
+.kc-header h1 {
+  margin: 0 0 0.5rem 0;
+  font-size: 2.2rem;
+  font-weight: 700;
+}
+
+.kc-header .curriculum-code {
+  font-size: 1.1rem;
+  opacity: 0.9;
+  font-weight: 500;
+}
+
+/* Performance Table */
+.performance-table {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  border: 1px solid #e9ecef;
+  overflow-x: auto;
+}
+
+.table-header {
+  display: grid;
+  grid-template-columns: 2fr 1.5fr 1.5fr 1fr 1.5fr;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  font-weight: 600;
+  color: #495057;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.table-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.table-row {
+  display: grid;
+  grid-template-columns: 2fr 1.5fr 1.5fr 1fr 1.5fr;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  align-items: center;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.table-row:hover {
+  background-color: white;
+  border-color: #3498db;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+  transform: translateY(-2px);
+}
+
+/* Column Styles */
+.col-name {
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 1rem;
+}
+
+.col-mastery {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.mastery-percentage {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #2c3e50;
+}
+
+.mastery-bar {
+  width: 100%;
+  height: 8px;
+  background-color: #e9ecef;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.mastery-fill {
+  height: 100%;
+  background-color: #3498db;
+  transition: width 0.3s ease;
+}
+
+.col-correct {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-weight: 600;
+}
+
+.response-count {
+  font-size: 0.85rem;
+  color: #6c757d;
+  font-weight: 400;
+}
+
+.col-time {
+  font-weight: 500;
+  color: #495057;
+}
+
+.col-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Intervention Cards for Students */
+.student-intervention-card {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  border: 1px solid #e9ecef;
+  margin-bottom: 1rem;
+}
+
+.student-intervention-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.25rem;
+}
+
+.student-intervention-name {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin: 0;
+}
+
+.student-intervention-metrics {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: 6px;
+}
+
+.intervention-metric {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.metric-label {
+  font-size: 0.75rem;
+  color: #6c757d;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  line-height: 1.2;
+}
+
+.metric-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #2c3e50;
+  line-height: 1.2;
+}
+
+.metric-value.below-threshold {
+  color: #dc3545;
+}
+
+.student-intervention-priority {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  background-color: white;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  margin-bottom: 1.25rem;
+}
+
+.priority-label {
+  font-weight: 600;
+  color: #495057;
+  font-size: 0.9rem;
+}
+
+.priority-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.priority-badge.high {
+  background-color: #dc3545;
+  color: white;
+}
+
+.priority-badge.medium {
+  background-color: #fd7e14;
+  color: white;
+}
+
+.priority-badge.low {
+  background-color: #28a745;
+  color: white;
+}
+
+.student-intervention-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e9ecef;
+}
+
+.quick-action-buttons {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.quick-action-btn {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: white;
+  border: 2px solid #dee2e6;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 1.2rem;
+}
+
+.quick-action-btn:hover {
+  background-color: #f8f9fa;
+  border-color: #3498db;
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(52, 152, 219, 0.2);
+}
+
+/* Tooltip for action buttons */
+.quick-action-btn::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 8px;
+  padding: 0.5rem 0.75rem;
+  background-color: #2c3e50;
+  color: white;
+  font-size: 0.75rem;
+  border-radius: 4px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.quick-action-btn::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 4px;
+  border: 4px solid transparent;
+  border-top-color: #2c3e50;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.quick-action-btn:hover::after,
+.quick-action-btn:hover::before {
+  opacity: 1;
+}
+
+/* Content Items Section */
+.content-items-section {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  margin-top: 2rem;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  border: 1px solid #e9ecef;
+}
+
+.content-tabs {
+  margin-top: 1.5rem;
+}
+
+.tab-headers {
+  display: flex;
+  gap: 1rem;
+  border-bottom: 2px solid #e9ecef;
+  margin-bottom: 1.5rem;
+}
+
+.tab-button {
+  padding: 0.75rem 1.5rem;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  font-size: 1rem;
+  font-weight: 500;
+  color: #6c757d;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tab-button:hover {
+  color: #495057;
+}
+
+.tab-button.active {
+  color: #3498db;
+  border-bottom-color: #3498db;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .table-header,
+  .table-row {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+  
+  .student-intervention-metrics {
+    grid-template-columns: 1fr;
+  }
+  
+  .student-intervention-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

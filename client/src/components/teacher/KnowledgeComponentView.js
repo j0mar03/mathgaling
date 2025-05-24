@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Pie } from 'react-chartjs-2';
 import './TeacherDashboard.css';
+import './KnowledgeComponentView.css';
 
 // Register ChartJS components
 ChartJS.register(ArcElement, Tooltip, Legend);

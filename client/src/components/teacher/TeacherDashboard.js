@@ -426,21 +426,21 @@ const TeacherDashboard = () => {
                       <p>Grade {item.student.grade_level} • {item.classroom.name}</p>
                       <div className="intervention-stats">
                         <div className="stat-item">
-                          <span className="stat-label">Mastery:</span>
+                          <span className="stat-label">Mastery</span>
                           <span className={`stat-value ${masteryPercentage < 80 ? 'below-threshold' : ''}`}>
                             {masteryPercentage}%
                           </span>
                         </div>
                         <div className="stat-item">
-                          <span className="stat-label">Intervention Score:</span>
+                          <span className="stat-label">Intervention Score</span>
                           <span className={`stat-value ${interventionScore < 50 ? 'below-threshold' : ''}`}>
                             {interventionScore}%
                           </span>
                         </div>
-                        <div className="intervention-priority">
-                          <span className="priority-label">Priority:</span>
-                          <span className="priority-value">{item.priority}</span>
-                        </div>
+                      </div>
+                      <div className="intervention-priority">
+                        <span className="priority-label">Priority:</span>
+                        <span className="priority-value">{item.priority}</span>
                       </div>
                     </div>
                     <div className="intervention-actions">
