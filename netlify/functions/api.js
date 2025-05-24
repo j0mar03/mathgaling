@@ -4333,6 +4333,11 @@ exports.handler = async (event, context) => {
         `)
         .eq('student_id', studentId)
         .order('knowledge_component_id');
+        
+      console.log(`[Netlify] Knowledge states query result - Count: ${data?.length || 0}, Error: ${error?.message || 'none'}`);
+      if (data && data.length > 0) {
+        console.log(`[Netlify] Sample knowledge state:`, JSON.stringify(data[0], null, 2));
+      }
       
       if (error) {
         console.error('[Netlify] Knowledge states fetch error:', error);
@@ -4450,6 +4455,103 @@ exports.handler = async (event, context) => {
         headers,
         body: JSON.stringify({
           error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
+  // Debug endpoint for progress data
+  if (path.includes('/debug/progress') && httpMethod === 'GET') {
+    try {
+      const queryParams = new URLSearchParams(event.queryStringParameters || {});
+      const studentId = queryParams.get('student_id');
+      
+      if (!studentId) {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({ error: 'student_id is required' })
+        };
+      }
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // Get student info
+      const { data: student } = await supabase
+        .from('students')
+        .select('*')
+        .eq('id', studentId)
+        .single();
+        
+      // Get knowledge states
+      const { data: knowledgeStates } = await supabase
+        .from('knowledge_states')
+        .select(`
+          *,
+          knowledge_components (
+            id,
+            name,
+            curriculum_code
+          )
+        `)
+        .eq('student_id', studentId);
+        
+      // Get all KCs for student's grade
+      const { data: gradeKCs } = await supabase
+        .from('knowledge_components')
+        .select('*')
+        .eq('grade_level', student?.grade_level || 3);
+        
+      // Get recent responses
+      const { data: responses } = await supabase
+        .from('responses')
+        .select('*')
+        .eq('student_id', studentId)
+        .order('created_at', { ascending: false })
+        .limit(10);
+        
+      // Calculate combined data like the frontend does
+      const combinedKCs = gradeKCs?.map(kc => {
+        const state = knowledgeStates?.find(ks => ks.knowledge_component_id === kc.id);
+        return {
+          ...kc,
+          p_mastery: state ? state.p_mastery : 0,
+          started: !!state,
+          state_details: state
+        };
+      }) || [];
+      
+      const overallMastery = combinedKCs.reduce((sum, kc) => sum + (kc.p_mastery || 0), 0) / (combinedKCs.length || 1);
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          student,
+          knowledge_states_count: knowledgeStates?.length || 0,
+          grade_kcs_count: gradeKCs?.length || 0,
+          responses_count: responses?.length || 0,
+          overall_mastery: (overallMastery * 100).toFixed(1) + '%',
+          combined_kcs_sample: combinedKCs.slice(0, 5),
+          knowledge_states_sample: knowledgeStates?.slice(0, 5),
+          debug: {
+            first_state: knowledgeStates?.[0],
+            first_grade_kc: gradeKCs?.[0],
+            matching_example: combinedKCs.find(kc => kc.started)
+          }
+        }, null, 2)
+      };
+      
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Debug endpoint error',
           message: error.message
         })
       };

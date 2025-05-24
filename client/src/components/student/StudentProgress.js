@@ -275,7 +275,17 @@ const StudentProgress = () => {
   
   // Combine all KCs with student's knowledge states
   const combinedKCs = allKnowledgeComponents.map(kc => {
-    const studentKCState = knowledgeStates.find(ks => ks.kc_id === kc.id || ks.KnowledgeComponent?.id === kc.id);
+    // Fix: Use knowledge_component_id instead of kc_id
+    const studentKCState = knowledgeStates.find(ks => 
+      ks.knowledge_component_id === kc.id || 
+      ks.KnowledgeComponent?.id === kc.id ||
+      ks.knowledge_components?.id === kc.id
+    );
+    
+    if (studentKCState && kc.id) {
+      console.log(`[Progress] Found state for KC ${kc.id}: mastery = ${studentKCState.p_mastery}`);
+    }
+    
     return {
       ...kc, // Spread all properties from the KC itself (name, description, curriculum_code etc.)
       KnowledgeComponent: kc, // Ensure KnowledgeComponent structure for consistency if needed elsewhere
@@ -493,8 +503,12 @@ const StudentProgress = () => {
         <div className="summary-card">
           <h3>🌟 Overall Mastery</h3>
           <div className="mastery-percentage">
-            {(combinedKCs.reduce((sum, kc) => sum + (kc.p_mastery || 0), 0) /
-              (combinedKCs.length || 1) * 100).toFixed(0)}%
+            {(() => {
+              const totalMastery = combinedKCs.reduce((sum, kc) => sum + (kc.p_mastery || 0), 0);
+              const avgMastery = totalMastery / (combinedKCs.length || 1);
+              console.log(`[Progress] Overall mastery calculation: total=${totalMastery}, count=${combinedKCs.length}, avg=${avgMastery}`);
+              return (avgMastery * 100).toFixed(0) + '%';
+            })()}
           </div>
           <div className="mastery-bar">
             <div
