@@ -3562,17 +3562,60 @@ exports.handler = async (event, context) => {
     try {
       const pathParts = path.split('/');
       const classroomId = pathParts[pathParts.indexOf('classrooms') + 1];
+      console.log('[Netlify] Fetching performance for classroom:', classroomId);
       
-      // Mock performance data
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // Get students in classroom with their performance data
+      const { data: enrollments, error: enrollmentError } = await supabase
+        .from('classroom_students')
+        .select(`
+          student_id,
+          enrollmentDate,
+          students (
+            id,
+            name,
+            auth_id,
+            grade_level
+          )
+        `)
+        .eq('classroom_id', classroomId);
+        
+      if (enrollmentError) {
+        console.error('Error fetching classroom students:', enrollmentError);
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to fetch classroom students',
+            message: enrollmentError.message
+          })
+        };
+      }
+      
+      // Format data to match what TeacherDashboard expects
+      const performanceData = (enrollments || []).map(enrollment => ({
+        student: enrollment.students,
+        performance: {
+          averageScore: 75 + Math.random() * 20, // Mock performance data
+          questionsAnswered: Math.floor(Math.random() * 50) + 10,
+          timeSpent: Math.floor(Math.random() * 3600) + 300,
+          lastActive: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString()
+        },
+        intervention: {
+          needed: Math.random() > 0.7,
+          priority: Math.random() > 0.8 ? 'high' : 'medium',
+          reason: 'Performance tracking'
+        }
+      }));
+      
       return {
         statusCode: 200,
         headers,
-        body: JSON.stringify({
-          averageScore: 75,
-          totalStudents: 25,
-          activeStudents: 20,
-          completionRate: 80
-        })
+        body: JSON.stringify(performanceData)
       };
       
     } catch (error) {
@@ -3664,6 +3707,7 @@ exports.handler = async (event, context) => {
     try {
       const pathParts = path.split('/');
       const classroomId = pathParts[pathParts.indexOf('classrooms') + 1];
+      console.log('[Netlify] Fetching students for classroom:', classroomId);
       
       const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
       const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
@@ -3675,7 +3719,7 @@ exports.handler = async (event, context) => {
         .from('classroom_students')
         .select(`
           student_id,
-          enrollment_date,
+          enrollmentDate,
           students (*)
         `)
         .eq('classroom_id', classroomId);
@@ -3694,7 +3738,7 @@ exports.handler = async (event, context) => {
       // Format response to return student objects
       const students = (data || []).map(enrollment => ({
         ...enrollment.students,
-        enrollment_date: enrollment.enrollment_date
+        enrollmentDate: enrollment.enrollmentDate
       }));
       
       return {
