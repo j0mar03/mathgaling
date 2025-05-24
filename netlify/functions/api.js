@@ -3362,7 +3362,7 @@ exports.handler = async (event, context) => {
           name: classroomData.name,
           description: classroomData.description,
           teacher_id: classroomData.teacher_id,
-          created_at: new Date().toISOString()
+          createdAt: new Date().toISOString()
         })
         .select()
         .single();
@@ -3386,7 +3386,7 @@ exports.handler = async (event, context) => {
         const enrollments = classroomData.studentIds.map(studentId => ({
           classroom_id: classroom.id,
           student_id: studentId,
-          enrollment_date: new Date().toISOString()
+          enrollmentDate: new Date().toISOString()
         }));
         
         await supabase

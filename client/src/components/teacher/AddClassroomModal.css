@@ -1,0 +1,325 @@
+.create-classroom-modal {
+  max-width: 650px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.modal-header h2 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 2rem;
+  cursor: pointer;
+  color: #95a5a6;
+  transition: color 0.2s;
+  padding: 0.25rem;
+}
+
+.close-button:hover {
+  color: #e74c3c;
+}
+
+.classroom-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.form-section {
+  background: #f8f9fa;
+  padding: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.form-section h3 {
+  margin: 0 0 1rem 0;
+  color: #34495e;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group:last-child {
+  margin-bottom: 0;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #2c3e50;
+  font-size: 1rem;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  font-family: inherit;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #3498db;
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+}
+
+.form-group small {
+  display: block;
+  margin-top: 0.25rem;
+  color: #7f8c8d;
+  font-size: 0.875rem;
+}
+
+.error-message {
+  background-color: #fee;
+  color: #c33;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid #f8d7da;
+}
+
+.loading-message,
+.info-message {
+  padding: 1rem;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.loading-message {
+  background-color: #e8f4fd;
+  color: #31708f;
+  border: 1px solid #bce8f1;
+}
+
+.info-message {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  border: 1px solid #a5d6a7;
+}
+
+.student-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 0.75rem;
+  margin: 1rem 0;
+  max-height: 200px;
+  overflow-y: auto;
+  padding: 0.5rem;
+  border: 1px solid #e9ecef;
+  border-radius: 4px;
+  background: white;
+}
+
+.student-checkbox-item {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem;
+  border: 1px solid #e9ecef;
+  border-radius: 4px;
+  background: white;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.student-checkbox-item:hover {
+  background: #f8f9fa;
+  border-color: #3498db;
+}
+
+.student-checkbox-item input[type="checkbox"] {
+  margin-right: 0.75rem;
+  width: auto;
+  transform: scale(1.2);
+  accent-color: #3498db;
+}
+
+.student-checkbox-item label {
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-weight: normal;
+  margin-bottom: 0;
+}
+
+.student-name {
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.student-grade {
+  font-size: 0.875rem;
+  color: #7f8c8d;
+}
+
+.selected-count {
+  margin-top: 1rem;
+  padding: 0.75rem;
+  background: #e8f5e9;
+  border: 1px solid #a5d6a7;
+  border-radius: 4px;
+  color: #2e7d32;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Preview Section */
+.classroom-preview {
+  background: white;
+  border: 2px solid #3498db;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-top: 1rem;
+}
+
+.preview-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.preview-icon {
+  font-size: 2rem;
+}
+
+.preview-name {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 0.25rem;
+}
+
+.preview-description {
+  font-size: 0.9rem;
+  color: #7f8c8d;
+}
+
+.preview-students {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #ecf0f1;
+}
+
+.preview-students strong {
+  color: #2c3e50;
+  font-size: 0.9rem;
+}
+
+.preview-student-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.preview-student-tag {
+  background: #3498db;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e0e0e0;
+}
+
+.cancel-button {
+  padding: 0.75rem 1.5rem;
+  background-color: #ecf0f1;
+  color: #2c3e50;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.cancel-button:hover {
+  background-color: #bdc3c7;
+}
+
+.submit-button {
+  padding: 0.75rem 1.5rem;
+  background-color: #27ae60;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: background-color 0.2s;
+  min-width: 150px;
+}
+
+.submit-button:hover {
+  background-color: #229954;
+}
+
+.submit-button:disabled {
+  background-color: #95a5a6;
+  cursor: not-allowed;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .create-classroom-modal {
+    width: 95%;
+    margin: 20px;
+  }
+  
+  .student-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+  }
+  
+  .cancel-button,
+  .submit-button {
+    width: 100%;
+  }
+}

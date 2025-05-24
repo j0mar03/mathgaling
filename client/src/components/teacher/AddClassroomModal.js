@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react'; // Import useEffect
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
-import './TeacherDashboard.css'; // Reuse styles or create a new CSS file if needed
-// Removed non-existent CSS import: import './AddClassroomModal.css';
+import './AddClassroomModal.css';
 const AddClassroomModal = ({ onClose, onSuccess }) => {
   const [classroomName, setClassroomName] = useState('');
   const [description, setDescription] = useState('');
@@ -59,9 +58,13 @@ const AddClassroomModal = ({ onClose, onSuccess }) => {
     setError(null);
 
     try {
-      // Assuming the endpoint requires the teacherId in the URL
-      // Adjust endpoint if needed - assuming it uses authenticated user ID implicitly now
-      // Send selectedStudentIds along with the name
+      console.log('[AddClassroom] Attempting to create classroom with data:', {
+        name: classroomName.trim(),
+        description: description.trim() || `${classroomName.trim()} - Created by ${user.name || 'Teacher'}`,
+        teacher_id: user.id,
+        studentIds: selectedStudentIds,
+      });
+      
       const response = await axios.post(`/api/teachers/classrooms`, {
         name: classroomName.trim(),
         description: description.trim() || `${classroomName.trim()} - Created by ${user.name || 'Teacher'}`,
@@ -71,88 +74,147 @@ const AddClassroomModal = ({ onClose, onSuccess }) => {
         headers: { Authorization: `Bearer ${token}` }
       });
 
+      console.log('[AddClassroom] Response received:', response);
+      
       // Call the onSuccess callback passed from the parent (TeacherDashboard)
       // with the newly created classroom data
       onSuccess(response.data.classroom || response.data);
 
     } catch (err) {
-      console.error('Error creating classroom:', err);
-      setError(err.response?.data?.error || 'Failed to create classroom. Please try again.');
+      console.error('[AddClassroom] Full error object:', err);
+      console.error('[AddClassroom] Error response:', err.response);
+      console.error('[AddClassroom] Error response data:', err.response?.data);
+      setError(err.response?.data?.message || err.response?.data?.error || err.message || 'Failed to create classroom. Please try again.');
       setIsSubmitting(false); // Keep modal open on error
     }
     // No finally block needed here as onSuccess should handle closing
   };
 
   return (
-    <div className="modal-backdrop">
-      <div className="modal-content">
-        <h2>Create New Classroom</h2>
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label htmlFor="classroomName">Classroom Name:</label>
-            <input
-              type="text"
-              id="classroomName"
-              value={classroomName}
-              onChange={(e) => setClassroomName(e.target.value)}
-              placeholder="e.g., Grade 3 - Section A"
-              required
-              disabled={isSubmitting}
-            />
+    <div className="modal-overlay">
+      <div className="modal-content create-classroom-modal">
+        <div className="modal-header">
+          <h2>Create New Classroom</h2>
+          <button className="close-button" onClick={onClose}>×</button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="classroom-form">
+          {error && (
+            <div className="error-message">
+              <span>⚠️</span> {error}
+            </div>
+          )}
+
+          <div className="form-section">
+            <h3>Classroom Information</h3>
+            
+            <div className="form-group">
+              <label htmlFor="classroomName">Classroom Name *</label>
+              <input
+                type="text"
+                id="classroomName"
+                value={classroomName}
+                onChange={(e) => setClassroomName(e.target.value)}
+                placeholder="e.g., Grade 3 - Section A"
+                required
+                disabled={isSubmitting}
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="description">Description</label>
+              <textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Brief description of the classroom..."
+                rows="3"
+                disabled={isSubmitting}
+              />
+              <small>Optional - A brief description to help identify this classroom</small>
+            </div>
           </div>
 
-          <div className="form-group">
-            <label htmlFor="description">Description (Optional):</label>
-            <textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Brief description of the classroom..."
-              rows="3"
-              disabled={isSubmitting}
-            />
+          <div className="form-section">
+            <h3>Add Students (Optional)</h3>
+            {loadingStudents ? (
+              <div className="loading-message">
+                <span>⏳</span> Loading available students...
+              </div>
+            ) : eligibleStudents.length === 0 ? (
+              <div className="info-message">
+                <span>ℹ️</span> No students available to enroll. You can add students later.
+              </div>
+            ) : (
+              <>
+                <p>Select students to enroll in this classroom:</p>
+                <div className="student-grid">
+                  {eligibleStudents.map(student => (
+                    <div key={student.id} className="student-checkbox-item">
+                      <input
+                        type="checkbox"
+                        id={`student-${student.id}`}
+                        checked={selectedStudentIds.includes(student.id)}
+                        onChange={() => handleStudentSelectionChange(student.id)}
+                        disabled={isSubmitting}
+                      />
+                      <label htmlFor={`student-${student.id}`}>
+                        <span className="student-name">{student.name}</span>
+                        <span className="student-grade">Grade {student.grade_level}</span>
+                      </label>
+                    </div>
+                  ))}
+                </div>
+                {selectedStudentIds.length > 0 && (
+                  <div className="selected-count">
+                    <span>📝</span> {selectedStudentIds.length} student{selectedStudentIds.length !== 1 ? 's' : ''} selected
+                  </div>
+                )}
+              </>
+            )}
           </div>
 
-          {error && <div className="error-message">{error}</div>}
+          {(classroomName.trim() || selectedStudentIds.length > 0) && (
+            <div className="form-section">
+              <h3>Preview</h3>
+              <div className="classroom-preview">
+                <div className="preview-header">
+                  <span className="preview-icon">🏫</span>
+                  <div>
+                    <div className="preview-name">{classroomName.trim() || 'New Classroom'}</div>
+                    <div className="preview-description">
+                      {description.trim() || `${classroomName.trim()} - Created by ${user?.name || 'Teacher'}`}
+                    </div>
+                  </div>
+                </div>
+                {selectedStudentIds.length > 0 && (
+                  <div className="preview-students">
+                    <strong>Students to be enrolled:</strong>
+                    <div className="preview-student-list">
+                      {selectedStudentIds.map(id => {
+                        const student = eligibleStudents.find(s => s.id === id);
+                        return student ? (
+                          <span key={id} className="preview-student-tag">
+                            {student.name}
+                          </span>
+                        ) : null;
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
-          <div className="modal-actions">
-            <button type="button" onClick={onClose} disabled={isSubmitting} className="button secondary">
+          <div className="form-actions">
+            <button type="button" onClick={onClose} className="cancel-button">
               Cancel
             </button>
-            <button type="submit" disabled={isSubmitting || loadingStudents} className="button primary">
+            <button type="submit" disabled={isSubmitting} className="submit-button">
               {isSubmitting ? 'Creating...' : 'Create Classroom'}
             </button>
           </div>
         </form>
-
-        {/* Student Selection Section */}
-        <div className="student-selection-section">
-          <h3>Enroll Students (Optional)</h3>
-          {loadingStudents ? (
-            <p>Loading students...</p>
-          ) : error ? (
-             <div className="error-message">{error}</div>
-          ) : eligibleStudents.length === 0 ? (
-            <p>No students available to enroll.</p>
-          ) : (
-            <div className="student-list">
-              {eligibleStudents.map(student => (
-                <div key={student.id} className="student-item">
-                  <input
-                    type="checkbox"
-                    id={`student-${student.id}`}
-                    checked={selectedStudentIds.includes(student.id)}
-                    onChange={() => handleStudentSelectionChange(student.id)}
-                    disabled={isSubmitting}
-                  />
-                  <label htmlFor={`student-${student.id}`}>
-                    {student.name} (Grade {student.grade_level})
-                  </label>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
       </div>
     </div>
   );
