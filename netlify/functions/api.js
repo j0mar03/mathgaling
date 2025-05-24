@@ -6222,13 +6222,16 @@ exports.handler = async (event, context) => {
     try {
       const { parent_id, student_id, classroom_id } = JSON.parse(body);
       
+      console.log('[Teacher Link] Received request:', { parent_id, student_id, classroom_id });
+      
       if (!parent_id || !student_id) {
         return {
           statusCode: 400,
           headers,
           body: JSON.stringify({
             error: 'Missing required fields',
-            message: 'Both parent_id and student_id are required'
+            message: 'Both parent_id and student_id are required',
+            received: { parent_id, student_id, classroom_id }
           })
         };
       }

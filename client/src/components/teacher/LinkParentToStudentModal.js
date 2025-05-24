@@ -54,6 +54,8 @@ const LinkParentToStudentModal = ({ student, classroomId, onClose, onLinked }) =
             setLinking(true);
             setError('');
 
+            console.log('Linking parent:', parentId, 'to student:', student.id, 'Student object:', student);
+            
             await axios.post('/api/teacher/parent-student-links', {
                 parent_id: parentId,
                 student_id: student.id,

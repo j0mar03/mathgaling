@@ -223,6 +223,7 @@ const ClassroomView = () => {
   };
   
   const handleLinkParent = (student) => {
+    console.log('handleLinkParent called with student:', student);
     setLinkingStudent(student);
     setShowLinkParentModal(true);
   };
