@@ -33,22 +33,33 @@ const ClassroomView = () => {
         return;
       }
       try {
+        console.log('[ClassroomView] Starting to fetch data for classroom:', id);
+        
         // Fetch specific classroom data using the new endpoint (ownership checked on backend)
+        console.log('[ClassroomView] Fetching classroom details...');
         const classroomResponse = await axios.get(`/api/classrooms/${id}`);
+        console.log('[ClassroomView] Classroom details:', classroomResponse.data);
         setClassroom(classroomResponse.data);
         
         // Fetch students in classroom
+        console.log('[ClassroomView] Fetching students...');
         const studentsResponse = await axios.get(`/api/classrooms/${id}/students`);
+        console.log('[ClassroomView] Students:', studentsResponse.data);
         setStudents(studentsResponse.data);
         
         // Fetch performance data
+        console.log('[ClassroomView] Fetching performance data...');
         const performanceResponse = await axios.get(`/api/classrooms/${id}/performance`);
+        console.log('[ClassroomView] Performance data:', performanceResponse.data);
         setPerformance(performanceResponse.data);
         
         // Fetch knowledge component performance
+        console.log('[ClassroomView] Fetching knowledge components...');
         const kcResponse = await axios.get(`/api/classrooms/${id}/knowledge-components`);
+        console.log('[ClassroomView] Knowledge components:', kcResponse.data);
         setKnowledgeComponents(kcResponse.data);
         
+        console.log('[ClassroomView] All data loaded successfully!');
         setLoading(false);
       } catch (err) {
         // Enhanced error logging
@@ -96,11 +107,15 @@ const ClassroomView = () => {
   
   // Prepare data for knowledge component chart
   const chartData = {
-    labels: knowledgeComponents.map(kc => kc.curriculum_code || 'Unknown'),
+    labels: knowledgeComponents && knowledgeComponents.length > 0 
+      ? knowledgeComponents.map(kc => kc.curriculum_code || 'Unknown')
+      : ['No data'],
     datasets: [
       {
         label: 'Average Mastery (%)',
-        data: knowledgeComponents.map(kc => kc.averageMastery * 100),
+        data: knowledgeComponents && knowledgeComponents.length > 0
+          ? knowledgeComponents.map(kc => (kc.averageMastery || 0) * 100)
+          : [0],
         backgroundColor: 'rgba(74, 111, 165, 0.7)',
         borderColor: 'rgba(74, 111, 165, 1)',
         borderWidth: 1,
@@ -259,6 +274,17 @@ const ClassroomView = () => {
 
   // Removed duplicate handleAddStudentConfirm function
   
+  // Add safety check for classroom data
+  if (!classroom) {
+    return (
+      <div className="error-container">
+        <h2>Classroom Not Found</h2>
+        <p>Unable to load classroom data.</p>
+        <Link to="/teacher" className="button">Back to Dashboard</Link>
+      </div>
+    );
+  }
+
   return (
     <div className="classroom-view">
       <div className="classroom-header">
