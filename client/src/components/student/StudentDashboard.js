@@ -126,7 +126,15 @@ const StudentDashboard = () => {
           headers: { Authorization: `Bearer ${token}` }
         });
         const fetchedNextActivity = activityResponse.data;
-        console.log('[StudentDashboard] Kid-friendly next activity response:', fetchedNextActivity);
+        console.log('[StudentDashboard] Kid-friendly next activity response:', {
+          type: fetchedNextActivity?.type,
+          kc_id: fetchedNextActivity?.kc_id,
+          kc_name: fetchedNextActivity?.kc_name,
+          message: fetchedNextActivity?.message,
+          completed_sequence: fetchedNextActivity?.completed_sequence,
+          all_mastered: fetchedNextActivity?.all_mastered,
+          fullResponse: fetchedNextActivity
+        });
         setNextActivity(fetchedNextActivity);
 
         // Fetch consolidated dashboard data (with cache busting for Supabase)
@@ -216,14 +224,53 @@ const StudentDashboard = () => {
         const allKcsFromModules = fetchedModules.flatMap(module => module.knowledgeComponents);
         
         console.log('[StudentDashboard] Total KCs from modules:', allKcsFromModules.length);
-        console.log('[StudentDashboard] First few KCs:', allKcsFromModules.slice(0, 3).map(kc => ({
+        console.log('[StudentDashboard] All KCs with mastery:', allKcsFromModules.map(kc => ({
           id: kc.id,
           name: kc.name,
           curriculum_code: kc.curriculum_code,
           mastery: kc.mastery
         })));
         
-        if (allKcsFromModules.length > 0) {
+        // PRIORITY 1: Use the kid-friendly-next-activity API response if it has a valid KC
+        if (fetchedNextActivity && fetchedNextActivity.kc_id && !fetchedNextActivity.completed_sequence) {
+          console.log('[StudentDashboard] Using kid-friendly-next-activity API response:', fetchedNextActivity);
+          
+          let displayName = fetchedNextActivity.kc_name || fetchedNextActivity.name || "Your Next Learning Adventure!";
+          let displayDescription = fetchedNextActivity.message || fetchedNextActivity.description || "Let's continue learning!";
+
+          // Get emoji based on KC name (with partial matching)
+          let emoji = KC_ICONS.default;
+          for (const [key, value] of Object.entries(KC_ICONS)) {
+            if (displayName.toLowerCase().includes(key.toLowerCase()) || 
+                key.toLowerCase().includes(displayName.toLowerCase().split(' ')[0])) {
+              emoji = value;
+              break;
+            }
+          }
+
+          determinedStep = { 
+            ...fetchedNextActivity,
+            id: fetchedNextActivity.kc_id,
+            name: displayName, 
+            description: displayDescription, 
+            isPrimary: true,
+            actionType: 'continue',
+            buttonText: 'Magpatuloy',
+            emoji: emoji,
+            type: 'kc',
+            kc_id: fetchedNextActivity.kc_id,
+            mastery: 0 // Will be updated from module data if available
+          };
+          
+          // Try to get mastery from module data
+          const kcFromModules = allKcsFromModules.find(kc => kc.id === fetchedNextActivity.kc_id);
+          if (kcFromModules) {
+            determinedStep.mastery = Math.round((kcFromModules.mastery || 0) * 100);
+          }
+        }
+        
+        // PRIORITY 2: If no valid API response, find from modules
+        if (!determinedStep && allKcsFromModules.length > 0) {
           // Sort by curriculum_code to get proper KC sequence
           const sortedKCs = [...allKcsFromModules].sort((a, b) => {
             if (a.curriculum_code && b.curriculum_code) {
@@ -321,36 +368,7 @@ const StudentDashboard = () => {
           }
         }
         
-        // Fallback 1: If no step determined yet AND fetchedNextActivity exists
-        if (!determinedStep && fetchedNextActivity && fetchedNextActivity.kc_id) {
-          console.log('[StudentDashboard] Using fetchedNextActivity from API:', fetchedNextActivity);
-          
-          let displayName = fetchedNextActivity.kc_name || fetchedNextActivity.name || "Your Next Learning Adventure!";
-          let displayDescription = fetchedNextActivity.message || fetchedNextActivity.description || "Let's continue learning!";
-
-          // Get emoji based on KC name (with partial matching)
-          let emoji = KC_ICONS.default;
-          for (const [key, value] of Object.entries(KC_ICONS)) {
-            if (displayName.toLowerCase().includes(key.toLowerCase()) || 
-                key.toLowerCase().includes(displayName.toLowerCase().split(' ')[0])) {
-              emoji = value;
-              break;
-            }
-          }
-
-          determinedStep = { 
-            ...fetchedNextActivity,
-            id: fetchedNextActivity.kc_id, // Ensure ID is set
-            name: displayName, 
-            description: displayDescription, 
-            isPrimary: true,
-            actionType: 'continue',
-            buttonText: 'Ipagpatuloy',
-            emoji: emoji,
-            type: 'kc',
-            kc_id: fetchedNextActivity.kc_id // Explicitly set kc_id
-          };
-        }
+        // This fallback is now handled as PRIORITY 1 above
         
         // Fallback 2: If still no step, use the first recommended topic
         if (!determinedStep && fetchedRecommendedTopics.length > 0) {
@@ -415,7 +433,14 @@ const StudentDashboard = () => {
           }
         }
         
-        console.log('[StudentDashboard] Final determinedStep:', determinedStep);
+        console.log('[StudentDashboard] Final determinedStep:', {
+          id: determinedStep?.id,
+          kc_id: determinedStep?.kc_id,
+          name: determinedStep?.name,
+          type: determinedStep?.type,
+          actionType: determinedStep?.actionType,
+          mastery: determinedStep?.mastery
+        });
         setCurrentLearningStep(determinedStep);
         
         // Fetch learning streak and daily progress
