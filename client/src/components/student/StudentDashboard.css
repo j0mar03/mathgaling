@@ -4,29 +4,41 @@ body {
   background-color: #f0f8ff; /* AliceBlue - a very soft pastel blue */
 }
 
+/* Ensure good contrast for accessibility */
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 .student-dashboard {
   max-width: 900px; /* Slightly reduced for better focus */
   margin: 20px auto;
-  padding: 25px;
+  padding: 30px;
   background-color: #fffaf0; /* FloralWhite - a warm pastel */
   border-radius: 25px;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
   font-size: 16px; /* Base font size */
-  color: #5D4037; /* Soft brown for text */
+  color: #333; /* Darker for better contrast */
+  position: relative;
 }
 
 /* General Button Style */
 .button {
   display: inline-block;
-  padding: 12px 25px;
+  padding: 14px 28px;
   border-radius: 25px; /* Rounded buttons */
   text-decoration: none;
   font-weight: bold;
   transition: all 0.3s ease;
   cursor: pointer;
-  border: none;
+  border: 2px solid transparent;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  font-size: 1em; /* Relative to parent */
+  font-size: 1.05em; /* Slightly larger for better readability */
+  min-height: 48px; /* Accessibility standard */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .button:hover {
@@ -38,24 +50,49 @@ body {
 /* Dashboard Header */
 .dashboard-header {
   text-align: center;
-  margin-bottom: 35px;
-  padding: 20px;
+  margin-bottom: 40px;
+  padding: 30px;
   background: linear-gradient(135deg, #FFEFBA, #FFFFFF); /* Soft yellow to white */
   border-radius: 20px;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Profile icon in top right */
+.dashboard-header .profile-icon {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.dashboard-header .profile-icon:hover {
+  transform: scale(1.1);
 }
 
 .dashboard-header h1 {
-  color: #FF8C69; /* Soft Coral */
-  font-size: 2.2em; /* Larger, friendly */
-  margin-bottom: 8px;
+  color: #FF6B4A; /* Darker coral for better contrast */
+  font-size: 2.4em; /* Larger, friendly */
+  margin-bottom: 12px;
   font-weight: 700; /* Nunito bold */
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .dashboard-header .subtitle {
-  color: #777;
-  font-size: 1.1em;
+  color: #555; /* Darker for better contrast */
+  font-size: 1.15em;
   margin-bottom: 15px;
+  font-weight: 500;
 }
 
 .encouragement-text {
@@ -66,44 +103,55 @@ body {
 }
 
 .progress-button {
-  background-color: #FFB6C1; /* LightPink */
+  background-color: #FF6B9D; /* Darker pink for better contrast */
   color: white;
-  padding: 12px 28px;
-  font-size: 1.1em;
+  padding: 14px 32px;
+  font-size: 1.15em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .progress-button:hover {
-  background-color: #FFC0CB; /* Pink */
+  background-color: #FF5583; /* Darker on hover */
+  transform: translateY(-3px);
+  box-shadow: 0 8px 16px rgba(255, 107, 157, 0.3);
 }
 
 /* Progress Stats Section */
 .progress-stats {
   background: #fff;
-  border-radius: 15px;
-  padding: 15px;
-  margin: 20px auto;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  border-radius: 20px;
+  padding: 20px;
+  margin: 30px auto 40px; /* More spacing from header */
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
   max-width: 400px; /* Center this block */
+  border: 2px solid #FFE5D0;
 }
 
 .streak-container {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
+  gap: 12px;
 }
 
 .streak-icon {
-  font-size: 1.8em;
-  margin-right: 10px;
-  color: #FFD700; /* Gold */
+  font-size: 2em;
+  color: #FFB700; /* Darker gold for better contrast */
   animation: pulse 1.5s infinite;
+  filter: drop-shadow(2px 2px 4px rgba(255, 183, 0, 0.3));
 }
 
 .streak-count {
-  font-size: 1.2em;
+  font-size: 1.3em;
   font-weight: bold;
-  color: #FF8C69; /* Soft Coral */
+  color: #FF6B4A; /* Darker coral for better contrast */
+  background-color: #FFF0EC;
+  padding: 8px 16px;
+  border-radius: 15px;
+  border: 2px solid #FFD4CC;
 }
 
 .daily-progress {
@@ -111,76 +159,133 @@ body {
 }
 
 .progress-bar {
-  background: #e0e0e0; /* Light grey for track */
-  border-radius: 10px;
-  height: 18px;
-  margin: 8px 0;
+  background: #e8e8e8; /* Slightly darker for better contrast */
+  border-radius: 12px;
+  height: 24px; /* Larger for better visibility */
+  margin: 12px 0;
   overflow: hidden;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .progress-fill {
-  background: linear-gradient(90deg, #90EE90, #32CD32); /* LightGreen to LimeGreen */
+  background: linear-gradient(90deg, #4CAF50, #2E7D32); /* Better contrast greens */
   height: 100%;
   border-radius: 10px;
   transition: width 0.5s ease;
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.progress-fill::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { left: -100%; }
+  100% { left: 100%; }
 }
 
 .progress-text {
-  font-size: 0.95em;
-  color: #555;
+  font-size: 1em;
+  color: #333; /* Darker for better contrast */
+  font-weight: 500;
+  margin-top: 8px;
 }
 
 /* Learning Path Focus Section */
 .learning-path-focus {
-  margin: 30px 0;
-  padding: 25px;
-  background-color: #E6E6FA; /* Lavender */
-  border-radius: 20px;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.07);
+  margin: 45px 0; /* More spacing from progress stats */
+  padding: 30px;
+  background: linear-gradient(135deg, #E6E6FA 0%, #F0E6FF 100%); /* Gradient lavender */
+  border-radius: 25px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
   text-align: center;
+  border: 2px solid #D4D4F5;
+  position: relative;
 }
 
 .focus-header h2 {
   color: #483D8B; /* DarkSlateBlue */
-  font-size: 1.8em;
-  margin-bottom: 10px;
+  font-size: 2em;
+  margin-bottom: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.focus-header h2::before {
+  content: '🚀';
+  font-size: 1.2em;
+  animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-10px); }
+  60% { transform: translateY(-5px); }
 }
 
 .focus-header p {
-  color: #6A5ACD; /* SlateBlue */
-  font-size: 1.1em;
-  margin-bottom: 20px;
+  color: #5A4FCF; /* Darker SlateBlue for contrast */
+  font-size: 1.15em;
+  margin-bottom: 25px;
+  font-weight: 500;
 }
 
 .focus-card {
   background-color: #fff;
-  border-radius: 15px;
-  padding: 20px;
-  margin-top: 15px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+  border-radius: 20px;
+  padding: 25px;
+  margin-top: 20px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
   border: 3px solid; /* Border color set by JS */
   display: flex;
   flex-direction: column;
   align-items: center;
+  transition: transform 0.3s ease;
+}
+
+.focus-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
 }
 
 .focus-emoji {
-  font-size: 4em; /* Large emoji */
-  margin-bottom: 15px;
+  font-size: 4.5em; /* Larger emoji for visual impact */
+  margin-bottom: 20px;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
 }
 
 .focus-content h3 {
-  color: #5D4037; /* Soft Brown */
-  font-size: 1.6em;
-  margin-bottom: 10px;
+  color: #3E2723; /* Darker brown for better contrast */
+  font-size: 1.7em;
+  margin-bottom: 12px;
+  font-weight: 700;
 }
 
 .focus-description {
-  color: #777;
-  font-size: 1em;
-  line-height: 1.6;
-  margin-bottom: 20px;
+  color: #555; /* Darker for better readability */
+  font-size: 1.05em;
+  line-height: 1.7;
+  margin-bottom: 25px;
   max-width: 500px;
+  font-weight: 400;
 }
 
 .focus-details {
@@ -237,59 +342,94 @@ body {
 }
 
 .start-learning-button {
-  padding: 15px 35px;
-  font-size: 1.3em;
+  padding: 18px 40px;
+  font-size: 1.35em;
   color: white;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
   /* background-color set by JS */
+  position: relative;
+  overflow: hidden;
+}
+
+.start-learning-button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(255,255,255,0.2);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.start-learning-button:hover::before {
+  width: 300px;
+  height: 300px;
 }
 
 /* Recommended Topics Section - Secondary */
 .recommended-topics-section {
-  margin: 30px 0;
-  padding: 20px;
+  margin: 45px 0;
+  padding: 25px;
   background-color: #FFF5EE; /* Seashell - very light warm pastel */
   border-radius: 20px;
 }
 
 .recommended-topics-section h2 {
   text-align: center;
-  color: #D2691E; /* Chocolate */
-  font-size: 1.6em;
-  margin-bottom: 10px;
+  color: #A0522D; /* Darker chocolate for contrast */
+  font-size: 1.8em;
+  margin-bottom: 12px;
+  font-weight: 700;
 }
 
 .recommended-topics-section > p {
   text-align: center;
-  color: #8B4513; /* SaddleBrown */
-  font-size: 1em;
-  margin-bottom: 20px;
+  color: #6B3410; /* Darker brown for readability */
+  font-size: 1.05em;
+  margin-bottom: 25px;
+  font-weight: 500;
 }
 
 .recommended-topics-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 24px;
 }
 
 .recommended-topic-card {
   background-color: #fff;
-  border-radius: 15px;
-  padding: 15px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
   text-align: center;
-  border: 2px solid #FFE4B5; /* Moccasin */
+  border: 2px solid #FFD4A3; /* Darker moccasin for contrast */
+  transition: all 0.3s ease;
+}
+
+.recommended-topic-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  border-color: #FFC48C;
 }
 
 .topic-card-emoji {
-  font-size: 2.5em;
-  margin-bottom: 10px;
+  font-size: 3em;
+  margin-bottom: 12px;
+  display: block;
+  animation: pulse 2s infinite;
 }
 
 .recommended-topic-card h3 {
-  color: #5D4037;
-  font-size: 1.2em;
-  margin-bottom: 10px;
-  min-height: 40px; /* For alignment */
+  color: #3E2723; /* Darker for better contrast */
+  font-size: 1.25em;
+  margin-bottom: 12px;
+  min-height: 45px; /* For alignment */
+  font-weight: 600;
 }
 
 .recommended-topic-card .mastery-info {
@@ -317,14 +457,18 @@ body {
 }
 
 .recommended-topic-card .practice-button {
-  background-color: #FFA07A; /* LightSalmon */
+  background-color: #FF7F50; /* Darker coral for contrast */
   color: white;
-  font-size: 1em;
-  padding: 10px 20px;
+  font-size: 1.05em;
+  padding: 12px 24px;
+  font-weight: 600;
+  min-width: 140px;
 }
 
 .recommended-topic-card .practice-button:hover {
-  background-color: #FA8072; /* Salmon */
+  background-color: #FF6347; /* Tomato - darker on hover */
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(255, 127, 80, 0.3);
 }
 
 
@@ -600,19 +744,82 @@ body {
 
 @media (max-width: 480px) {
   .dashboard-header h1 {
-    font-size: 1.6em;
+    font-size: 1.8em;
   }
   .button {
-    padding: 10px 20px;
-    font-size: 0.95em;
+    padding: 12px 22px;
+    font-size: 1em;
   }
   .focus-content h3 {
-    font-size: 1.2em;
+    font-size: 1.3em;
   }
   .start-learning-button {
-    font-size: 1em;
+    font-size: 1.1em;
   }
   .recommended-topic-card h3, .kc-card h4 {
-    font-size: 1em;
+    font-size: 1.05em;
   }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .button {
+    border: 2px solid currentColor;
+  }
+  
+  .progress-fill {
+    background: #2E7D32;
+  }
+  
+  .focus-card {
+    border-width: 4px;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Better focus styles for accessibility */
+*:focus {
+  outline: 3px solid #4A90E2;
+  outline-offset: 2px;
+}
+
+button:focus, .button:focus {
+  outline: 3px solid #4A90E2;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+}
+
+/* Ensure all interactive elements meet minimum size */
+a.button, button, .button, .clickable {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Improved icon styles */
+.icon-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.icon-wrapper:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
