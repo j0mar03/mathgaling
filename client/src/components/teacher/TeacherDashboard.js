@@ -45,21 +45,28 @@ const TeacherDashboard = () => {
       //   return;
       // }
       try {
+        console.log(`[TeacherDashboard] Starting data fetch for teacher ID: ${teacherId}`);
+        
         // Fetch teacher profile
+        console.log(`[TeacherDashboard] Fetching teacher profile...`);
         const teacherResponse = await axios.get(`/api/teachers/${teacherId}`);
+        console.log(`[TeacherDashboard] ✅ Teacher profile loaded:`, teacherResponse.data);
         setTeacher(teacherResponse.data);
         
         // Fetch classrooms
+        console.log(`[TeacherDashboard] Fetching classrooms...`);
         const classroomsResponse = await axios.get(`/api/teachers/${teacherId}/classrooms`);
+        console.log(`[TeacherDashboard] ✅ Classrooms loaded:`, classroomsResponse.data);
         setClassrooms(classroomsResponse.data);
-        // Log the raw data received for classrooms again
-        console.log("TeacherDashboard - RAW Received classrooms data:", JSON.stringify(classroomsResponse.data, null, 2));
         
         // Fetch performance data for each classroom and collect all students
+        console.log(`[TeacherDashboard] Fetching performance data for ${classroomsResponse.data.length} classrooms...`);
         const performanceData = {};
         const studentsArray = [];
         for (const classroom of classroomsResponse.data) {
+          console.log(`[TeacherDashboard] Fetching performance for classroom ${classroom.id}...`);
           const performanceResponse = await axios.get(`/api/classrooms/${classroom.id}/performance`);
+          console.log(`[TeacherDashboard] ✅ Performance data for classroom ${classroom.id}:`, performanceResponse.data);
           performanceData[classroom.id] = performanceResponse.data;
           
           // Collect students with classroom info
@@ -74,20 +81,34 @@ const TeacherDashboard = () => {
         }
         setClassroomPerformance(performanceData);
         setAllStudents(studentsArray);
+        console.log(`[TeacherDashboard] ✅ All performance data processed. Total students: ${studentsArray.length}`);
         
         // Fetch knowledge component mastery data
+        console.log(`[TeacherDashboard] Fetching KC mastery data...`);
         const kcMasteryResponse = await axios.get(`/api/teachers/${teacherId}/knowledge-component-mastery`);
+        console.log(`[TeacherDashboard] ✅ KC Mastery data loaded:`, kcMasteryResponse.data);
         setKnowledgeComponentMastery(kcMasteryResponse.data);
-        console.log("TeacherDashboard - RAW Received KC Mastery data:", JSON.stringify(kcMasteryResponse.data, null, 2));
+
+        console.log(`[TeacherDashboard] 🎉 All data loaded successfully!`);
 
         // setLoading(false) should be inside the try block after successful fetches
       } catch (err) {
-        console.error('Error fetching data:', err);
+        console.error('[TeacherDashboard] ❌ Error fetching data:', err);
+        console.error('[TeacherDashboard] Error details:', {
+          message: err.message,
+          status: err.response?.status,
+          statusText: err.response?.statusText,
+          data: err.response?.data,
+          url: err.config?.url,
+          method: err.config?.method
+        });
+        
         // Check for 401 specifically, could indicate token issue despite teacherId being present initially
         if (err.response?.status === 401) {
              setError('Authentication error. Please log out and log in again.');
         } else {
-             setError('Failed to load dashboard data. Please try again later.');
+             const errorDetails = err.response?.data?.error || err.message || 'Unknown error';
+             setError(`Failed to load dashboard data: ${errorDetails}`);
         }
         // setLoading(false) should be in finally or after error handling
       } finally {
