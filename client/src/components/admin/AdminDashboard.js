@@ -22,6 +22,8 @@ const AdminDashboard = () => {
     const [showKcForm, setShowKcForm] = useState(false); // State for KC form visibility
     const [editingKc, setEditingKc] = useState(null); // State for KC being edited
     const [activeTab, setActiveTab] = useState('users'); // 'users', 'kcs', 'content', 'pdf'
+    const [linkingParent, setLinkingParent] = useState(null); // State for parent being linked
+    const [showLinkModal, setShowLinkModal] = useState(false); // State for link modal visibility
     // Get user and the context's loading state
     const { user, token, loading: authLoading } = useAuth(); // Get user, token, and loading state
 

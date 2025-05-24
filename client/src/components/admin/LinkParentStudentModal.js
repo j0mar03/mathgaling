@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import './LinkParentStudentModal.css';
@@ -12,13 +12,7 @@ const LinkParentStudentModal = ({ parent, onClose, onLinked }) => {
     const [linking, setLinking] = useState(false);
     const { token } = useAuth();
 
-    useEffect(() => {
-        if (parent) {
-            fetchData();
-        }
-    }, [parent]);
-
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         try {
             setLoading(true);
             setError('');
@@ -42,7 +36,14 @@ const LinkParentStudentModal = ({ parent, onClose, onLinked }) => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [parent, token]);
+
+    useEffect(() => {
+        if (parent) {
+            fetchData();
+        }
+    }, [parent, fetchData]);
+
 
     const isLinked = (studentId) => {
         return linkedStudents.some(s => s.id === studentId);
