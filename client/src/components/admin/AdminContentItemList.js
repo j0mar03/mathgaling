@@ -107,7 +107,7 @@ function AdminContentItemList() {
     if (token) {
       fetchContentItems(pagination.currentPage);
     }
-  }, [token, filters, pagination.currentPage, pagination.limit]);
+  }, [token, filters.type, filters.kcId, filters.difficulty, filters.search, filters.showAll, pagination.currentPage]);
   
   // Handle filter changes
   const handleFilterChange = (e) => {

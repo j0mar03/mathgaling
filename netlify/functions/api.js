@@ -1556,7 +1556,7 @@ exports.handler = async (event, context) => {
     }
   }
   
-  // GET /api/admin/content-items - List content items
+  // GET /api/admin/content-items - List content items with filtering
   if (path.includes('/admin/content-items') && httpMethod === 'GET') {
     try {
       const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
@@ -1564,7 +1564,22 @@ exports.handler = async (event, context) => {
       
       const supabase = createClient(supabaseUrl, supabaseKey);
       
-      const { data, error } = await supabase
+      // Get query parameters
+      const queryParams = event.queryStringParameters || {};
+      const page = parseInt(queryParams.page) || 1;
+      const limit = parseInt(queryParams.limit) || 10;
+      const kcId = queryParams.kcId;
+      const type = queryParams.type;
+      const difficulty = queryParams.difficulty;
+      const search = queryParams.search;
+      const showAll = queryParams.showAll === 'true';
+      
+      console.log('[Admin Content Items] Query params:', {
+        page, limit, kcId, type, difficulty, search, showAll
+      });
+      
+      // Build query
+      let query = supabase
         .from('content_items')
         .select(`
           *,
@@ -1572,10 +1587,44 @@ exports.handler = async (event, context) => {
             id,
             name,
             grade_level,
-            description
+            description,
+            curriculum_code
           )
-        `)
-        .order('id');
+        `, { count: 'exact' });
+      
+      // Apply filters
+      if (kcId) {
+        console.log('[Admin Content Items] Filtering by KC ID:', kcId, 'Type:', typeof kcId);
+        query = query.eq('knowledge_component_id', parseInt(kcId));
+      }
+      
+      if (type) {
+        query = query.eq('type', type);
+      }
+      
+      if (difficulty) {
+        query = query.eq('difficulty', difficulty);
+      }
+      
+      if (search) {
+        query = query.or(`content.ilike.%${search}%,title.ilike.%${search}%`);
+      }
+      
+      // Apply pagination unless showing all
+      if (!showAll) {
+        const offset = (page - 1) * limit;
+        query = query.range(offset, offset + limit - 1);
+      }
+      
+      query = query.order('id', { ascending: false });
+      
+      const { data, error, count } = await query;
+      
+      console.log('[Admin Content Items] Query results:', {
+        totalItems: count,
+        returnedItems: data?.length || 0,
+        error: error?.message
+      });
       
       if (error) {
         return {
@@ -1588,12 +1637,17 @@ exports.handler = async (event, context) => {
         };
       }
       
+      const totalPages = showAll ? 1 : Math.ceil((count || 0) / limit);
+      
       return {
         statusCode: 200,
         headers,
         body: JSON.stringify({
           contentItems: data || [],
-          totalCount: data?.length || 0
+          total: count || 0,
+          totalPages: totalPages,
+          currentPage: page,
+          limit: showAll ? count : limit
         })
       };
       
