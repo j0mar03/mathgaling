@@ -49,7 +49,7 @@ const StudentDetailView = () => {
         // Fetch detailed student performance (with cache busting for Supabase)
         const performanceResponse = await axios.get(`/api/students/${id}/detailed-performance?_t=${Date.now()}`);
         setDetailedPerformance(performanceResponse.data);
-        setStudent(performanceResponse.data.studentInfo); // Use correct property name 'studentInfo'
+        setStudent(performanceResponse.data.student);
         
         setLoading(false);
       } catch (err) {

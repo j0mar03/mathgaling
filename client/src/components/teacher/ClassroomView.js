@@ -554,7 +554,7 @@ const ClassroomView = () => {
                 .map(student => (
                   <div 
                     key={student.student.id} 
-                    className={`intervention-item priority-${student.intervention.priority.toLowerCase()}`}
+                    className={`intervention-item priority-${(student.intervention.priority || 'medium').toLowerCase()}`}
                   >
                     <div className="intervention-details">
                       <h3>{student.student.name}</h3>
@@ -563,13 +563,19 @@ const ClassroomView = () => {
                         <span className="priority-label">Priority:</span> 
                         <span className="priority-value">{student.intervention.priority}</span>
                       </div>
-                      <div className="intervention-recommendations">
-                        <p><strong>Difficulty Adjustment:</strong> {student.intervention.recommendations.difficulty}</p>
-                        <p><strong>Hint Strategy:</strong> {student.intervention.recommendations.hints}</p>
-                        {student.intervention.recommendations.pacing && (
-                          <p><strong>Pacing:</strong> {student.intervention.recommendations.pacing}</p>
-                        )}
-                      </div>
+                      {student.intervention.recommendations ? (
+                        <div className="intervention-recommendations">
+                          <p><strong>Difficulty Adjustment:</strong> {student.intervention.recommendations.difficulty || 'N/A'}</p>
+                          <p><strong>Hint Strategy:</strong> {student.intervention.recommendations.hints || 'N/A'}</p>
+                          {student.intervention.recommendations.pacing && (
+                            <p><strong>Pacing:</strong> {student.intervention.recommendations.pacing}</p>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="intervention-recommendations">
+                          <p><strong>Reason:</strong> {student.intervention.reason || 'Performance tracking needed'}</p>
+                        </div>
+                      )}
                     </div>
                     <div className="intervention-actions">
                       <Link to={`/teacher/student/${student.student.id}`} className="button">
