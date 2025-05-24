@@ -5384,16 +5384,19 @@ exports.handler = async (event, context) => {
       }
       
       // Create message record
+      // TODO: Get actual teacher ID from auth context or session
+      const teacherId = 1; // Placeholder - should be actual teacher ID
+      
       const { data: messageRecord, error: messageError } = await supabase
         .from('messages')
         .insert({
-          recipient_id: studentId,
-          recipient_type: 'student',
-          sender_type: 'teacher',
-          subject: `Message from your teacher`,
-          content: message,
+          from_user_id: teacherId,
+          from_user_type: 'teacher',
+          to_user_id: studentId,
+          to_user_type: 'student',
+          message: message,
           read: false,
-          created_at: new Date().toISOString()
+          sent_at: new Date().toISOString()
         })
         .select()
         .single();
