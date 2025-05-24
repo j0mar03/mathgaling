@@ -407,75 +407,94 @@ const ClassroomView = () => {
           </div>
           
           <div className="students-table">
-            <div className="table-header">
-              <div className="col-name">Name</div>
-              <div className="col-grade">Grade</div>
-              <div className="col-mastery">Math Mastery</div>
-              <div className="col-activity">Last Activity</div>
-              <div className="col-intervention">Intervention</div>
-              <div className="col-actions">Actions</div>
-            </div>
-            
-            <div className="table-body">
-              {sortedStudents.map(student => (
-                <div 
-                  key={student.student.id} 
-                  className={`table-row ${student.intervention && student.intervention.needed ? 'needs-intervention' : ''}`}
-                >
-                  <div className="col-name">{student.student.name}</div>
-                  <div className="col-grade">{student.student.grade_level}</div>
-                  <div className="col-mastery">
-                    <div className="mastery-percentage">
-                      {student.performance?.mathMastery != null 
-                        ? (student.performance.mathMastery * 100).toFixed(0) + '%'
-                        : student.performance?.averageMastery != null
-                        ? (student.performance.averageMastery * 100).toFixed(0) + '%'
-                        : 'N/A'}
-                    </div>
-                    <div className="mastery-bar">
-                      <div 
-                        className="mastery-fill" 
-                        style={{ 
-                          width: `${
-                            student.performance?.mathMastery != null
-                              ? student.performance.mathMastery * 100
-                              : student.performance?.averageMastery != null
-                              ? student.performance.averageMastery * 100
-                              : 0
-                          }%` 
-                        }}
-                      ></div>
-                    </div>
-                  </div>
-                  <div className="col-activity">
-                    {student.performance?.lastActive 
-                      ? new Date(student.performance.lastActive).toLocaleDateString() 
-                      : 'Never'}
-                  </div>
-                  <div className="col-intervention">
-                    {student.intervention && student.intervention.needed ? (
-                      <span className={`priority-badge ${student.intervention.priority.toLowerCase()}`}>
-                        {student.intervention.priority}
-                      </span>
-                    ) : (
-                      <span className="no-intervention">None</span>
-                    )}
-                  </div>
-                  <div className="col-actions">
-                    <Link to={`/teacher/student/${student.student.id}`} className="button small">
-                      View
-                   </Link>
-                   <button
-                     className="button small danger"
-                     onClick={() => handleRemoveStudent(student.student.id, student.student.name)}
-                     disabled={isProcessing}
-                   >
-                     Remove
-                   </button>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th className="text-center">Grade</th>
+                  <th>Math Mastery</th>
+                  <th>Last Activity</th>
+                  <th className="text-center">Intervention</th>
+                  <th className="text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sortedStudents.map(student => (
+                  <tr 
+                    key={student.student.id} 
+                    className={student.intervention && student.intervention.needed ? 'needs-intervention' : ''}
+                  >
+                    <td className="col-name">{student.student.name}</td>
+                    <td className="col-grade">{student.student.grade_level}</td>
+                    <td className="col-mastery">
+                      <div className="mastery-display">
+                        <div className="mastery-percentage">
+                          {student.performance?.mathMastery != null 
+                            ? (student.performance.mathMastery * 100).toFixed(0) + '%'
+                            : student.performance?.averageMastery != null
+                            ? (student.performance.averageMastery * 100).toFixed(0) + '%'
+                            : student.performance?.averageScore != null
+                            ? Math.round(student.performance.averageScore) + '%'
+                            : 'N/A'}
+                        </div>
+                        {(student.performance?.mathMastery != null || student.performance?.averageMastery != null || student.performance?.averageScore != null) && (
+                          <div className="mastery-bar">
+                            <div 
+                              className="mastery-fill" 
+                              style={{ 
+                                width: `${
+                                  student.performance?.mathMastery != null
+                                    ? student.performance.mathMastery * 100
+                                    : student.performance?.averageMastery != null
+                                    ? student.performance.averageMastery * 100
+                                    : student.performance?.averageScore != null
+                                    ? student.performance.averageScore
+                                    : 0
+                                }%` 
+                              }}
+                            ></div>
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                    <td className="col-activity">
+                      {student.performance?.lastActive 
+                        ? new Date(student.performance.lastActive).toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: '2-digit' })
+                        : 'Never'}
+                    </td>
+                    <td className="col-intervention">
+                      {student.intervention && student.intervention.needed ? (
+                        <span className={`priority-badge ${student.intervention.priority.toLowerCase()}`}>
+                          {student.intervention.priority}
+                        </span>
+                      ) : (
+                        <span className="no-intervention">None</span>
+                      )}
+                    </td>
+                    <td className="col-actions">
+                      <div className="action-buttons">
+                        <Link to={`/teacher/student/${student.student.id}`} className="icon-button view" title="View Student">
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                          </svg>
+                        </Link>
+                        <button
+                          className="icon-button remove"
+                          onClick={() => handleRemoveStudent(student.student.id, student.student.name)}
+                          disabled={isProcessing}
+                          title="Remove Student"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
         
