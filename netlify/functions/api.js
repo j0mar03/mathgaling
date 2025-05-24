@@ -2373,6 +2373,57 @@ exports.handler = async (event, context) => {
     }
   }
   
+  // GET /api/content - Get content items (with optional KC filter)
+  if (path === '/api/content' && httpMethod === 'GET') {
+    try {
+      const queryParams = new URLSearchParams(event.queryStringParameters || {});
+      const kcId = queryParams.get('kc_id');
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      let query = supabase
+        .from('content_items')
+        .select('*')
+        .eq('type', 'multiple_choice');
+        
+      if (kcId) {
+        query = query.eq('knowledge_component_id', kcId);
+      }
+      
+      const { data, error } = await query.limit(10);
+      
+      if (error) {
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to fetch content items',
+            message: error.message
+          })
+        };
+      }
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify(data || [])
+      };
+      
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
   // GET /api/content/:id - Get content item by ID
   if (path.match(/\/api\/content\/\d+$/) && httpMethod === 'GET') {
     try {
@@ -2621,12 +2672,48 @@ exports.handler = async (event, context) => {
       
       const supabase = createClient(supabaseUrl, supabaseKey);
       
+      // Validate content_item_id exists
+      const contentItemId = responseData.content_item_id || responseData.contentItemId;
+      if (!contentItemId) {
+        console.error('[Netlify] ❌ Missing content_item_id in request');
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({
+            error: 'Missing content_item_id',
+            message: 'content_item_id is required'
+          })
+        };
+      }
+      
+      // Verify content item exists
+      const { data: contentItem, error: contentCheckError } = await supabase
+        .from('content_items')
+        .select('id, knowledge_component_id')
+        .eq('id', contentItemId)
+        .single();
+        
+      if (contentCheckError || !contentItem) {
+        console.error('[Netlify] ❌ Content item not found:', contentItemId);
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({
+            error: 'Invalid content_item_id',
+            message: `Content item ${contentItemId} not found`,
+            debug: { contentCheckError }
+          })
+        };
+      }
+      
+      console.log(`[Netlify] ✅ Content item ${contentItemId} verified, belongs to KC ${contentItem.knowledge_component_id}`);
+      
       // Create response record
       const { data: response, error: responseError } = await supabase
         .from('responses')
         .insert({
           student_id: parseInt(studentId),
-          content_item_id: responseData.content_item_id || responseData.contentItemId,
+          content_item_id: parseInt(contentItemId),
           answer: responseData.answer,
           correct: responseData.correct || responseData.isCorrect,
           time_spent: responseData.time_spent || responseData.timeSpent || null,
