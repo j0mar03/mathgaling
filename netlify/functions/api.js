@@ -5542,20 +5542,25 @@ exports.handler = async (event, context) => {
       }
       
       // Create notification for the student
-      const { error: notificationError } = await supabase
-        .from('notifications')
-        .insert({
-          recipient_id: studentId,
-          recipient_type: 'student',
-          type: 'message',
-          title: 'New message from your teacher',
-          content: `You have received a new message from your teacher.`,
-          read: false,
-          created_at: new Date().toISOString()
-        });
-        
-      if (notificationError) {
-        console.warn('[Netlify] Notification creation failed (non-critical):', notificationError);
+      try {
+        const { error: notificationError } = await supabase
+          .from('notifications')
+          .insert({
+            user_id: studentId,
+            user_type: 'student',
+            type: 'message',
+            title: 'New message from your teacher',
+            message: `You have received a new message from your teacher.`,
+            read: false,
+            reference_id: messageRecord.id,
+            created_at: new Date().toISOString()
+          });
+          
+        if (notificationError) {
+          console.warn('[Netlify] Notification creation failed (non-critical):', notificationError);
+        }
+      } catch (err) {
+        console.warn('[Netlify] Notification creation failed (non-critical):', err);
       }
       
       return {

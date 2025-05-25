@@ -62,10 +62,68 @@
 /* View Controls */
 .view-controls {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
   padding: 10px 0;
+  gap: 20px;
+}
+
+/* Color Theme Selector */
+.color-theme-selector {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: white;
+  padding: 8px 12px;
+  border-radius: 16px;
+  border: 2px solid #dee2e6;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.theme-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #6c757d;
+  margin-right: 4px;
+}
+
+.theme-buttons {
+  display: flex;
+  gap: 6px;
+}
+
+.theme-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.theme-btn:hover {
+  transform: scale(1.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.theme-btn.active {
+  border-color: #2c3e50;
+  transform: scale(1.1);
+  box-shadow: 0 0 0 2px rgba(44, 62, 80, 0.3);
+}
+
+.theme-btn.active::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 .accessibility-toggle {
@@ -109,16 +167,49 @@
   font-size: 0.8rem;
 }
 
-/* Dashboard Header */
+/* Dashboard Header - Default: Lighter, Friendlier Blue */
 .dashboard-header {
   text-align: center;
   margin-bottom: 30px;
   padding: 30px;
-  background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 50%, #fecfef 100%);
+  background: linear-gradient(135deg, #74b9ff 0%, #a8d8ff 50%, #dae8fc 100%);
   border-radius: 24px;
-  color: #2c3e50;
+  color: white;
   position: relative;
-  border: 3px solid #ff6b9d;
+  border: 3px solid #5b9bd5;
+  box-shadow: 0 8px 20px rgba(116, 185, 255, 0.3);
+}
+
+/* Alternative Color Schemes */
+.dashboard-header.green-theme {
+  background: linear-gradient(135deg, #81c784 0%, #a5d6a7 50%, #c8e6c9 100%);
+  border-color: #66bb6a;
+  box-shadow: 0 8px 20px rgba(129, 199, 132, 0.3);
+}
+
+.dashboard-header.peach-theme {
+  background: linear-gradient(135deg, #ffab91 0%, #ffcc80 50%, #ffe0b2 100%);
+  border-color: #ff8a65;
+  box-shadow: 0 8px 20px rgba(255, 171, 145, 0.3);
+}
+
+.dashboard-header.purple-theme {
+  background: linear-gradient(135deg, #b39ddb 0%, #c5b5e3 50%, #d1c4e9 100%);
+  border-color: #9575cd;
+  box-shadow: 0 8px 20px rgba(179, 157, 219, 0.3);
+}
+
+.dashboard-header.yellow-theme {
+  background: linear-gradient(135deg, #fff176 0%, #fff59d 50%, #fff9c4 100%);
+  border-color: #ffeb3b;
+  box-shadow: 0 8px 20px rgba(255, 241, 118, 0.3);
+  color: #2c3e50; /* Dark text for better contrast on yellow */
+}
+
+.dashboard-header.teal-theme {
+  background: linear-gradient(135deg, #4dd0e1 0%, #80deea 50%, #b2ebf2 100%);
+  border-color: #26c6da;
+  box-shadow: 0 8px 20px rgba(77, 208, 225, 0.3);
 }
 
 .messages-icon {
@@ -183,26 +274,44 @@
 }
 
 .dashboard-header h1 {
-  color: #2c3e50;
+  color: white;
   font-size: 2.5rem;
   margin-bottom: 12px;
   font-weight: 700;
-  text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.5);
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .dashboard-header .subtitle {
-  color: #34495e;
+  color: rgba(255, 255, 255, 0.95);
   font-size: 1.2rem;
   margin-bottom: 15px;
   font-weight: 600;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .encouragement-text {
-  color: #34495e;
+  color: rgba(255, 255, 255, 0.9);
   font-style: italic;
   font-size: 1.1rem;
   margin-bottom: 20px;
   font-weight: 500;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Yellow theme text adjustments for better contrast */
+.dashboard-header.yellow-theme h1 {
+  color: #2c3e50;
+  text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.7);
+}
+
+.dashboard-header.yellow-theme .subtitle {
+  color: #34495e;
+  text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.5);
+}
+
+.dashboard-header.yellow-theme .encouragement-text {
+  color: #34495e;
+  text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.5);
 }
 
 .progress-button {
@@ -820,7 +929,17 @@
   }
   
   .view-controls {
-    justify-content: center;
+    flex-direction: column;
+    gap: 15px;
+    align-items: center;
+  }
+  
+  .color-theme-selector {
+    order: 1;
+  }
+  
+  .accessibility-toggle {
+    order: 2;
   }
   
   .messages-icon {
