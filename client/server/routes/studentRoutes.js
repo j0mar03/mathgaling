@@ -353,6 +353,134 @@ router.get('/:id/recommended-content', optionalAuth, async (req, res) => {
 });
 
 
+// Get challenge quiz questions (difficulty-based from random KCs)
+router.get('/:id/challenge-quiz', optionalAuth, async (req, res) => {
+  try {
+    console.log("[challenge-quiz] Fetching challenge quiz questions");
+    
+    const studentId = parseInt(req.params.id, 10);
+    const limit = parseInt(req.query.limit) || 8;
+    
+    // Get student's knowledge states to determine difficulty levels
+    const knowledgeStates = await db.KnowledgeState.findAll({
+      where: { student_id: studentId },
+      include: [{
+        model: db.KnowledgeComponent,
+        as: 'KnowledgeComponent'
+      }]
+    });
+    
+    // Calculate overall mastery to determine challenge difficulty
+    const totalMastery = knowledgeStates.reduce((sum, state) => sum + (state.p_mastery || 0), 0);
+    const averageMastery = knowledgeStates.length > 0 ? totalMastery / knowledgeStates.length : 0;
+    
+    // Determine difficulty tier based on student's overall mastery
+    let targetDifficulty;
+    if (averageMastery >= 0.8) {
+      targetDifficulty = [4, 5]; // Advanced - highest difficulty
+    } else if (averageMastery >= 0.6) {
+      targetDifficulty = [3, 4]; // Intermediate-Advanced
+    } else if (averageMastery >= 0.4) {
+      targetDifficulty = [2, 3]; // Beginner-Intermediate
+    } else {
+      targetDifficulty = [1, 2]; // Starter-Beginner
+    }
+    
+    console.log(`[challenge-quiz] Student average mastery: ${(averageMastery * 100).toFixed(1)}%, Target difficulty: ${targetDifficulty.join(',')}`);
+    
+    // Get recently answered content items to avoid repetition
+    const recentAnswers = await db.Response.findAll({
+      where: {
+        student_id: studentId,
+        createdAt: {
+          [db.Sequelize.Op.gt]: new Date(Date.now() - 30 * 60 * 1000) // Exclude responses in the last 30 minutes
+        }
+      },
+      attributes: ['content_item_id'],
+      raw: true,
+      limit: 10
+    });
+    
+    const answeredItemIds = recentAnswers.map(r => r.content_item_id);
+    
+    // Build where clause for challenge questions
+    const whereClause = {
+      type: {
+        [db.Sequelize.Op.in]: ['multiple_choice', 'question', 'fill_in_blank', 'computation', 'word_problem']
+      },
+      difficulty: {
+        [db.Sequelize.Op.in]: targetDifficulty
+      }
+    };
+    
+    // Exclude recently answered questions
+    if (answeredItemIds.length > 0) {
+      whereClause.id = { [db.Sequelize.Op.notIn]: answeredItemIds };
+    }
+    
+    // Find all eligible challenge questions
+    const contentItems = await db.ContentItem.findAll({
+      where: whereClause,
+      include: [{
+        model: db.KnowledgeComponent,
+        as: 'KnowledgeComponent',
+        attributes: ['id', 'name', 'curriculum_code']
+      }],
+      order: db.Sequelize.literal('RANDOM()'), // Random selection
+      limit: limit * 2 // Get more than needed to ensure variety
+    });
+    
+    if (contentItems.length === 0) {
+      console.warn(`[challenge-quiz] No challenge questions found for difficulty levels ${targetDifficulty.join(',')}`);
+      return res.json([]);
+    }
+    
+    // Group questions by KC to ensure variety
+    const questionsByKC = {};
+    contentItems.forEach(item => {
+      const kcId = item.knowledge_component_id;
+      if (!questionsByKC[kcId]) {
+        questionsByKC[kcId] = [];
+      }
+      questionsByKC[kcId].push(item);
+    });
+    
+    // Select questions from different KCs to create variety
+    const selectedQuestions = [];
+    const kcIds = Object.keys(questionsByKC);
+    let kcIndex = 0;
+    
+    while (selectedQuestions.length < limit && selectedQuestions.length < contentItems.length) {
+      const currentKcId = kcIds[kcIndex % kcIds.length];
+      const kcQuestions = questionsByKC[currentKcId];
+      
+      if (kcQuestions.length > 0) {
+        const question = kcQuestions.shift(); // Take and remove first question
+        selectedQuestions.push(question);
+      }
+      
+      kcIndex++;
+      
+      // If we've cycled through all KCs and some have no more questions, remove them
+      if (kcIndex % kcIds.length === 0) {
+        for (let i = kcIds.length - 1; i >= 0; i--) {
+          if (questionsByKC[kcIds[i]].length === 0) {
+            kcIds.splice(i, 1);
+          }
+        }
+        if (kcIds.length === 0) break;
+      }
+    }
+    
+    console.log(`[challenge-quiz] Selected ${selectedQuestions.length} questions from ${Object.keys(questionsByKC).length} different KCs`);
+    
+    res.json(selectedQuestions);
+  } catch (err) {
+    console.error('Error fetching challenge quiz:', err);
+    res.status(500).json({ error: 'Failed to fetch challenge quiz' });
+  }
+});
+
 // Submit a response to content
 router.post('/:id/responses', optionalAuth, studentController.processResponse);
 

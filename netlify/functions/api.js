@@ -3128,6 +3128,153 @@ exports.handler = async (event, context) => {
     }
   }
   
+  // GET /api/students/:id/challenge-quiz - Get challenge quiz questions based on difficulty and student mastery
+  if (path.includes('/challenge-quiz') && httpMethod === 'GET') {
+    try {
+      const pathParts = path.split('/');
+      const studentId = pathParts[pathParts.indexOf('students') + 1];
+      const queryParams = new URLSearchParams(event.queryStringParameters || {});
+      const limit = parseInt(queryParams.get('limit')) || 8;
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // Get student's knowledge states to determine difficulty levels
+      const { data: knowledgeStates, error: statesError } = await supabase
+        .from('knowledge_states')
+        .select('p_mastery')
+        .eq('student_id', studentId);
+        
+      if (statesError) {
+        console.warn('Could not fetch knowledge states:', statesError);
+      }
+      
+      // Calculate overall mastery to determine challenge difficulty
+      const totalMastery = (knowledgeStates || []).reduce((sum, state) => sum + (state.p_mastery || 0), 0);
+      const averageMastery = knowledgeStates && knowledgeStates.length > 0 ? totalMastery / knowledgeStates.length : 0;
+      
+      // Determine difficulty tier based on student's overall mastery
+      let targetDifficulty;
+      if (averageMastery >= 0.8) {
+        targetDifficulty = [4, 5]; // Advanced - highest difficulty
+      } else if (averageMastery >= 0.6) {
+        targetDifficulty = [3, 4]; // Intermediate-Advanced
+      } else if (averageMastery >= 0.4) {
+        targetDifficulty = [2, 3]; // Beginner-Intermediate
+      } else {
+        targetDifficulty = [1, 2]; // Starter-Beginner
+      }
+      
+      console.log(`[challenge-quiz] Student ${studentId} average mastery: ${(averageMastery * 100).toFixed(1)}%, Target difficulty: ${targetDifficulty.join(',')}`);
+      
+      // Get recently answered content items to avoid repetition
+      const thirtyMinutesAgo = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+      const { data: recentAnswers } = await supabase
+        .from('responses')
+        .select('content_item_id')
+        .eq('student_id', studentId)
+        .gt('created_at', thirtyMinutesAgo)
+        .limit(10);
+      
+      const answeredItemIds = (recentAnswers || []).map(r => r.content_item_id);
+      
+      // Build query for challenge questions
+      let query = supabase
+        .from('content_items')
+        .select(`
+          *,
+          knowledge_components!inner(id, name, curriculum_code)
+        `)
+        .in('type', ['multiple_choice', 'question', 'fill_in_blank', 'computation', 'word_problem'])
+        .in('difficulty', targetDifficulty);
+      
+      // Exclude recently answered questions
+      if (answeredItemIds.length > 0) {
+        query = query.not('id', 'in', `(${answeredItemIds.join(',')})`);
+      }
+      
+      const { data: contentItems, error } = await query
+        .limit(limit * 3); // Get more than needed for variety
+      
+      if (error) {
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to fetch challenge quiz',
+            message: error.message
+          })
+        };
+      }
+      
+      if (!contentItems || contentItems.length === 0) {
+        console.warn(`[challenge-quiz] No challenge questions found for difficulty levels ${targetDifficulty.join(',')}`);
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify([])
+        };
+      }
+      
+      // Group questions by KC to ensure variety
+      const questionsByKC = {};
+      contentItems.forEach(item => {
+        const kcId = item.knowledge_component_id;
+        if (!questionsByKC[kcId]) {
+          questionsByKC[kcId] = [];
+        }
+        questionsByKC[kcId].push(item);
+      });
+      
+      // Select questions from different KCs to create variety
+      const selectedQuestions = [];
+      const kcIds = Object.keys(questionsByKC);
+      let kcIndex = 0;
+      
+      while (selectedQuestions.length < limit && selectedQuestions.length < contentItems.length) {
+        const currentKcId = kcIds[kcIndex % kcIds.length];
+        const kcQuestions = questionsByKC[currentKcId];
+        
+        if (kcQuestions.length > 0) {
+          const question = kcQuestions.shift(); // Take and remove first question
+          selectedQuestions.push(question);
+        }
+        
+        kcIndex++;
+        
+        // If we've cycled through all KCs and some have no more questions, remove them
+        if (kcIndex % kcIds.length === 0) {
+          for (let i = kcIds.length - 1; i >= 0; i--) {
+            if (questionsByKC[kcIds[i]].length === 0) {
+              kcIds.splice(i, 1);
+            }
+          }
+          if (kcIds.length === 0) break;
+        }
+      }
+      
+      console.log(`[challenge-quiz] Selected ${selectedQuestions.length} questions from ${Object.keys(questionsByKC).length} different KCs`);
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify(selectedQuestions)
+      };
+      
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
   // GET /api/students/:id/knowledge-states - Get student's knowledge states
   if (path.includes('/knowledge-states') && httpMethod === 'GET') {
     try {

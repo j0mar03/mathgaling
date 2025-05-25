@@ -222,6 +222,41 @@ Based on user feedback for more appealing and educational colors:
 - **Touch-Friendly**: 24px color buttons optimal for small fingers
 - **Consistent Spacing**: Proper gaps and margins for all screen sizes
 
+## Challenge Quiz System (Jan 2025)
+
+### Math Challenge Implementation:
+- **New Challenge Mode**: Implemented difficulty-based quiz system in Math Challenge
+- **Difficulty Tiers**: 5 levels (1-5) based on student's overall mastery:
+  - Advanced (80%+ mastery): Difficulty 4-5 questions
+  - Intermediate-Advanced (60-79%): Difficulty 3-4 questions  
+  - Beginner-Intermediate (40-59%): Difficulty 2-3 questions
+  - Starter-Beginner (<40%): Difficulty 1-2 questions
+
+### Challenge Quiz Features:
+- **Random KC Selection**: Questions from different Knowledge Components for variety
+- **Independent Progress**: Challenge quiz progress doesn't affect regular KC mastery levels
+- **Smart Question Selection**: Avoids recently answered questions (30-minute window)
+- **Multi-KC Variety**: Ensures questions come from different KCs in each quiz session
+
+### API Endpoints Added:
+- **Frontend**: `/student/quiz?mode=challenge&practice_mode=true`
+- **Backend**: `/api/students/:id/challenge-quiz` (both server and Netlify function)
+- **Response Tracking**: Separate practice_mode flag prevents KC mastery interference
+
+### Technical Implementation:
+- **Server Route**: `client/server/routes/studentRoutes.js` - challenge-quiz endpoint
+- **Netlify Function**: `netlify/functions/api.js` - challenge-quiz endpoint  
+- **Frontend Logic**: `QuizView.js` - handles challenge mode separately from sequential mode
+- **Mastery Dashboard**: Updated to use `mode=challenge` instead of `mode=random`
+
+### Challenge Quiz Logic:
+1. Fetches student's knowledge states to calculate overall mastery
+2. Determines appropriate difficulty tier based on mastery level
+3. Queries content_items table filtering by difficulty and question types
+4. Groups questions by KC to ensure variety across different topics
+5. Selects questions round-robin style from different KCs
+6. Tracks responses as practice_mode to prevent KC mastery updates
+
 ## Memories
 - Fix math mastery
 - Add to memory
@@ -232,4 +267,5 @@ Based on user feedback for more appealing and educational colors:
 - Student dashboard redesigned for better usability
 - Orange default color theme with localStorage persistence for color preferences
 - Fixed notification duplicate key error with existence check before creation
+- Challenge quiz system implemented with difficulty-based KC selection and independent progress tracking
 - Add to memory

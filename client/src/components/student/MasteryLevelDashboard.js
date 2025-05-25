@@ -219,7 +219,7 @@ const MasteryLevelDashboard = () => {
   };
 
   const handleStartChallenge = () => {
-    navigate('/student/quiz?mode=random&practice_mode=true');
+    navigate('/student/quiz?mode=challenge&practice_mode=true');
   };
 
   const handleTopicClick = (topic) => {

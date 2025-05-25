@@ -56,6 +56,7 @@ const QuizView = () => {
     const queryParams = new URLSearchParams(location.search);
     const kcId = queryParams.get('kc_id');
     const mode = queryParams.get('mode');
+    const practiceMode = queryParams.get('practice_mode') === 'true';
 
     if (!kcId && mode === 'sequential') {
       setError('No knowledge component specified for sequential quiz');
@@ -117,6 +118,13 @@ const QuizView = () => {
           const allQuestions = await Promise.all(questionPromises);
           questionsData = allQuestions.filter(q => q !== null); // Remove failed questions
 
+        } else if (mode === 'challenge') {
+          // Challenge mode - get difficulty-based questions from random KCs
+          const response = await axios.get(`/api/students/${user.id}/challenge-quiz?limit=8`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+
+          questionsData = response.data || [];
         } else {
           // Regular mode - get recommended content
           const response = await axios.get(`/api/students/${user.id}/recommended-content?limit=8`, {
@@ -403,20 +411,21 @@ const QuizView = () => {
       }
     ]);
     
-    // Submit response to backend (NOT practice mode - this should update mastery)
+    // Submit response to backend
     try {
-      console.log('[QuizView] Submitting mastery quiz response for KC progress update');
+      const queryParams = new URLSearchParams(location.search);
+      const mode = queryParams.get('mode');
+      const practiceMode = queryParams.get('practice_mode') === 'true';
+      
+      // For challenge mode, we want independent progress tracking
+      const isChallenge = mode === 'challenge';
+      const shouldUpdateMastery = !practiceMode && !isChallenge; // Only update mastery for regular sequential quizzes
+      
+      console.log(`[QuizView] Submitting response - Mode: ${mode}, Practice: ${practiceMode}, Challenge: ${isChallenge}, Update Mastery: ${shouldUpdateMastery}`);
       console.log('[QuizView] Question details:', {
         id: currentQuestion.id,
         kc_id: currentQuestion.knowledge_component?.id,
         kc_name: currentQuestion.knowledge_component?.name
-      });
-      console.log('[QuizView] Submission payload:', {
-        content_item_id: currentQuestion.id,
-        answer: currentQuestion.type === 'fill_in_blank' ? fillInAnswer : selectedOption,
-        correct: isCorrect,
-        practice_mode: false,
-        time_spent: timeSpent
       });
       
       const response = await axios.post(`/api/students/${user.id}/responses`, {
@@ -426,15 +435,16 @@ const QuizView = () => {
         interaction_data: {
           hintRequests: hintRequests,
           attempts: 1,
-          selectedOption: currentQuestion.type === 'fill_in_blank' ? fillInAnswer : selectedOption
+          selectedOption: currentQuestion.type === 'fill_in_blank' ? fillInAnswer : selectedOption,
+          quiz_mode: mode // Track what type of quiz this was
         },
         correct: isCorrect,
-        practice_mode: false // Explicitly set to false to ensure mastery updates
+        practice_mode: !shouldUpdateMastery // Set practice mode for challenge quizzes to prevent KC mastery updates
       }, {
         headers: { 
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache' // Prevent caching for Supabase
+          'Cache-Control': 'no-cache'
         }
       });
       
