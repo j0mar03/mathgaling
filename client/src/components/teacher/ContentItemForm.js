@@ -2,9 +2,9 @@ import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext'; // Use the custom hook
 
-function ContentItemForm({ itemToEdit, onSuccess, onClose }) {
+function ContentItemForm({ itemToEdit, onSuccess, onClose, knowledgeComponentId }) {
   const [formData, setFormData] = useState({
-    knowledge_component_id: '',
+    knowledge_component_id: knowledgeComponentId || '',
     type: '',
     content: '',
     metadata: '', // Assuming metadata is stored as JSON string for simplicity

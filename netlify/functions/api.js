@@ -2437,22 +2437,54 @@ exports.handler = async (event, context) => {
       // Count topics with mastery >= 0.8 as completed
       const topicsCompleted = knowledgeStates?.filter(ks => ks.p_mastery >= 0.8).length || 0;
       
-      // Calculate learning streak (simplified - days with activity)
+      // Calculate learning streak (consecutive days with activity)
       const { data: recentResponses, error: responseError } = await supabase
         .from('responses')
         .select('created_at')
         .eq('student_id', studentId)
-        .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()) // Last 7 days
+        .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()) // Last 30 days
         .order('created_at', { ascending: false });
       
-      // Simple streak calculation - count unique days with responses
+      // Calculate consecutive day streak
+      let streak = 0;
+      const today = new Date();
+      const todayStr = today.toDateString();
+      
+      // Get unique days with activity, sorted by date (most recent first)
       const uniqueDays = new Set();
       recentResponses?.forEach(response => {
         const date = new Date(response.created_at).toDateString();
         uniqueDays.add(date);
       });
       
-      const streak = uniqueDays.size || 0;
+      const sortedDays = Array.from(uniqueDays).sort((a, b) => new Date(b) - new Date(a));
+      
+      // Check if there's activity today or yesterday (to handle timezone differences)
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = yesterday.toDateString();
+      
+      let currentDate = new Date(today);
+      let startFromToday = sortedDays.includes(todayStr);
+      
+      // If no activity today, check if there was activity yesterday
+      if (!startFromToday && sortedDays.includes(yesterdayStr)) {
+        currentDate = yesterday;
+        startFromToday = true;
+      }
+      
+      // Count consecutive days backwards from the starting date
+      if (startFromToday) {
+        for (let i = 0; i < 30; i++) { // Check up to 30 days back
+          const checkDateStr = currentDate.toDateString();
+          if (sortedDays.includes(checkDateStr)) {
+            streak++;
+            currentDate.setDate(currentDate.getDate() - 1);
+          } else {
+            break; // Streak is broken
+          }
+        }
+      }
       
       return {
         statusCode: 200,
@@ -2550,9 +2582,39 @@ exports.handler = async (event, context) => {
         };
       }
 
-      // For now, we'll get the student ID from the token or assume a student
-      // TODO: Properly decode JWT token to get user info
-      const studentId = 20; // This should come from the decoded JWT token
+      const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+      let userId = null;
+      let userRole = null;
+      
+      // Decode JWT token to get user info
+      try {
+        // Simple JWT decode without verification (for development)
+        // In production, this should use proper JWT verification with secret
+        const base64Payload = token.split('.')[1];
+        const payload = JSON.parse(Buffer.from(base64Payload, 'base64').toString('utf8'));
+        userId = payload.id;
+        userRole = payload.role;
+        
+        console.log(`[Netlify] Decoded token - User ID: ${userId}, Role: ${userRole}`);
+      } catch (decodeError) {
+        console.error('[Netlify] JWT decode error:', decodeError);
+        return {
+          statusCode: 401,
+          headers,
+          body: JSON.stringify({ error: 'Invalid authorization token' })
+        };
+      }
+      
+      // For now, only support student message inboxes
+      if (userRole !== 'student') {
+        return {
+          statusCode: 403,
+          headers,
+          body: JSON.stringify({ error: 'Only students can access message inbox currently' })
+        };
+      }
+      
+      const studentId = userId;
       
       const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
       const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
@@ -5502,6 +5564,48 @@ exports.handler = async (event, context) => {
       const pathParts = path.split('/');
       const studentId = pathParts[pathParts.indexOf('students') + 1];
       
+      // Extract and verify auth token
+      const authHeader = event.headers.authorization || event.headers.Authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return {
+          statusCode: 401,
+          headers,
+          body: JSON.stringify({ error: 'Authorization required' })
+        };
+      }
+      
+      const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+      let teacherId = null;
+      let teacherRole = null;
+      
+      // Decode JWT token to get teacher info
+      try {
+        // Simple JWT decode without verification (for development)
+        // In production, this should use proper JWT verification with secret
+        const base64Payload = token.split('.')[1];
+        const payload = JSON.parse(Buffer.from(base64Payload, 'base64').toString('utf8'));
+        teacherId = payload.id;
+        teacherRole = payload.role;
+        
+        console.log(`[Netlify] Decoded token - Teacher ID: ${teacherId}, Role: ${teacherRole}`);
+        
+        // Verify this is actually a teacher
+        if (teacherRole !== 'teacher') {
+          return {
+            statusCode: 403,
+            headers,
+            body: JSON.stringify({ error: 'Only teachers can send messages to students' })
+          };
+        }
+      } catch (decodeError) {
+        console.error('[Netlify] JWT decode error:', decodeError);
+        return {
+          statusCode: 401,
+          headers,
+          body: JSON.stringify({ error: 'Invalid authorization token' })
+        };
+      }
+      
       const requestData = JSON.parse(event.body);
       const { message, studentName } = requestData;
       
@@ -5520,9 +5624,28 @@ exports.handler = async (event, context) => {
       
       const supabase = createClient(supabaseUrl, supabaseKey);
       
-      console.log(`[Netlify] Teacher sending message to student ${studentId}:`, message);
+      console.log(`[Netlify] Teacher ${teacherId} sending message to student ${studentId}:`, message);
       
-      // First verify student exists
+      // Verify teacher exists
+      const { data: teacher, error: teacherError } = await supabase
+        .from('teachers')
+        .select('id, name')
+        .eq('id', teacherId)
+        .single();
+        
+      if (teacherError || !teacher) {
+        console.error('[Netlify] Teacher lookup error:', teacherError);
+        return {
+          statusCode: 404,
+          headers,
+          body: JSON.stringify({
+            error: 'Teacher not found',
+            message: teacherError?.message || 'Teacher not found'
+          })
+        };
+      }
+      
+      // Verify student exists
       const { data: student, error: studentError } = await supabase
         .from('students')
         .select('id, name, auth_id')
@@ -5540,10 +5663,6 @@ exports.handler = async (event, context) => {
           })
         };
       }
-      
-      // Create message record
-      // TODO: Get actual teacher ID from auth context or session
-      const teacherId = 1; // Placeholder - should be actual teacher ID
       
       const { data: messageRecord, error: messageError } = await supabase
         .from('messages')

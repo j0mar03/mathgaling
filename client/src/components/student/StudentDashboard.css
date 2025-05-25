@@ -987,8 +987,10 @@
   .action-button {
     width: 100%;
     max-width: 300px;
-    min-height: 100px;
-    padding: 20px 16px;
+    min-height: 120px;
+    padding: 24px 20px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
   
   .button-text {
@@ -1015,10 +1017,26 @@
   
   .color-theme-selector {
     order: 1;
+    padding: 12px 16px;
+  }
+  
+  .theme-btn {
+    width: 32px;
+    height: 32px;
+    margin: 2px;
+  }
+  
+  .theme-buttons {
+    gap: 8px;
   }
   
   .accessibility-toggle {
     order: 2;
+  }
+  
+  .toggle-btn {
+    padding: 12px 20px;
+    font-size: 16px;
   }
   
   .messages-icon {

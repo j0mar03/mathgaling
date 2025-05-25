@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js';
 import { Pie } from 'react-chartjs-2';
+import ContentItemForm from './ContentItemForm';
 import './TeacherDashboard.css';
 import './KnowledgeComponentView.css';
 
@@ -19,6 +20,8 @@ const KnowledgeComponentView = () => {
   const [contentItems, setContentItems] = useState([]);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('quizzes');
+  const [showContentForm, setShowContentForm] = useState(false);
+  const [editingContent, setEditingContent] = useState(null);
   
   useEffect(() => {
     const fetchData = async () => {
@@ -166,6 +169,40 @@ const KnowledgeComponentView = () => {
     }
   };
   
+  // Handler for adding new content
+  const handleAddContent = () => {
+    setEditingContent(null);
+    setShowContentForm(true);
+  };
+  
+  // Handler for editing content
+  const handleEditContent = (contentItem) => {
+    setEditingContent(contentItem);
+    setShowContentForm(true);
+  };
+  
+  // Handler for closing content form
+  const handleCloseContentForm = () => {
+    setShowContentForm(false);
+    setEditingContent(null);
+  };
+  
+  // Handler for successful content form submission
+  const handleContentFormSuccess = async () => {
+    setShowContentForm(false);
+    setEditingContent(null);
+    
+    // Refresh content items
+    try {
+      const contentResponse = await axios.get(`/api/teachers/knowledge-components/${id}/content-items`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setContentItems(contentResponse.data);
+    } catch (err) {
+      console.error('Error refreshing content items:', err);
+    }
+  };
+  
   return (
     <div className="knowledge-component-view">
       <div className="kc-header">
@@ -197,7 +234,7 @@ const KnowledgeComponentView = () => {
         </div>
         <div className="header-actions">
           <Link to="/teacher" className="button secondary">Back to Dashboard</Link>
-          <button className="button">Edit Content</button>
+          <button className="button" onClick={handleAddContent}>Edit Content</button>
         </div>
       </div>
       
@@ -299,7 +336,7 @@ const KnowledgeComponentView = () => {
         <div className="content-items-section">
           <div className="section-header">
             <h2>Content Items</h2>
-            <button className="add-button">+ Add Content</button>
+            <button className="add-button" onClick={handleAddContent}>+ Add Content</button>
           </div>
           
           {contentItems.length > 0 ? (
@@ -358,7 +395,7 @@ const KnowledgeComponentView = () => {
                         </div>
                         <div className="content-actions">
                           <button className="button small">Preview</button>
-                          <button className="button small">Edit</button>
+                          <button className="button small" onClick={() => handleEditContent(item)}>Edit</button>
                         </div>
                       </div>
                     </div>
@@ -396,6 +433,20 @@ const KnowledgeComponentView = () => {
           )}
         </div>
       </div>
+      
+      {/* Content Item Form Modal */}
+      {showContentForm && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <ContentItemForm
+              itemToEdit={editingContent}
+              onSuccess={handleContentFormSuccess}
+              onClose={handleCloseContentForm}
+              knowledgeComponentId={id}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

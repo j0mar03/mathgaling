@@ -299,16 +299,45 @@
 }
 
 /* Responsive Adjustments */
+@media (max-width: 1200px) {
+  .admin-dashboard {
+    max-width: 100%;
+    padding: 15px;
+  }
+}
+
 @media (max-width: 768px) {
+  .admin-dashboard {
+    padding: 10px;
+    margin: 0;
+    border-radius: 0;
+  }
+  
+  .admin-dashboard h1 {
+    font-size: 24px;
+    text-align: center;
+    margin-bottom: 15px;
+  }
+  
+  .admin-dashboard h2 {
+    font-size: 20px;
+    margin-bottom: 12px;
+  }
+  
   .dashboard-tabs {
     flex-direction: column;
     border-bottom: none;
+    gap: 8px;
   }
   
-  .tab-button {
+  .tab-button, .review-link-button {
     margin-right: 0;
-    margin-bottom: 5px;
-    border-radius: 4px;
+    margin-bottom: 0;
+    border-radius: 8px;
+    width: 100%;
+    text-align: center;
+    padding: 15px;
+    font-size: 16px;
   }
   
   .tab-button.active {
@@ -318,5 +347,71 @@
   .admin-table {
     display: block;
     overflow-x: auto;
+    font-size: 14px;
+  }
+  
+  .admin-table th,
+  .admin-table td {
+    padding: 8px 6px;
+    white-space: nowrap;
+  }
+  
+  .admin-button {
+    padding: 12px 16px;
+    font-size: 14px;
+    margin-right: 5px;
+    margin-bottom: 8px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    min-height: 44px;
+  }
+  
+  .admin-section {
+    padding: 15px 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-dashboard {
+    padding: 8px;
+  }
+  
+  .admin-dashboard h1 {
+    font-size: 20px;
+  }
+  
+  .admin-dashboard h2 {
+    font-size: 18px;
+  }
+  
+  .tab-button, .review-link-button {
+    padding: 16px;
+    font-size: 16px;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    min-height: 48px;
+  }
+  
+  .admin-table {
+    font-size: 12px;
+  }
+  
+  .admin-table th,
+  .admin-table td {
+    padding: 6px 4px;
+  }
+  
+  .admin-button {
+    padding: 6px 10px;
+    font-size: 11px;
+    display: block;
+    width: 100%;
+    margin-bottom: 5px;
+    margin-right: 0;
+  }
+  
+  /* Stack action buttons vertically on very small screens */
+  .admin-table td:last-child {
+    min-width: 120px;
   }
 }
