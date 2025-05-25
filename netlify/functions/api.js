@@ -5576,25 +5576,38 @@ exports.handler = async (event, context) => {
       // Create notification for the student
       try {
         const now = new Date().toISOString();
-        const { error: notificationError } = await supabase
+        
+        // Check if notification already exists for this message
+        const { data: existingNotification } = await supabase
           .from('notifications')
-          .insert({
-            user_id: studentId,
-            user_type: 'student',
-            type: 'message',
-            title: 'New message from your teacher',
-            message: `You have received a new message from your teacher.`,
-            read: false,
-            reference_id: messageRecord.id,
-            created_at: now,
-            createdAt: now,
-            updatedAt: now
-          });
+          .select('id')
+          .eq('reference_id', messageRecord.id)
+          .eq('user_id', studentId)
+          .eq('type', 'message')
+          .single();
           
-        if (notificationError) {
-          console.warn('[Netlify] Notification creation failed (non-critical):', notificationError);
+        if (existingNotification) {
+          console.log('[Netlify] Notification already exists for message:', messageRecord.id);
         } else {
-          console.log('[Netlify] Notification created successfully for user:', studentId);
+          const { error: notificationError } = await supabase
+            .from('notifications')
+            .insert({
+              user_id: studentId,
+              user_type: 'student',
+              type: 'message',
+              title: 'New message from your teacher',
+              message: `You have received a new message from your teacher.`,
+              read: false,
+              reference_id: messageRecord.id,
+              created_at: now,
+              updated_at: now
+            });
+            
+          if (notificationError) {
+            console.warn('[Netlify] Notification creation failed (non-critical):', notificationError);
+          } else {
+            console.log('[Netlify] Notification created successfully for user:', studentId);
+          }
         }
       } catch (err) {
         console.warn('[Netlify] Notification creation failed (non-critical):', err);

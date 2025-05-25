@@ -231,3 +231,4 @@ Based on user feedback for more appealing and educational colors:
 - Student messages system fully implemented and working with multiple messages
 - Student dashboard redesigned for better usability
 - Orange default color theme with localStorage persistence for color preferences
+- Fixed notification duplicate key error with existence check before creation
