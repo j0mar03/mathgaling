@@ -227,5 +227,7 @@ Based on user feedback for more appealing and educational colors:
 - Add to memory
 - Parent-student linking implementation with admin and teacher interfaces
 - Currently debugging 500 error on parent-student link creation
+- Parent dashboard 500 error when fetching children - added debug logging to API
 - Student messages system fully implemented and working with multiple messages
 - Student dashboard redesigned for better usability
+- Orange default color theme with localStorage persistence for color preferences

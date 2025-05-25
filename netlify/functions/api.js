@@ -4865,16 +4865,33 @@ exports.handler = async (event, context) => {
       const pathParts = path.split('/');
       const parentId = pathParts[pathParts.indexOf('parents') + 1];
       
+      console.log('Parent ID:', parentId);
+      console.log('Full path:', path);
+      
       const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
       const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
       
       const supabase = createClient(supabaseUrl, supabaseKey);
       
       // Get parent-student relationships
-      const { data: relationships } = await supabase
+      const { data: relationships, error: relationError } = await supabase
         .from('parent_students')
         .select('student_id')
         .eq('parent_id', parentId);
+      
+      console.log('Relationships:', relationships);
+      console.log('Relation error:', relationError);
+      
+      if (relationError) {
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to fetch parent-student relationships',
+            message: relationError.message
+          })
+        };
+      }
       
       if (!relationships || relationships.length === 0) {
         return {
@@ -4886,10 +4903,15 @@ exports.handler = async (event, context) => {
       
       // Get student details
       const studentIds = relationships.map(r => r.student_id);
+      console.log('Student IDs:', studentIds);
+      
       const { data: students, error } = await supabase
         .from('students')
         .select('*')
         .in('id', studentIds);
+      
+      console.log('Students:', students);
+      console.log('Students error:', error);
       
       if (error) {
         return {
@@ -4909,6 +4931,7 @@ exports.handler = async (event, context) => {
       };
       
     } catch (error) {
+      console.error('Parent students endpoint error:', error);
       return {
         statusCode: 500,
         headers,
@@ -4976,6 +4999,9 @@ exports.handler = async (event, context) => {
       const pathParts = path.split('/');
       const parentId = pathParts[pathParts.indexOf('parents') + 1];
       
+      console.log('Children endpoint - Parent ID:', parentId);
+      console.log('Children endpoint - Full path:', path);
+      
       const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
       const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
       
@@ -4990,7 +5016,11 @@ exports.handler = async (event, context) => {
         `)
         .eq('parent_id', parentId);
       
+      console.log('Children endpoint - Query data:', data);
+      console.log('Children endpoint - Query error:', error);
+      
       if (error) {
+        console.error('Children endpoint - Database error:', error);
         return {
           statusCode: 500,
           headers,
@@ -5003,6 +5033,7 @@ exports.handler = async (event, context) => {
       
       // Extract student objects
       const children = (data || []).map(rel => rel.students);
+      console.log('Children endpoint - Extracted children:', children);
       
       return {
         statusCode: 200,
@@ -5011,6 +5042,7 @@ exports.handler = async (event, context) => {
       };
       
     } catch (error) {
+      console.error('Children endpoint - Exception:', error);
       return {
         statusCode: 500,
         headers,
@@ -5543,6 +5575,7 @@ exports.handler = async (event, context) => {
       
       // Create notification for the student
       try {
+        const now = new Date().toISOString();
         const { error: notificationError } = await supabase
           .from('notifications')
           .insert({
@@ -5553,11 +5586,15 @@ exports.handler = async (event, context) => {
             message: `You have received a new message from your teacher.`,
             read: false,
             reference_id: messageRecord.id,
-            created_at: new Date().toISOString()
+            created_at: now,
+            createdAt: now,
+            updatedAt: now
           });
           
         if (notificationError) {
           console.warn('[Netlify] Notification creation failed (non-critical):', notificationError);
+        } else {
+          console.log('[Netlify] Notification created successfully for user:', studentId);
         }
       } catch (err) {
         console.warn('[Netlify] Notification creation failed (non-critical):', err);

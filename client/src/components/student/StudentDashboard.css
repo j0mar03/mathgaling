@@ -181,6 +181,18 @@
 }
 
 /* Alternative Color Schemes */
+.dashboard-header.orange-theme {
+  background: linear-gradient(135deg, #ff9f43 0%, #ffb366 50%, #ffc994 100%);
+  border-color: #ff8c1a;
+  box-shadow: 0 8px 20px rgba(255, 159, 67, 0.3);
+}
+
+.dashboard-header.blue-theme {
+  background: linear-gradient(135deg, #74b9ff 0%, #a8d8ff 50%, #dae8fc 100%);
+  border-color: #5b9bd5;
+  box-shadow: 0 8px 20px rgba(116, 185, 255, 0.3);
+}
+
 .dashboard-header.green-theme {
   background: linear-gradient(135deg, #81c784 0%, #a5d6a7 50%, #c8e6c9 100%);
   border-color: #66bb6a;
@@ -210,6 +222,73 @@
   background: linear-gradient(135deg, #4dd0e1 0%, #80deea 50%, #b2ebf2 100%);
   border-color: #26c6da;
   box-shadow: 0 8px 20px rgba(77, 208, 225, 0.3);
+}
+
+/* Theme Support for Learning Sections */
+.orange-theme .learning-path-focus {
+  background: linear-gradient(135deg, #fff7e6 0%, #ffe8cc 100%);
+  border-color: #ff8c1a;
+  box-shadow: 0 8px 20px rgba(255, 159, 67, 0.2);
+}
+
+.orange-theme .activities-section {
+  background: linear-gradient(135deg, #fff2e6 0%, #ffebcc 100%);
+  border-color: #ff9f43;
+}
+
+.blue-theme .learning-path-focus {
+  background: linear-gradient(135deg, #e8f4fd 0%, #dae8fc 100%);
+  border-color: #5b9bd5;
+  box-shadow: 0 8px 20px rgba(116, 185, 255, 0.2);
+}
+
+.blue-theme .activities-section {
+  background: linear-gradient(135deg, #f0f8ff 0%, #e6f2ff 100%);
+  border-color: #74b9ff;
+}
+
+.green-theme .learning-path-focus {
+  background: linear-gradient(135deg, #e8f5e8 0%, #f0fff0 100%);
+  border-color: #66bb6a;
+  box-shadow: 0 8px 20px rgba(129, 199, 132, 0.2);
+}
+
+.green-theme .activities-section {
+  background: linear-gradient(135deg, #f1f8e9 0%, #e8f5e8 100%);
+  border-color: #81c784;
+}
+
+.peach-theme .learning-path-focus {
+  background: linear-gradient(135deg, #fff4f0 0%, #ffe0b2 100%);
+  border-color: #ff8a65;
+  box-shadow: 0 8px 20px rgba(255, 171, 145, 0.2);
+}
+
+.peach-theme .activities-section {
+  background: linear-gradient(135deg, #fff8f5 0%, #ffcc80 100%);
+  border-color: #ffab91;
+}
+
+.purple-theme .learning-path-focus {
+  background: linear-gradient(135deg, #f3e5f5 0%, #e1bee7 100%);
+  border-color: #9575cd;
+  box-shadow: 0 8px 20px rgba(179, 157, 219, 0.2);
+}
+
+.purple-theme .activities-section {
+  background: linear-gradient(135deg, #f8f5ff 0%, #e8eaf6 100%);
+  border-color: #b39ddb;
+}
+
+.teal-theme .learning-path-focus {
+  background: linear-gradient(135deg, #e0f2f1 0%, #b2dfdb 100%);
+  border-color: #26c6da;
+  box-shadow: 0 8px 20px rgba(77, 208, 225, 0.2);
+}
+
+.teal-theme .activities-section {
+  background: linear-gradient(135deg, #e6fffa 0%, #b2ebf2 100%);
+  border-color: #4dd0e1;
 }
 
 .messages-icon {

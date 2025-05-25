@@ -64,12 +64,26 @@ const StudentDashboard = () => {
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [viewMode, setViewMode] = useState('desktop'); // New state for view toggle
   const [isCompactView, setIsCompactView] = useState(false); // New state for compact mode
-  const [colorTheme, setColorTheme] = useState(''); // New state for color themes
+  const [colorTheme, setColorTheme] = useState('orange-theme'); // New state for color themes - default orange
   const { user, token } = useAuth(); // Get user AND token from context
   const navigate = useNavigate();
 
   // Use the authenticated user's ID
   const studentId = user?.id;
+  
+  // Load saved color theme on component mount
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('student-color-theme');
+    if (savedTheme) {
+      setColorTheme(savedTheme);
+    }
+  }, []);
+  
+  // Save color theme whenever it changes
+  const handleColorThemeChange = (newTheme) => {
+    setColorTheme(newTheme);
+    localStorage.setItem('student-color-theme', newTheme);
+  };
   
   // Rotate encouragements
   useEffect(() => {
@@ -560,7 +574,7 @@ const StudentDashboard = () => {
   };
 
   return (
-    <div className={`student-dashboard-container ${isCompactView ? 'compact' : ''} ${viewMode}`}>
+    <div className={`student-dashboard-container ${isCompactView ? 'compact' : ''} ${viewMode} ${colorTheme}`}>
       <div className="student-dashboard">
         {/* View Controls */}
         <div className="view-controls">
@@ -568,32 +582,38 @@ const StudentDashboard = () => {
             <span className="theme-label">Colors:</span>
             <div className="theme-buttons">
               <button 
-                className={`theme-btn blue ${colorTheme === '' ? 'active' : ''}`}
-                onClick={() => setColorTheme('')}
+                className={`theme-btn orange ${colorTheme === 'orange-theme' ? 'active' : ''}`}
+                onClick={() => handleColorThemeChange('orange-theme')}
+                title="Orange Theme"
+                style={{backgroundColor: '#ff9f43'}}
+              ></button>
+              <button 
+                className={`theme-btn blue ${colorTheme === 'blue-theme' ? 'active' : ''}`}
+                onClick={() => handleColorThemeChange('blue-theme')}
                 title="Blue Theme"
                 style={{backgroundColor: '#74b9ff'}}
               ></button>
               <button 
                 className={`theme-btn green ${colorTheme === 'green-theme' ? 'active' : ''}`}
-                onClick={() => setColorTheme('green-theme')}
+                onClick={() => handleColorThemeChange('green-theme')}
                 title="Green Theme"
                 style={{backgroundColor: '#81c784'}}
               ></button>
               <button 
                 className={`theme-btn peach ${colorTheme === 'peach-theme' ? 'active' : ''}`}
-                onClick={() => setColorTheme('peach-theme')}
+                onClick={() => handleColorThemeChange('peach-theme')}
                 title="Peach Theme"
                 style={{backgroundColor: '#ffab91'}}
               ></button>
               <button 
                 className={`theme-btn purple ${colorTheme === 'purple-theme' ? 'active' : ''}`}
-                onClick={() => setColorTheme('purple-theme')}
+                onClick={() => handleColorThemeChange('purple-theme')}
                 title="Purple Theme"
                 style={{backgroundColor: '#b39ddb'}}
               ></button>
               <button 
                 className={`theme-btn teal ${colorTheme === 'teal-theme' ? 'active' : ''}`}
-                onClick={() => setColorTheme('teal-theme')}
+                onClick={() => handleColorThemeChange('teal-theme')}
                 title="Teal Theme"
                 style={{backgroundColor: '#4dd0e1'}}
               ></button>
