@@ -795,7 +795,7 @@ const StudentDashboard = () => {
             >
               <span className="button-emoji">🏆</span>
               <span className="button-text">
-                {isCompactView ? 'Math Challenge' : 'Take a Challenge'}
+                {isCompactView ? 'Challenge' : 'Math Challenge'}
               </span>
               <span className="button-subtitle">{!isCompactView && 'Test your skills!'}</span>
             </button>
@@ -806,9 +806,9 @@ const StudentDashboard = () => {
             >
               <span className="button-emoji">📚</span>
               <span className="button-text">
-                {isCompactView ? 'Math Stories' : 'Interactive Stories'}
+                {isCompactView ? 'Stories' : 'Math Stories'}
               </span>
-              <span className="button-subtitle">{!isCompactView && 'Learn with stories!'}</span>
+              <span className="button-subtitle">{!isCompactView && 'Learn with fun!'}</span>
             </button>
             
             {!isCompactView && (
@@ -817,8 +817,8 @@ const StudentDashboard = () => {
                 onClick={() => navigate('/student/progress')}
               >
                 <span className="button-emoji">🌟</span>
-                <span className="button-text">My Journey</span>
-                <span className="button-subtitle">See how far you've come!</span>
+                <span className="button-text">My Progress</span>
+                <span className="button-subtitle">See your growth!</span>
               </button>
             )}
           </div>
