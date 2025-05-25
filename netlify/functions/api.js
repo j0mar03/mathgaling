@@ -6569,6 +6569,20 @@ exports.handler = async (event, context) => {
         };
       }
       
+      // Also update any notifications related to this message
+      try {
+        await supabase
+          .from('notifications')
+          .update({ read: true })
+          .eq('user_id', userId)
+          .eq('user_type', userType)
+          .eq('type', 'message')
+          .eq('reference_id', messageId);
+      } catch (notificationError) {
+        // Log but don't fail the main operation
+        console.warn('[Netlify] Notification update failed (non-critical):', notificationError);
+      }
+      
       return {
         statusCode: 200,
         headers,

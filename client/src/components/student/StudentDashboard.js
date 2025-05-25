@@ -14,7 +14,7 @@ const KC_ICONS = {
   "Number Words": "📝",
   "Comparing Numbers": "⚖️",
   "Rounding Numbers": "🎯",
-  "Ordering Numbers": "📊",
+  "Ordering Numbers": "🧮", // More thematic for ordering
   "Money Representation": "💰",
   "Addition": "➕",
   "Subtraction": "➖",
@@ -561,38 +561,25 @@ const StudentDashboard = () => {
   return (
     <div className={`student-dashboard-container ${isCompactView ? 'compact' : ''} ${viewMode}`}>
       <div className="student-dashboard">
-        {/* View Toggle Controls */}
+        {/* View Controls */}
         <div className="view-controls">
-          <div className="view-toggle">
+          <div className="accessibility-toggle">
             <button 
-              className={`toggle-btn ${viewMode === 'mobile' ? 'active' : ''}`}
-              onClick={() => setViewMode('mobile')}
-              title="Mobile View"
+              className={`toggle-btn ${isCompactView ? 'active' : ''}`}
+              onClick={() => setIsCompactView(!isCompactView)}
+              title="Simple View"
             >
-              📱
-            </button>
-            <button 
-              className={`toggle-btn ${viewMode === 'desktop' ? 'active' : ''}`}
-              onClick={() => setViewMode('desktop')}
-              title="Desktop View"
-            >
-              🖥️
+              <span className="toggle-icon">{isCompactView ? '📋' : '🎨'}</span>
+              <span className="toggle-label">{isCompactView ? 'Simple' : 'Full'}</span>
             </button>
           </div>
-          <button 
-            className={`compact-toggle ${isCompactView ? 'active' : ''}`}
-            onClick={() => setIsCompactView(!isCompactView)}
-            title="Toggle Compact View"
-          >
-            {isCompactView ? '📋' : '📄'}
-          </button>
         </div>
 
         {/* Welcome Header */}
         <header className="dashboard-header">
           {/* Messages Icon */}
           <div 
-            className="profile-icon" 
+            className="messages-icon" 
             onClick={() => navigate('/student/messages')}
             role="button"
             tabIndex={0}
@@ -601,9 +588,10 @@ const StudentDashboard = () => {
                 navigate('/student/messages');
               }
             }}
-            title={`You have ${unreadMessages} unread message${unreadMessages !== 1 ? 's' : ''}`}
+            title={`Messages${unreadMessages > 0 ? ` (${unreadMessages} new)` : ''}`}
           >
-            ✉️
+            <span className="icon-emoji">📬</span>
+            <span className="icon-label">Messages</span>
             {unreadMessages > 0 && (
               <div className="notification-badge">
                 {unreadMessages}
@@ -626,7 +614,8 @@ const StudentDashboard = () => {
           )}
         
           <button className="progress-button" onClick={() => navigate('/student/progress')}>
-            {isCompactView ? 'Progress' : 'View My Progress'}
+            <span className="button-icon">🌱</span>
+            <span className="button-text">{isCompactView ? 'My Progress' : 'See My Growth'}</span>
           </button>
         </header>
         
@@ -656,8 +645,14 @@ const StudentDashboard = () => {
         {currentLearningStep && currentLearningStep.isPrimary && (
           <section className="learning-path-focus">
             <div className="focus-header">
-              <h2>{isCompactView ? '🎯 Start' : '🌟 Your Next Adventure'}</h2>
-              {!isCompactView && <p>Ready to learn something amazing?</p>}
+              <h2>
+                {isCompactView ? (
+                  <><span className="number-blocks">1️⃣2️⃣3️⃣</span> Let's Start!</>
+                ) : (
+                  <><span className="adventure-icon">🚀</span> Your Next Math Adventure!</>
+                )}
+              </h2>
+              {!isCompactView && <p>Ready to learn something amazing? Let's go!</p>}
             </div>
             <div className="focus-card">
               <div className="focus-emoji">{currentLearningStep?.emoji || '🎯'}</div>
@@ -713,10 +708,8 @@ const StudentDashboard = () => {
                       }
                     }}
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                    </svg>
-                    {isCompactView ? 'Start' : (currentLearningStep?.buttonText || 'Continue')}
+                    <span className="play-icon">🎮</span>
+                    {isCompactView ? 'Let\'s Go!' : (currentLearningStep?.buttonText === 'Continue' ? 'Let\'s Continue!' : currentLearningStep?.buttonText === 'Start' ? 'Let\'s Start!' : 'Let\'s Play!')}
                   </button>
                 </div>
               </div>
@@ -728,88 +721,104 @@ const StudentDashboard = () => {
         <div className="quick-stats">
           {isCompactView ? (
             <>
-              <div className="stat-card">
-                <div className="stat-icon">🎯</div>
+              <div className="stat-card completed">
+                <div className="stat-visual">
+                  <div className="stars-display">
+                    {Array.from({length: Math.min(exercisesCompleted, 5)}, (_, i) => (
+                      <span key={i} className="earned-star">⭐</span>
+                    ))}
+                  </div>
+                </div>
                 <div className="stat-value">{exercisesCompleted}</div>
-                <div className="stat-label">Done</div>
+                <div className="stat-label">Activities Done</div>
               </div>
               
-              <div className="stat-card">
-                <div className="stat-icon">🔥</div>
+              <div className="stat-card streak">
+                <div className="stat-icon">{learningStreak > 0 ? '🔥' : '📅'}</div>
                 <div className="stat-value">{learningStreak}</div>
-                <div className="stat-label">Streak</div>
+                <div className="stat-label">{learningStreak === 1 ? 'Day' : 'Days in a Row'}</div>
               </div>
             </>
           ) : (
             <>
-              <div className="stat-card">
-                <div className="stat-icon">🎯</div>
+              <div className="stat-card completed">
+                <div className="stat-visual">
+                  <div className="stars-display">
+                    {Array.from({length: Math.min(exercisesCompleted, 5)}, (_, i) => (
+                      <span key={i} className="earned-star">⭐</span>
+                    ))}
+                    {exercisesCompleted > 5 && <span className="more-indicator">+{exercisesCompleted - 5}</span>}
+                  </div>
+                </div>
                 <div className="stat-value">{exercisesCompleted}</div>
-                <div className="stat-label">Completed</div>
+                <div className="stat-label">Activities Done</div>
               </div>
               
-              <div className="stat-card">
-                <div className="stat-icon">🔥</div>
+              <div className="stat-card streak">
+                <div className="stat-icon">{learningStreak > 0 ? '🔥' : '📅'}</div>
                 <div className="stat-value">{learningStreak}</div>
-                <div className="stat-label">Day Streak</div>
+                <div className="stat-label">{learningStreak === 1 ? 'Day' : 'Days in a Row'}</div>
               </div>
               
-              <div className="stat-card">
-                <div className="stat-icon">⭐</div>
+              <div className="stat-card progress">
+                <div className="stat-icon">🌱</div>
                 <div className="stat-value">{Math.round((exercisesCompleted / Math.max(totalTopics, 1)) * 100)}%</div>
-                <div className="stat-label">Progress</div>
+                <div className="stat-label">Learning Growth</div>
               </div>
               
-              <div className="stat-card">
-                <div className="stat-icon">🎮</div>
-                <div className="stat-value">{dailyGoal - exercisesCompleted > 0 ? dailyGoal - exercisesCompleted : 0}</div>
-                <div className="stat-label">To Goal</div>
+              <div className="stat-card goal">
+                <div className="stat-icon">🎯</div>
+                <div className="stat-value">{dailyGoal - exercisesCompleted > 0 ? dailyGoal - exercisesCompleted : '✓'}</div>
+                <div className="stat-label">{dailyGoal - exercisesCompleted > 0 ? 'More to Goal' : 'Goal Reached!'}</div>
               </div>
             </>
           )}
         </div>
         
-        {/* Fun Practice Section */}
-        <section className="learning-path-focus">
+        {/* Fun Activities Section */}
+        <section className="learning-path-focus activities-section">
           <div className="focus-header">
-            <h2>{isCompactView ? '🎮 Games' : '🎮 Fun Math Games'}</h2>
-            {!isCompactView && <p>Choose your adventure and have fun learning!</p>}
+            <h2>
+              {isCompactView ? (
+                <><span className="games-icon">🎯</span> Activities</>
+              ) : (
+                <><span className="games-icon">🎮</span> Fun Learning Activities!</>
+              )}
+            </h2>
+            {!isCompactView && <p>Pick what sounds fun and start learning!</p>}
           </div>
           
           <div className="action-buttons">
             <button
-              className="action-button quiz-button"
+              className="action-button challenge-button"
               onClick={handleStartChallenge}
             >
-              {!isCompactView && (
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              )}
-              {isCompactView ? 'Challenge' : 'Math Challenge'}
+              <span className="button-emoji">🏆</span>
+              <span className="button-text">
+                {isCompactView ? 'Math Challenge' : 'Take a Challenge'}
+              </span>
+              <span className="button-subtitle">{!isCompactView && 'Test your skills!'}</span>
             </button>
             
             <button
-              className="action-button mastery-button"
+              className="action-button stories-button"
               onClick={handleStartBookQuiz}
             >
-              {!isCompactView && (
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                </svg>
-              )}
-              {isCompactView ? 'Books' : 'Book Questions'}
+              <span className="button-emoji">📚</span>
+              <span className="button-text">
+                {isCompactView ? 'Math Stories' : 'Interactive Stories'}
+              </span>
+              <span className="button-subtitle">{!isCompactView && 'Learn with stories!'}</span>
             </button>
             
             {!isCompactView && (
               <button
-                className="action-button practice-button"
+                className="action-button progress-button-alt"
                 onClick={() => navigate('/student/progress')}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-                View Progress
+                <span className="button-emoji">🌟</span>
+                <span className="button-text">My Journey</span>
+                <span className="button-subtitle">See how far you've come!</span>
               </button>
             )}
           </div>
