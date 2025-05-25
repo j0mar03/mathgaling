@@ -5599,8 +5599,8 @@ exports.handler = async (event, context) => {
               message: `You have received a new message from your teacher.`,
               read: false,
               reference_id: messageRecord.id,
-              created_at: now,
-              updated_at: now
+              createdAt: now,
+              updatedAt: now
             });
             
           if (notificationError) {
