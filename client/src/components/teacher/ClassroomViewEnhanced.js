@@ -582,73 +582,6 @@ const ClassroomViewEnhanced = () => {
         </div>
       )}
 
-      {/* Performance Analytics Dashboard */}
-      <div className="analytics-dashboard">
-        <div className="analytics-grid">
-          {/* Performance Distribution Chart */}
-          <div className="analytics-card chart-card">
-            <div className="card-header">
-              <h3>📊 Performance Distribution</h3>
-              <div className="chart-info">Student mastery levels across the classroom</div>
-            </div>
-            <div className="chart-container">
-              {performanceDistribution && (
-                <Doughnut 
-                  data={performanceDistribution}
-                  options={{
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                      legend: {
-                        position: 'bottom',
-                        labels: {
-                          padding: 15,
-                          usePointStyle: true
-                        }
-                      }
-                    }
-                  }}
-                />
-              )}
-            </div>
-          </div>
-
-          {/* Knowledge Component Priority */}
-          <div className="analytics-card priority-card">
-            <div className="card-header">
-              <h3>🎯 Knowledge Component Priorities</h3>
-              <div className="chart-info">Focus areas requiring teacher attention</div>
-            </div>
-            <div className="priority-list">
-              {kcPriorityAnalysis.slice(0, 5).map(kc => (
-                <div key={kc.id} className={`priority-item ${kc.priority.toLowerCase()}`}>
-                  <div className="priority-header">
-                    <span className="kc-code">{kc.curriculum_code}</span>
-                    <span className={`priority-badge ${kc.priority.toLowerCase()}`}>
-                      {kc.priority} Priority
-                    </span>
-                  </div>
-                  <div className="kc-name">{kc.name}</div>
-                  <div className="priority-stats">
-                    <div className="stat">
-                      <span className="stat-label">Avg. Mastery:</span>
-                      <span className="stat-value">{kc.avgMastery.toFixed(0)}%</span>
-                    </div>
-                    <div className="stat">
-                      <span className="stat-label">Students Needing Help:</span>
-                      <span className="stat-value">{kc.studentsNeedingHelp}</span>
-                    </div>
-                  </div>
-                  <Link to={`/teacher/knowledge-components/${kc.id}`} className="view-details-btn">
-                    View Details →
-                  </Link>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* Student Management Section */}
       <div className="student-management-section">
         <div className="section-header">
@@ -820,6 +753,77 @@ const ClassroomViewEnhanced = () => {
                 </div>
               );
             })}
+          </div>
+        </div>
+      </div>
+
+      {/* Performance Analytics Dashboard */}
+      <div className="analytics-dashboard">
+        <div className="section-header">
+          <h2>📊 Performance Analytics Dashboard</h2>
+          <div className="chart-info">Comprehensive overview of classroom performance metrics</div>
+        </div>
+        <div className="analytics-grid">
+          {/* Performance Distribution Chart */}
+          <div className="analytics-card chart-card">
+            <div className="card-header">
+              <h3>📊 Performance Distribution</h3>
+              <div className="chart-info">Student mastery levels across the classroom</div>
+            </div>
+            <div className="chart-container">
+              {performanceDistribution && (
+                <Doughnut 
+                  data={performanceDistribution}
+                  options={{
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                      legend: {
+                        position: 'bottom',
+                        labels: {
+                          padding: 15,
+                          usePointStyle: true
+                        }
+                      }
+                    }
+                  }}
+                />
+              )}
+            </div>
+          </div>
+
+          {/* Knowledge Component Priority */}
+          <div className="analytics-card priority-card">
+            <div className="card-header">
+              <h3>🎯 Knowledge Component Priorities</h3>
+              <div className="chart-info">Focus areas requiring teacher attention</div>
+            </div>
+            <div className="priority-list">
+              {kcPriorityAnalysis.slice(0, 5).map(kc => (
+                <div key={kc.id} className={`priority-item ${kc.priority.toLowerCase()}`}>
+                  <div className="priority-header">
+                    <span className="kc-code">{kc.curriculum_code}</span>
+                    <span className={`priority-badge ${kc.priority.toLowerCase()}`}>
+                      {kc.priority} Priority
+                    </span>
+                  </div>
+                  <div className="kc-name">{kc.name}</div>
+                  <div className="priority-stats">
+                    <div className="stat">
+                      <span className="stat-label">Avg. Mastery:</span>
+                      <span className="stat-value">{kc.avgMastery.toFixed(0)}%</span>
+                    </div>
+                    <div className="stat">
+                      <span className="stat-label">Students Needing Help:</span>
+                      <span className="stat-value">{kc.studentsNeedingHelp}</span>
+                    </div>
+                  </div>
+                  <Link to={`/teacher/knowledge-components/${kc.id}`} className="view-details-btn">
+                    View Details →
+                  </Link>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>
