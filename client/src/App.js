@@ -24,8 +24,8 @@ import SignupImproved from './components/shared/SignupImproved';
 import NotFound from './components/shared/NotFound';
 
 // Teacher Interface Components
-import TeacherDashboard from './components/teacher/TeacherDashboard';
-import ClassroomView from './components/teacher/ClassroomView';
+import TeacherDashboard from './components/teacher/TeacherDashboardEnhanced';
+import ClassroomView from './components/teacher/ClassroomViewEnhanced';
 import StudentDetailView from './components/teacher/StudentDetailView';
 import KnowledgeComponentView from './components/teacher/KnowledgeComponentView';
 import TeacherProfile from './components/teacher/TeacherProfile'; // Import TeacherProfile
