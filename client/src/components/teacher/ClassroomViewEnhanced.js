@@ -6,6 +6,8 @@ import { Bar, Line, Doughnut } from 'react-chartjs-2';
 import { useAuth } from '../../context/AuthContext';
 import './ClassroomViewEnhanced.css';
 import LinkParentToStudentModal from './LinkParentToStudentModal';
+import OverviewPerformanceModal from './OverviewPerformanceModal';
+import DetailedPerformanceModal from './DetailedPerformanceModal';
 
 // Register ChartJS components
 ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, ArcElement, Title, Tooltip, Legend);
@@ -24,6 +26,8 @@ const ClassroomViewEnhanced = () => {
   const [selectedStudents, setSelectedStudents] = useState([]);
   const [linkingStudent, setLinkingStudent] = useState(null);
   const [showLinkParentModal, setShowLinkParentModal] = useState(false);
+  const [showOverviewModal, setShowOverviewModal] = useState(false);
+  const [showDetailedModal, setShowDetailedModal] = useState(false);
   const [viewMode, setViewMode] = useState('overview');
   const { user } = useAuth();
   const teacherId = user?.id;
@@ -446,6 +450,24 @@ const ClassroomViewEnhanced = () => {
         />
       )}
 
+      {/* Overview Performance Modal */}
+      <OverviewPerformanceModal
+        isOpen={showOverviewModal}
+        onClose={() => setShowOverviewModal(false)}
+        classroomData={classroom}
+        performance={performance}
+        knowledgeComponents={knowledgeComponents}
+      />
+
+      {/* Detailed Performance Modal */}
+      <DetailedPerformanceModal
+        isOpen={showDetailedModal}
+        onClose={() => setShowDetailedModal(false)}
+        classroomData={classroom}
+        performance={performance}
+        knowledgeComponents={knowledgeComponents}
+      />
+
       {/* Enhanced Header */}
       <div className="classroom-enhanced-header">
         <div className="header-content">
@@ -495,14 +517,14 @@ const ClassroomViewEnhanced = () => {
         <div className="header-actions">
           <div className="view-controls">
             <button 
-              className={`view-toggle ${viewMode === 'overview' ? 'active' : ''}`}
-              onClick={() => setViewMode('overview')}
+              className="view-toggle overview-btn"
+              onClick={() => setShowOverviewModal(true)}
             >
               📊 Overview
             </button>
             <button 
-              className={`view-toggle ${viewMode === 'detailed' ? 'active' : ''}`}
-              onClick={() => setViewMode('detailed')}
+              className="view-toggle detailed-btn"
+              onClick={() => setShowDetailedModal(true)}
             >
               📋 Detailed
             </button>

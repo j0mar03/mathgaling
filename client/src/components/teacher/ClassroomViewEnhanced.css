@@ -2,7 +2,7 @@
 
 .classroom-enhanced {
   min-height: 100vh;
-  background: linear-gradient(135deg, #f8f9ff 0%, #e8f2ff 100%);
+  background: #f8f9fa;
   padding: 20px;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
@@ -145,18 +145,40 @@
   background: rgba(255,255,255,0.2);
   border: 1px solid rgba(255,255,255,0.3);
   color: white;
-  padding: 10px 20px;
+  padding: 12px 24px;
   border-radius: 25px;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
 }
 
-.view-toggle.active,
 .view-toggle:hover {
   background: rgba(255,255,255,0.3);
   transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+}
+
+.view-toggle.overview-btn {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.3), rgba(118, 75, 162, 0.3));
+  border: 1px solid rgba(102, 126, 234, 0.5);
+}
+
+.view-toggle.overview-btn:hover {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.5), rgba(118, 75, 162, 0.5));
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+}
+
+.view-toggle.detailed-btn {
+  background: linear-gradient(135deg, rgba(240, 147, 251, 0.3), rgba(245, 87, 108, 0.3));
+  border: 1px solid rgba(240, 147, 251, 0.5);
+}
+
+.view-toggle.detailed-btn:hover {
+  background: linear-gradient(135deg, rgba(240, 147, 251, 0.5), rgba(245, 87, 108, 0.5));
+  box-shadow: 0 6px 20px rgba(240, 147, 251, 0.3);
 }
 
 .back-button {
@@ -234,7 +256,7 @@
   align-items: center;
   margin-bottom: 24px;
   padding: 24px;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  background: white;
   border-radius: 16px;
   box-shadow: 0 4px 16px rgba(0,0,0,0.08);
   border: 1px solid #e2e8f0;
@@ -249,8 +271,8 @@
 .section-header h2 {
   margin: 0;
   font-size: 1.75rem;
-  font-weight: 800;
-  color: #1e293b;
+  font-weight: 700;
+  color: #2c3e50;
   letter-spacing: -0.5px;
 }
 
@@ -344,7 +366,8 @@
 .urgency-reason {
   font-size: 0.9rem;
   color: #e74c3c;
-  background: #fdf2f2;
+  background: white;
+  border: 1px solid #fecaca;
   padding: 5px 10px;
   border-radius: 8px;
 }
@@ -440,7 +463,8 @@
 }
 
 .insight-action {
-  background: #f8f9fa;
+  background: white;
+  border: 1px solid #e9ecef;
   padding: 10px;
   border-radius: 8px;
   font-size: 0.9rem;
@@ -497,7 +521,8 @@
 }
 
 .priority-item {
-  background: #f8f9fa;
+  background: white;
+  border: 1px solid #e9ecef;
   border-radius: 10px;
   padding: 15px;
   transition: all 0.3s ease;
@@ -844,12 +869,13 @@
   grid-template-columns: 2fr 1.5fr 1fr 1.5fr 1fr;
   gap: 16px;
   padding: 24px;
-  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-  color: white;
+  background: #f8f9fa;
+  color: #495057;
   font-weight: 700;
   font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 0.8px;
+  border-bottom: 2px solid #e9ecef;
 }
 
 .table-body {
@@ -868,13 +894,13 @@
 }
 
 .student-row:hover {
-  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+  background: #f8f9fa;
   transform: translateX(6px);
 }
 
 .student-row.needs-intervention {
   border-left: 4px solid #ef4444;
-  background: linear-gradient(135deg, #fef2f2, #fecaca);
+  background: #fff5f5;
 }
 
 .student-info {
@@ -915,17 +941,20 @@
 }
 
 .mastery-value.critical {
-  background: #fdf2f2;
+  background: white;
+  border: 2px solid #e74c3c;
   color: #e74c3c;
 }
 
 .mastery-value.warning {
-  background: #fef9e7;
+  background: white;
+  border: 2px solid #f39c12;
   color: #f39c12;
 }
 
 .mastery-value.good {
-  background: #f0f9f0;
+  background: white;
+  border: 2px solid #27ae60;
   color: #27ae60;
 }
 
@@ -970,17 +999,20 @@
 }
 
 .activity-status.recent {
-  background: #d5f4e6;
+  background: white;
+  border: 1px solid #27ae60;
   color: #27ae60;
 }
 
 .activity-status.moderate {
-  background: #fef9e7;
+  background: white;
+  border: 1px solid #f39c12;
   color: #f39c12;
 }
 
 .activity-status.old {
-  background: #fdf2f2;
+  background: white;
+  border: 1px solid #e74c3c;
   color: #e74c3c;
 }
 
@@ -1166,7 +1198,8 @@
   font-size: 0.9rem;
   margin-bottom: 6px;
   font-family: 'Segoe UI', monospace;
-  background: #f1f5f9;
+  background: white;
+  border: 1px solid #e2e8f0;
   padding: 4px 8px;
   border-radius: 6px;
   display: inline-block;
@@ -1348,7 +1381,7 @@
   border: 2px solid #3b82f6;
   border-radius: 20px;
   display: inline-block;
-  background: linear-gradient(135deg, transparent, rgba(59, 130, 246, 0.05));
+  background: white;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1356,7 +1389,7 @@
 }
 
 .kc-detail-btn:hover {
-  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  background: #3b82f6;
   color: white;
   transform: translateY(-3px);
   box-shadow: 0 6px 20px rgba(59, 130, 246, 0.3);
@@ -1540,4 +1573,40 @@
     flex-direction: column;
     gap: 5px;
   }
+}
+
+/* Global professional styling for white background theme */
+.classroom-enhanced h1, 
+.classroom-enhanced h2, 
+.classroom-enhanced h3, 
+.classroom-enhanced h4, 
+.classroom-enhanced h5, 
+.classroom-enhanced h6 {
+  color: #2c3e50;
+}
+
+.classroom-enhanced p:not(.classroom-subtitle):not(.chart-info),
+.classroom-enhanced span:not(.stat-value):not(.stat-label):not(.indicator-dot),
+.classroom-enhanced div:not(.live-indicator) {
+  color: #495057;
+}
+
+/* Ensure all section backgrounds are white with proper borders */
+.classroom-enhanced .urgent-alerts-section,
+.classroom-enhanced .insights-section,
+.classroom-enhanced .student-management-section,
+.classroom-enhanced .analytics-dashboard,
+.classroom-enhanced .kc-analysis-section {
+  background: transparent;
+}
+
+/* Professional card styling */
+.classroom-enhanced .urgent-intervention-card,
+.classroom-enhanced .insight-card,
+.classroom-enhanced .analytics-card,
+.classroom-enhanced .kc-analysis-card,
+.classroom-enhanced .enhanced-student-table {
+  background: white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  border: 1px solid #e9ecef;
 }
