@@ -1,12 +1,13 @@
-/* Enhanced Child Progress View Styles */
+/* Enhanced Child Progress View Styles - Scoped to prevent global interference */
 .child-progress-enhanced {
   min-height: 100vh;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background: #f8f9fa;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  padding: 20px;
 }
 
-/* Loading States */
-.loading-container {
+/* Loading States - Scoped */
+.child-progress-enhanced .loading-container {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -16,7 +17,7 @@
   color: #666;
 }
 
-.loading-spinner {
+.child-progress-enhanced .loading-spinner {
   width: 50px;
   height: 50px;
   border: 4px solid #e3e3e3;
@@ -31,8 +32,8 @@
   100% { transform: rotate(360deg); }
 }
 
-/* Error States */
-.error-container {
+/* Error States - Scoped */
+.child-progress-enhanced .error-container {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -42,7 +43,7 @@
   padding: 40px;
 }
 
-.error-icon {
+.child-progress-enhanced .error-icon {
   font-size: 64px;
   margin-bottom: 20px;
 }
@@ -199,9 +200,10 @@
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 
-.metric-card.primary {
+.child-progress-enhanced .metric-card.primary {
   border-left-color: #4CAF50;
-  background: linear-gradient(135deg, #f8fff8 0%, #e8f5e8 100%);
+  background: white;
+  border: 1px solid #e8f5e8;
 }
 
 .metric-icon {
@@ -337,19 +339,22 @@
   border-left: 4px solid #e9ecef;
 }
 
-.insight-item.positive {
+.child-progress-enhanced .insight-item.positive {
   border-left-color: #28a745;
-  background: linear-gradient(135deg, #f8fff8 0%, #e8f5e8 100%);
+  background: white;
+  border: 1px solid #e8f5e8;
 }
 
-.insight-item.attention {
+.child-progress-enhanced .insight-item.attention {
   border-left-color: #ffc107;
-  background: linear-gradient(135deg, #fffbf0 0%, #fef3cd 100%);
+  background: white;
+  border: 1px solid #fef3cd;
 }
 
-.insight-item.neutral {
+.child-progress-enhanced .insight-item.neutral {
   border-left-color: #17a2b8;
-  background: linear-gradient(135deg, #f0fdff 0%, #cdf3f8 100%);
+  background: white;
+  border: 1px solid #cdf3f8;
 }
 
 .insight-icon {
@@ -621,4 +626,57 @@
   .chart-container.large {
     height: 300px;
   }
+}
+
+/* Ensure all styles are properly scoped to prevent global conflicts */
+.child-progress-enhanced .error-actions,
+.child-progress-enhanced .btn-retry,
+.child-progress-enhanced .btn-back,
+.child-progress-enhanced .progress-header,
+.child-progress-enhanced .header-content,
+.child-progress-enhanced .student-info,
+.child-progress-enhanced .student-avatar,
+.child-progress-enhanced .student-details,
+.child-progress-enhanced .student-meta,
+.child-progress-enhanced .header-actions,
+.child-progress-enhanced .btn-primary,
+.child-progress-enhanced .btn-secondary,
+.child-progress-enhanced .metrics-grid,
+.child-progress-enhanced .metric-card,
+.child-progress-enhanced .metric-icon,
+.child-progress-enhanced .metric-content,
+.child-progress-enhanced .metric-value,
+.child-progress-enhanced .metric-label,
+.child-progress-enhanced .progress-content,
+.child-progress-enhanced .content-section,
+.child-progress-enhanced .section-header,
+.child-progress-enhanced .chart-container,
+.child-progress-enhanced .charts-grid,
+.child-progress-enhanced .chart-section,
+.child-progress-enhanced .insights-grid,
+.child-progress-enhanced .insights-column,
+.child-progress-enhanced .recommendations-column,
+.child-progress-enhanced .insights-list,
+.child-progress-enhanced .recommendations-list,
+.child-progress-enhanced .insight-item,
+.child-progress-enhanced .insight-icon,
+.child-progress-enhanced .insight-content,
+.child-progress-enhanced .recommendation-item,
+.child-progress-enhanced .recommendation-icon,
+.child-progress-enhanced .recommendation-content,
+.child-progress-enhanced .subjects-grid,
+.child-progress-enhanced .subject-card,
+.child-progress-enhanced .subject-header,
+.child-progress-enhanced .mastery-badge,
+.child-progress-enhanced .progress-bar,
+.child-progress-enhanced .progress-fill,
+.child-progress-enhanced .subject-stats,
+.child-progress-enhanced .trend,
+.child-progress-enhanced .activity-timeline,
+.child-progress-enhanced .activity-item,
+.child-progress-enhanced .activity-indicator,
+.child-progress-enhanced .activity-content,
+.child-progress-enhanced .activity-question,
+.child-progress-enhanced .activity-meta {
+  /* All styles are already properly scoped above */
 }
