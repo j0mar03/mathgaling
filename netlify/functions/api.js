@@ -5068,6 +5068,196 @@ exports.handler = async (event, context) => {
     }
   }
   
+  // GET /api/students/:id/detailed-performance - Get detailed student performance
+  if (path.match(/\/students\/\d+\/detailed-performance$/) && httpMethod === 'GET') {
+    try {
+      const pathParts = path.split('/');
+      const studentId = pathParts[pathParts.indexOf('students') + 1];
+      
+      console.log('[Student Performance] Fetching detailed performance for student:', studentId);
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // Get student knowledge states for mastery calculation
+      const { data: knowledgeStates, error: ksError } = await supabase
+        .from('knowledge_states')
+        .select('*')
+        .eq('student_id', studentId);
+      
+      if (ksError) {
+        console.error('[Student Performance] Error fetching knowledge states:', ksError);
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to fetch knowledge states',
+            message: ksError.message
+          })
+        };
+      }
+      
+      // Get recent responses for activity analysis
+      const { data: recentResponses, error: responsesError } = await supabase
+        .from('responses')
+        .select('*')
+        .eq('student_id', studentId)
+        .order('created_at', { ascending: false })
+        .limit(100);
+      
+      if (responsesError) {
+        console.error('[Student Performance] Error fetching responses:', responsesError);
+      }
+      
+      // Calculate performance metrics
+      const totalKCs = knowledgeStates.length;
+      const averageMastery = totalKCs > 0 ? 
+        knowledgeStates.reduce((sum, ks) => sum + (ks.p_mastery || 0), 0) / totalKCs : 0;
+      
+      const totalResponses = recentResponses ? recentResponses.length : 0;
+      const correctResponses = recentResponses ? 
+        recentResponses.filter(r => r.correct).length : 0;
+      const accuracy = totalResponses > 0 ? (correctResponses / totalResponses) * 100 : 0;
+      
+      const performanceData = {
+        averageMastery: averageMastery,
+        totalKnowledgeComponents: totalKCs,
+        masteredKCs: knowledgeStates.filter(ks => (ks.p_mastery || 0) >= 0.8).length,
+        accuracy: accuracy,
+        totalQuestions: totalResponses,
+        correctAnswers: correctResponses,
+        recentResponses: recentResponses || []
+      };
+      
+      console.log('[Student Performance] Performance data calculated:', performanceData);
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify(performanceData)
+      };
+      
+    } catch (error) {
+      console.error('[Student Performance] Unexpected error:', error);
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
+  // GET /api/parents/students/:id/weekly-report - Get weekly report for student
+  if (path.match(/\/parents\/students\/\d+\/weekly-report$/) && httpMethod === 'GET') {
+    try {
+      const pathParts = path.split('/');
+      const studentId = pathParts[pathParts.indexOf('students') + 1];
+      
+      console.log('[Weekly Report] Generating weekly report for student:', studentId);
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // Calculate date range for this week
+      const now = new Date();
+      const weekStart = new Date(now);
+      weekStart.setDate(now.getDate() - now.getDay()); // Start of this week (Sunday)
+      weekStart.setHours(0, 0, 0, 0);
+      
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekStart.getDate() + 6); // End of this week (Saturday)
+      weekEnd.setHours(23, 59, 59, 999);
+      
+      // Get responses from this week
+      const { data: weeklyResponses, error: responsesError } = await supabase
+        .from('responses')
+        .select('*')
+        .eq('student_id', studentId)
+        .gte('created_at', weekStart.toISOString())
+        .lte('created_at', weekEnd.toISOString())
+        .order('created_at', { ascending: false });
+      
+      if (responsesError) {
+        console.error('[Weekly Report] Error fetching weekly responses:', responsesError);
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to fetch weekly responses',
+            message: responsesError.message
+          })
+        };
+      }
+      
+      // Calculate weekly metrics
+      const totalQuestions = weeklyResponses ? weeklyResponses.length : 0;
+      const correctAnswers = weeklyResponses ? 
+        weeklyResponses.filter(r => r.correct).length : 0;
+      const weeklyAccuracy = totalQuestions > 0 ? (correctAnswers / totalQuestions) * 100 : 0;
+      
+      // Calculate time spent
+      const totalTimeSpent = weeklyResponses ? 
+        weeklyResponses.reduce((sum, r) => sum + (r.time_spent || 0), 0) : 0;
+      
+      // Group by day
+      const dailyActivity = {};
+      const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      
+      days.forEach(day => {
+        dailyActivity[day] = { questions: 0, correct: 0, timeSpent: 0 };
+      });
+      
+      if (weeklyResponses) {
+        weeklyResponses.forEach(response => {
+          const responseDate = new Date(response.created_at);
+          const dayName = days[responseDate.getDay()];
+          dailyActivity[dayName].questions++;
+          if (response.correct) {
+            dailyActivity[dayName].correct++;
+          }
+          dailyActivity[dayName].timeSpent += response.time_spent || 0;
+        });
+      }
+      
+      const weeklyReport = {
+        weekStart: weekStart.toISOString(),
+        weekEnd: weekEnd.toISOString(),
+        totalQuestions,
+        correctAnswers,
+        accuracy: weeklyAccuracy,
+        totalTimeSpent,
+        dailyActivity,
+        activeDays: Object.values(dailyActivity).filter(day => day.questions > 0).length
+      };
+      
+      console.log('[Weekly Report] Report generated:', weeklyReport);
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify(weeklyReport)
+      };
+      
+    } catch (error) {
+      console.error('[Weekly Report] Unexpected error:', error);
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
   // GET /api/parents/:id/students - Get parent's students
   if (path.includes('/parents/') && path.includes('/students') && httpMethod === 'GET') {
     try {
