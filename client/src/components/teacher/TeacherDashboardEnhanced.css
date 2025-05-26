@@ -2,39 +2,19 @@
 
 .teacher-dashboard-enhanced {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
   padding: 20px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
 }
 
-/* Modern Professional Header */
+/* Modern Teacher-Friendly Header */
 .dashboard-header {
-  position: relative;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 24px;
-  padding: 40px;
+  background: white;
+  border-radius: 20px;
+  padding: 30px;
   margin-bottom: 30px;
-  color: white;
-  box-shadow: 0 20px 40px rgba(102, 126, 234, 0.3);
-  overflow: hidden;
-}
-
-.header-background {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
-}
-
-.header-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  border: 1px solid #e9ecef;
 }
 
 .header-content {
@@ -50,16 +30,56 @@
 }
 
 .welcome-text h1 {
-  font-size: 2.5rem;
+  font-size: 2.2rem;
   font-weight: 700;
   margin: 0 0 8px 0;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  color: #2c3e50;
 }
 
 .welcome-text p {
-  font-size: 1.2rem;
-  opacity: 0.9;
+  font-size: 1.1rem;
+  color: #5a6c7d;
   margin: 0;
+}
+
+.header-actions {
+  display: flex;
+  gap: 15px;
+}
+
+.action-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.95rem;
+}
+
+.action-button.primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.action-button.primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.action-button.secondary {
+  background: #f8f9fa;
+  color: #495057;
+  border: 1px solid #dee2e6;
+}
+
+.action-button.secondary:hover {
+  background: #e9ecef;
+  transform: translateY(-2px);
 }
 
 .performance-badge {
@@ -95,17 +115,17 @@
 }
 
 .metric-card {
-  background: rgba(255,255,255,0.15);
-  border-radius: 20px;
-  padding: 25px;
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,0.2);
+  background: #f8f9fa;
+  border-radius: 16px;
+  padding: 20px;
+  border: 1px solid #e9ecef;
   transition: all 0.3s ease;
 }
 
 .metric-card:hover {
-  transform: translateY(-5px);
-  background: rgba(255,255,255,0.25);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+  background: white;
 }
 
 .metric-icon {
@@ -115,15 +135,15 @@
 }
 
 .metric-value {
-  font-size: 2.2rem;
+  font-size: 2rem;
   font-weight: 700;
   margin-bottom: 5px;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  color: #2c3e50;
 }
 
 .metric-label {
-  font-size: 1rem;
-  opacity: 0.9;
+  font-size: 0.9rem;
+  color: #5a6c7d;
   margin-bottom: 8px;
   font-weight: 600;
 }
@@ -137,12 +157,12 @@
 }
 
 .metric-change.positive {
-  background: rgba(39, 174, 96, 0.3);
+  background: #d5f4e6;
   color: #27ae60;
 }
 
 .metric-change.warning {
-  background: rgba(243, 156, 18, 0.3);
+  background: #fef9e7;
   color: #f39c12;
 }
 
@@ -390,13 +410,12 @@
 .insights-header h2 {
   font-size: 2rem;
   font-weight: 700;
-  color: white;
+  color: #2c3e50;
   margin: 0 0 10px 0;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
 
 .insights-header p {
-  color: rgba(255,255,255,0.9);
+  color: #5a6c7d;
   font-size: 1.1rem;
   margin: 0;
 }
@@ -524,22 +543,21 @@
   text-align: center;
   margin-bottom: 30px;
   padding: 20px;
-  background: rgba(255,255,255,0.1);
-  border-radius: 20px;
-  backdrop-filter: blur(10px);
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
 }
 
 .section-header h2 {
-  font-size: 2rem;
+  font-size: 1.8rem;
   font-weight: 700;
-  color: white;
+  color: #2c3e50;
   margin: 0 0 10px 0;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
 
 .section-header p {
-  color: rgba(255,255,255,0.9);
-  font-size: 1.1rem;
+  color: #5a6c7d;
+  font-size: 1rem;
   margin: 0;
 }
 
@@ -783,18 +801,37 @@
 .btn-classroom {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  padding: 12px 24px;
-  border-radius: 20px;
+  padding: 10px 18px;
+  border-radius: 12px;
   text-decoration: none;
   font-weight: 600;
   transition: all 0.3s ease;
   display: inline-block;
+  font-size: 0.9rem;
 }
 
 .btn-classroom:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
   color: white;
+}
+
+.btn-add-student {
+  background: #27ae60;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.85rem;
+  margin-left: 10px;
+}
+
+.btn-add-student:hover {
+  background: #229954;
+  transform: translateY(-2px);
 }
 
 /* Intervention Action Plan */

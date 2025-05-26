@@ -4,6 +4,10 @@ import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, LineElement, PointElement, ArcElement, Filler } from 'chart.js';
 import { Bar, Line, Doughnut } from 'react-chartjs-2';
+import AddClassroomModal from './AddClassroomModal';
+import CreateStudentModal from './CreateStudentModal';
+import AddStudentToClassroomModal from './AddStudentToClassroomModal';
+import AssignPracticeModal from './AssignPracticeModal';
 import './TeacherDashboardEnhanced.css';
 
 // Register ChartJS components including Filler for area charts
@@ -16,10 +20,18 @@ const TeacherDashboardEnhanced = () => {
   const [allStudents, setAllStudents] = useState([]);
   const [studentsNeedingHelp, setStudentsNeedingHelp] = useState([]);
   const [classroomPerformance, setClassroomPerformance] = useState({});
-  const [interventionPriorities, setInterventionPriorities] = useState([]);
   const [error, setError] = useState(null);
-  const { user } = useAuth();
   
+  // Modal states for classroom and student creation
+  const [showAddClassroomModal, setShowAddClassroomModal] = useState(false);
+  const [showCreateStudentModal, setShowCreateStudentModal] = useState(false);
+  const [selectedClassroomForStudent, setSelectedClassroomForStudent] = useState(null);
+  const [showAddStudentModal, setShowAddStudentModal] = useState(false);
+  const [selectedClassroomForAddStudent, setSelectedClassroomForAddStudent] = useState(null);
+  const [showAssignPracticeModal, setShowAssignPracticeModal] = useState(false);
+  const [selectedStudentForPractice, setSelectedStudentForPractice] = useState(null);
+  
+  const { user, token } = useAuth();
   const teacherId = user?.id;
   
   useEffect(() => {
@@ -31,7 +43,7 @@ const TeacherDashboardEnhanced = () => {
       }
       
       try {
-        console.log(`[TeacherDashboard] Fetching data for teacher ID: ${teacherId}`);
+        console.log(`[TeacherDashboardEnhanced] Fetching data for teacher ID: ${teacherId}`);
         
         // Fetch teacher profile and classrooms
         const [teacherResponse, classroomsResponse] = await Promise.all([
@@ -42,95 +54,46 @@ const TeacherDashboardEnhanced = () => {
         setTeacher(teacherResponse.data);
         setClassrooms(classroomsResponse.data || []);
         
-        // Fetch all students across classrooms
-        const allStudentsData = [];
-        const classroomPerformanceData = {};
+        // Fetch performance data for each classroom
+        const performanceData = {};
+        const studentsArray = [];
         
         for (const classroom of classroomsResponse.data || []) {
           try {
-            const studentsResponse = await axios.get(`/api/classrooms/${classroom.id}/students`);
-            const students = studentsResponse.data || [];
+            const performanceResponse = await axios.get(`/api/classrooms/${classroom.id}/performance`);
+            performanceData[classroom.id] = performanceResponse.data;
             
-            // Fetch performance data for each student
-            const studentsWithPerformance = await Promise.all(
-              students.map(async (student) => {
-                try {
-                  const [weeklyReport, knowledgeStates] = await Promise.all([
-                    axios.get(`/api/parents/students/${student.id}/weekly-report`),
-                    axios.get(`/api/students/${student.id}/knowledge-states`)
-                  ]);
-                  
-                  const performance = weeklyReport.data?.weeklyProgress || {};
-                  const states = knowledgeStates.data || [];
-                  
-                  return {
-                    ...student,
-                    classroomId: classroom.id,
-                    classroomName: classroom.name,
-                    performance: {
-                      overallMastery: performance.averageMastery || 0,
-                      activeDays: performance.activeDays || 0,
-                      accuracyRate: performance.correctRate || 0,
-                      totalQuestions: performance.totalQuestionsAnswered || 0,
-                      timeSpent: performance.totalTimeSpent || 0,
-                      weeklyChange: performance.weeklyChange || 0,
-                      knowledgeStates: states,
-                      strugglingAreas: states.filter(ks => ks.p_mastery < 0.5).length,
-                      masteredAreas: states.filter(ks => ks.p_mastery >= 0.8).length
-                    }
-                  };
-                } catch (err) {
-                  console.warn(`Failed to fetch performance for student ${student.id}`);
-                  return {
-                    ...student,
-                    classroomId: classroom.id,
-                    classroomName: classroom.name,
-                    performance: {
-                      overallMastery: 0,
-                      activeDays: 0,
-                      accuracyRate: 0,
-                      totalQuestions: 0,
-                      timeSpent: 0,
-                      weeklyChange: 0,
-                      knowledgeStates: [],
-                      strugglingAreas: 0,
-                      masteredAreas: 0
-                    }
-                  };
-                }
-              })
-            );
-            
-            allStudentsData.push(...studentsWithPerformance);
-            
-            // Calculate classroom performance metrics
-            const classroomStats = calculateClassroomStats(studentsWithPerformance);
-            classroomPerformanceData[classroom.id] = {
-              ...classroom,
-              students: studentsWithPerformance,
-              stats: classroomStats
-            };
-            
+            // Collect students with classroom info
+            performanceResponse.data.forEach(studentPerf => {
+              studentsArray.push({
+                ...studentPerf.student,
+                performance: studentPerf.performance,
+                intervention: studentPerf.intervention,
+                classroom: classroom
+              });
+            });
           } catch (err) {
-            console.warn(`Failed to fetch students for classroom ${classroom.id}`);
+            console.warn(`Failed to fetch performance for classroom ${classroom.id}`);
+            performanceData[classroom.id] = [];
           }
         }
         
-        setAllStudents(allStudentsData);
-        setClassroomPerformance(classroomPerformanceData);
+        setClassroomPerformance(performanceData);
+        setAllStudents(studentsArray);
         
-        // Identify students needing help
-        const studentsNeedingHelp = identifyStudentsNeedingHelp(allStudentsData);
+        // Identify students needing help using actual intervention data
+        const studentsNeedingHelp = studentsArray.filter(student => 
+          student.intervention && student.intervention.needed
+        ).sort((a, b) => {
+          const priorityOrder = { 'high': 3, 'medium': 2, 'low': 1 };
+          return priorityOrder[b.intervention.priority] - priorityOrder[a.intervention.priority];
+        });
         setStudentsNeedingHelp(studentsNeedingHelp);
         
-        // Generate intervention priorities
-        const priorities = generateInterventionPriorities(allStudentsData);
-        setInterventionPriorities(priorities);
-        
-        console.log(`[TeacherDashboard] Data loaded successfully`);
+        console.log(`[TeacherDashboardEnhanced] Data loaded successfully. Total students: ${studentsArray.length}`);
         setLoading(false);
       } catch (err) {
-        console.error(`[TeacherDashboard] Error fetching data:`, err);
+        console.error(`[TeacherDashboardEnhanced] Error fetching data:`, err);
         setError('Failed to load teacher dashboard. Please try again later.');
         setLoading(false);
       }
@@ -326,162 +289,37 @@ const TeacherDashboardEnhanced = () => {
     }).slice(0, 6);
   };
   
-  // Helper function to calculate classroom statistics
-  const calculateClassroomStats = (students) => {
-    if (students.length === 0) return null;
-    
-    const totalMastery = students.reduce((sum, s) => sum + s.performance.overallMastery, 0);
-    const averageMastery = totalMastery / students.length;
-    
-    const totalActiveDays = students.reduce((sum, s) => sum + s.performance.activeDays, 0);
-    const averageActiveDays = totalActiveDays / students.length;
-    
-    const totalAccuracy = students.reduce((sum, s) => sum + s.performance.accuracyRate, 0);
-    const averageAccuracy = totalAccuracy / students.length;
-    
-    const strugglingStudents = students.filter(s => 
-      s.performance.overallMastery < 0.5 || 
-      s.performance.activeDays < 3 || 
-      s.performance.accuracyRate < 0.6
-    ).length;
-    
-    const excellentStudents = students.filter(s => 
-      s.performance.overallMastery >= 0.8 && 
-      s.performance.activeDays >= 5 && 
-      s.performance.accuracyRate >= 0.8
-    ).length;
-    
-    return {
-      totalStudents: students.length,
-      averageMastery,
-      averageActiveDays,
-      averageAccuracy,
-      strugglingStudents,
-      excellentStudents,
-      needsAttention: strugglingStudents > students.length * 0.3
-    };
-  };
   
-  // Helper function to identify students needing help
-  const identifyStudentsNeedingHelp = (students) => {
-    return students
-      .map(student => {
-        const issues = [];
-        const performance = student.performance;
-        let urgencyScore = 0;
-        
-        // Check mastery level
-        if (performance.overallMastery < 0.3) {
-          issues.push({ type: 'critical', message: 'Very low mastery level', icon: '🚨' });
-          urgencyScore += 10;
-        } else if (performance.overallMastery < 0.5) {
-          issues.push({ type: 'high', message: 'Below expected mastery', icon: '⚠️' });
-          urgencyScore += 7;
+  // Handle sending messages to students
+  const handleSendMessage = async (student, messageType) => {
+    try {
+      const messages = {
+        encouragement: {
+          subject: 'Keep Going! You\'re Doing Great! 🌟',
+          content: `Hi ${student.name}! I noticed you haven't been active lately. Remember, every small step counts! I'm here to help you succeed. Let's work together to reach your goals! 💪`
+        },
+        progress: {
+          subject: 'Great Progress! 🎉',
+          content: `Congratulations ${student.name}! You've been making excellent progress. Keep up the amazing work!`
         }
-        
-        // Check activity level
-        if (performance.activeDays < 2) {
-          issues.push({ type: 'critical', message: 'Very low engagement', icon: '📅' });
-          urgencyScore += 8;
-        } else if (performance.activeDays < 4) {
-          issues.push({ type: 'medium', message: 'Inconsistent practice', icon: '📆' });
-          urgencyScore += 5;
-        }
-        
-        // Check accuracy
-        if (performance.accuracyRate < 0.5) {
-          issues.push({ type: 'high', message: 'Low accuracy rate', icon: '🎯' });
-          urgencyScore += 6;
-        }
-        
-        // Check struggling areas
-        if (performance.strugglingAreas > 5) {
-          issues.push({ type: 'high', message: 'Multiple struggling areas', icon: '📚' });
-          urgencyScore += 5;
-        }
-        
-        // Check weekly trend
-        if (performance.weeklyChange < -0.05) {
-          issues.push({ type: 'medium', message: 'Declining performance', icon: '📉' });
-          urgencyScore += 4;
-        }
-        
-        return {
-          ...student,
-          issues,
-          urgencyScore,
-          needsHelp: issues.length > 0
-        };
-      })
-      .filter(student => student.needsHelp)
-      .sort((a, b) => b.urgencyScore - a.urgencyScore);
-  };
-  
-  // Helper function to generate intervention priorities
-  const generateInterventionPriorities = (students) => {
-    const priorities = [];
-    
-    // Low engagement intervention
-    const lowEngagementStudents = students.filter(s => s.performance.activeDays < 3);
-    if (lowEngagementStudents.length > 0) {
-      priorities.push({
-        title: 'Low Engagement Intervention',
-        type: 'engagement',
-        urgency: 'high',
-        studentsCount: lowEngagementStudents.length,
-        description: 'Students with inconsistent practice patterns need engagement strategies',
-        students: lowEngagementStudents.slice(0, 5),
-        actions: [
-          'Send parent communication about practice importance',
-          'Implement gamification strategies',
-          'Schedule one-on-one check-ins',
-          'Adjust difficulty level to maintain interest'
-        ]
+      };
+
+      const message = messages[messageType] || messages.encouragement;
+      
+      await axios.post('/api/messages', {
+        receiver_id: student.id,
+        receiver_type: 'student',
+        subject: message.subject,
+        content: message.content
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
       });
+
+      alert(`Message sent to ${student.name}!`);
+    } catch (err) {
+      console.error('Error sending message:', err);
+      alert('Failed to send message. Please try again.');
     }
-    
-    // Low mastery intervention
-    const lowMasteryStudents = students.filter(s => s.performance.overallMastery < 0.5);
-    if (lowMasteryStudents.length > 0) {
-      priorities.push({
-        title: 'Academic Support Needed',
-        type: 'academic',
-        urgency: 'critical',
-        studentsCount: lowMasteryStudents.length,
-        description: 'Students below grade-level expectations need immediate academic support',
-        students: lowMasteryStudents.slice(0, 5),
-        actions: [
-          'Schedule remedial instruction sessions',
-          'Provide additional practice materials',
-          'Consider peer tutoring assignments',
-          'Contact parents for home support strategies'
-        ]
-      });
-    }
-    
-    // Accuracy intervention
-    const lowAccuracyStudents = students.filter(s => s.performance.accuracyRate < 0.6);
-    if (lowAccuracyStudents.length > 0) {
-      priorities.push({
-        title: 'Accuracy Improvement Focus',
-        type: 'accuracy',
-        urgency: 'medium',
-        studentsCount: lowAccuracyStudents.length,
-        description: 'Students making frequent errors need focused accuracy training',
-        students: lowAccuracyStudents.slice(0, 5),
-        actions: [
-          'Review common error patterns',
-          'Provide step-by-step problem solving guides',
-          'Implement self-checking strategies',
-          'Use manipulatives for concrete understanding'
-        ]
-      });
-    }
-    
-    return priorities.sort((a, b) => {
-      const urgencyOrder = { critical: 3, high: 2, medium: 1 };
-      return urgencyOrder[b.urgency] - urgencyOrder[a.urgency];
-    });
   };
   
   if (loading) {
@@ -530,22 +368,27 @@ const TeacherDashboardEnhanced = () => {
 
   return (
     <div className="teacher-dashboard-enhanced">
-      {/* Modern Professional Header */}
+      {/* Modern Teacher-Friendly Header */}
       <div className="dashboard-header">
-        <div className="header-background">
-          <div className="header-overlay"></div>
-        </div>
         <div className="header-content">
           <div className="teacher-welcome">
             <div className="welcome-text">
               <h1>Good {new Date().getHours() < 12 ? 'Morning' : new Date().getHours() < 17 ? 'Afternoon' : 'Evening'}, {teacher?.name || 'Teacher'}! 👋</h1>
               <p>Here's how your classes are performing today</p>
             </div>
-            <div className="performance-badge">
-              <div className="badge-content">
-                <span className="badge-label">Overall Performance</span>
-                <span className="badge-value">{analytics?.overallMastery || 0}%</span>
-              </div>
+            <div className="header-actions">
+              <button 
+                className="action-button primary"
+                onClick={() => setShowAddClassroomModal(true)}
+              >
+                <span>🏫</span> Add Classroom
+              </button>
+              <button 
+                className="action-button secondary"
+                onClick={() => setShowCreateStudentModal(true)}
+              >
+                <span>👤</span> Create Student
+              </button>
             </div>
           </div>
           
@@ -754,6 +597,7 @@ const TeacherDashboardEnhanced = () => {
         </div>
       )}
 
+
       {/* Classroom Performance Overview */}
       <div className="classrooms-overview">
         <div className="section-header">
@@ -762,109 +606,199 @@ const TeacherDashboardEnhanced = () => {
         </div>
         
         <div className="classrooms-grid">
-          {Object.values(classroomPerformance).map(classroom => (
-            <div key={classroom.id} className="classroom-card">
-              <div className="classroom-header">
-                <h3>{classroom.name}</h3>
-                <div className="classroom-status">
-                  {classroom.stats?.needsAttention ? (
-                    <span className="status-badge attention">⚠️ Needs Attention</span>
-                  ) : (
-                    <span className="status-badge good">✅ On Track</span>
-                  )}
-                </div>
-              </div>
-              
-              <div className="classroom-stats">
-                <div className="stat-row">
-                  <span>📊 Students:</span>
-                  <span>{classroom.stats?.totalStudents || 0}</span>
-                </div>
-                <div className="stat-row">
-                  <span>🎯 Avg Mastery:</span>
-                  <span className={`${((classroom.stats?.averageMastery || 0) * 100) > 70 ? 'text-success' : 'text-warning'}`}>
-                    {((classroom.stats?.averageMastery || 0) * 100).toFixed(0)}%
-                  </span>
-                </div>
-                <div className="stat-row">
-                  <span>⚠️ Struggling:</span>
-                  <span className="text-warning">{classroom.stats?.strugglingStudents || 0}</span>
-                </div>
-                <div className="stat-row">
-                  <span>⭐ Excelling:</span>
-                  <span className="text-success">{classroom.stats?.excellentStudents || 0}</span>
-                </div>
-              </div>
-              
-              <div className="classroom-actions">
-                <Link to={`/teacher/classroom/${classroom.id}`} className="btn-classroom">
-                  View Detailed Analytics
-                </Link>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Intervention Action Plan */}
-      {interventionPriorities.length > 0 && (
-        <div className="intervention-priorities">
-          <div className="section-header">
-            <h2>📋 Systematic Intervention Action Plan</h2>
-            <p>Evidence-based strategies to support struggling students</p>
-          </div>
-          
-          <div className="priorities-grid">
-            {interventionPriorities.map((priority, index) => (
-              <div key={index} className={`priority-card ${priority.urgency}`}>
-                <div className="priority-header">
-                  <h3>{priority.title}</h3>
-                  <div className="priority-meta">
-                    <span className={`urgency-tag ${priority.urgency}`}>
-                      {priority.urgency.toUpperCase()}
-                    </span>
-                    <span className="student-count">
-                      {priority.studentsCount} student{priority.studentsCount !== 1 ? 's' : ''}
-                    </span>
-                  </div>
-                </div>
-                
-                <p className="priority-description">{priority.description}</p>
-                
-                <div className="affected-students">
-                  <strong>Affected Students:</strong>
-                  <div className="student-chips">
-                    {priority.students.map(student => (
-                      <span key={student.id} className="student-chip">
-                        {student.name}
-                      </span>
-                    ))}
-                    {priority.studentsCount > 5 && (
-                      <span className="student-chip more">
-                        +{priority.studentsCount - 5} more
-                      </span>
+          {Object.values(classroomPerformance).map(classroom => {
+            const students = classroom || [];
+            const totalStudents = students.length;
+            const interventionsCount = students.filter(s => s.intervention && s.intervention.needed).length;
+            
+            // Calculate average mastery
+            let totalMastery = 0;
+            let studentCount = 0;
+            
+            students.forEach(student => {
+              if (student.performance && typeof student.performance.mathMastery === 'number') {
+                totalMastery += student.performance.mathMastery;
+                studentCount++;
+              } else if (student.performance && typeof student.performance.averageMastery === 'number') {
+                totalMastery += student.performance.averageMastery;
+                studentCount++;
+              }
+            });
+            
+            const avgMastery = studentCount > 0 ? (totalMastery / studentCount) * 100 : 0;
+            const classroomInfo = classrooms.find(c => c.id === students[0]?.student?.classroom_id) || 
+                                  { id: 'unknown', name: 'Unknown Classroom' };
+            
+            return (
+              <div key={classroomInfo.id} className="classroom-card">
+                <div className="classroom-header">
+                  <h3>{classroomInfo.name}</h3>
+                  <div className="classroom-status">
+                    {interventionsCount > totalStudents * 0.3 ? (
+                      <span className="status-badge attention">⚠️ Needs Attention</span>
+                    ) : (
+                      <span className="status-badge good">✅ On Track</span>
                     )}
                   </div>
                 </div>
                 
-                <div className="action-steps">
-                  <strong>Recommended Actions:</strong>
-                  <ul>
-                    {priority.actions.slice(0, 3).map((action, actionIndex) => (
-                      <li key={actionIndex}>{action}</li>
-                    ))}
-                  </ul>
+                <div className="classroom-stats">
+                  <div className="stat-row">
+                    <span>📊 Students:</span>
+                    <span>{totalStudents}</span>
+                  </div>
+                  <div className="stat-row">
+                    <span>🎯 Avg Mastery:</span>
+                    <span className={`${avgMastery > 70 ? 'text-success' : 'text-warning'}`}>
+                      {avgMastery.toFixed(0)}%
+                    </span>
+                  </div>
+                  <div className="stat-row">
+                    <span>⚠️ Needing Help:</span>
+                    <span className="text-warning">{interventionsCount}</span>
+                  </div>
+                  <div className="stat-row">
+                    <span>⭐ Excellent:</span>
+                    <span className="text-success">
+                      {students.filter(s => s.performance && (s.performance.mathMastery >= 0.8 || s.performance.averageMastery >= 0.8)).length}
+                    </span>
+                  </div>
                 </div>
                 
-                <div className="priority-actions">
-                  <button className="btn-priority">
-                    Create Action Plan
+                <div className="classroom-actions">
+                  <Link to={`/teacher/classroom/${classroomInfo.id}`} className="btn-classroom">
+                    View Detailed Analytics
+                  </Link>
+                  <button 
+                    className="btn-add-student"
+                    onClick={() => {
+                      setSelectedClassroomForAddStudent(classroomInfo.id);
+                      setShowAddStudentModal(true);
+                    }}
+                  >
+                    + Add Student
                   </button>
                 </div>
               </div>
-            ))}
-          </div>
+            );
+          })}
         </div>
+      </div>
+      {/* Modals */}
+      {showAddClassroomModal && (
+        <AddClassroomModal
+          onClose={() => setShowAddClassroomModal(false)}
+          onSuccess={(newClassroom) => {
+            setClassrooms(prev => [...prev, newClassroom]);
+            setClassroomPerformance(prev => ({ ...prev, [newClassroom.id]: [] }));
+            setShowAddClassroomModal(false);
+            alert(`Classroom "${newClassroom.name}" created successfully!`);
+          }}
+        />
+      )}
+
+      {showCreateStudentModal && (
+        <CreateStudentModal
+          onClose={() => {
+            setShowCreateStudentModal(false);
+            setSelectedClassroomForStudent(null);
+          }}
+          onSuccess={async (newStudent) => {
+            // Refresh data to show the new student
+            try {
+              const classroomsResponse = await axios.get(`/api/teachers/${teacherId}/classrooms`);
+              setClassrooms(classroomsResponse.data);
+              
+              // Refresh performance data
+              const performanceData = {};
+              const studentsArray = [];
+              for (const classroom of classroomsResponse.data) {
+                const performanceResponse = await axios.get(`/api/classrooms/${classroom.id}/performance`);
+                performanceData[classroom.id] = performanceResponse.data;
+                
+                performanceResponse.data.forEach(studentPerf => {
+                  studentsArray.push({
+                    ...studentPerf.student,
+                    performance: studentPerf.performance,
+                    intervention: studentPerf.intervention,
+                    classroom: classroom
+                  });
+                });
+              }
+              setClassroomPerformance(performanceData);
+              setAllStudents(studentsArray);
+            } catch (err) {
+              console.error('Error refreshing data:', err);
+            }
+            
+            setShowCreateStudentModal(false);
+            setSelectedClassroomForStudent(null);
+            
+            // Show credentials to teacher
+            if (newStudent.credentials) {
+              alert(`Student created successfully!\n\nLogin Credentials:\nEmail: ${newStudent.credentials.email}\nPassword: ${newStudent.credentials.password}\n\nPlease save these credentials!`);
+            } else {
+              alert('Student created successfully!');
+            }
+          }}
+          classroomId={selectedClassroomForStudent}
+        />
+      )}
+
+      {showAddStudentModal && selectedClassroomForAddStudent && (
+        <AddStudentToClassroomModal
+          onClose={() => {
+            setShowAddStudentModal(false);
+            setSelectedClassroomForAddStudent(null);
+          }}
+          onSuccess={async () => {
+            // Refresh classroom data
+            try {
+              const classroomsResponse = await axios.get(`/api/teachers/${teacherId}/classrooms`);
+              setClassrooms(classroomsResponse.data);
+              
+              // Refresh performance data
+              const performanceData = {};
+              const studentsArray = [];
+              for (const classroom of classroomsResponse.data) {
+                const performanceResponse = await axios.get(`/api/classrooms/${classroom.id}/performance`);
+                performanceData[classroom.id] = performanceResponse.data;
+                
+                performanceResponse.data.forEach(studentPerf => {
+                  studentsArray.push({
+                    ...studentPerf.student,
+                    performance: studentPerf.performance,
+                    intervention: studentPerf.intervention,
+                    classroom: classroom
+                  });
+                });
+              }
+              setClassroomPerformance(performanceData);
+              setAllStudents(studentsArray);
+            } catch (err) {
+              console.error('Error refreshing data:', err);
+            }
+            
+            setShowAddStudentModal(false);
+            setSelectedClassroomForAddStudent(null);
+          }}
+          classroomId={selectedClassroomForAddStudent}
+          classroomName={classrooms.find(c => c.id === selectedClassroomForAddStudent)?.name || 'Classroom'}
+        />
+      )}
+
+      {showAssignPracticeModal && selectedStudentForPractice && (
+        <AssignPracticeModal
+          student={selectedStudentForPractice}
+          onClose={() => {
+            setShowAssignPracticeModal(false);
+            setSelectedStudentForPractice(null);
+          }}
+          onAssignSuccess={() => {
+            setShowAssignPracticeModal(false);
+            setSelectedStudentForPractice(null);
+          }}
+        />
       )}
     </div>
   );
