@@ -167,6 +167,10 @@
 /* Login Form Styles */
 .login-form-container {
   animation: slide-in 0.3s ease-out;
+  position: relative;
+  z-index: 10;
+  background: transparent;
+  width: 100%;
 }
 
 @keyframes slide-in {
@@ -181,24 +185,66 @@
 }
 
 .back-button {
-  background: none;
-  border: none;
-  color: #667eea;
-  font-size: 1rem;
-  font-weight: 600;
+  background: rgba(102, 126, 234, 0.1) !important;
+  border: 2px solid #667eea !important;
+  color: #667eea !important;
+  font-size: 1rem !important;
+  font-weight: 700 !important;
   cursor: pointer;
-  padding: 8px 16px;
+  padding: 12px 20px;
   margin-bottom: 20px;
   border-radius: 8px;
   transition: all 0.2s ease;
-  display: inline-flex;
+  display: inline-flex !important;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
+  text-decoration: none !important;
+  outline: none !important;
+  box-shadow: 0 2px 4px rgba(102, 126, 234, 0.2) !important;
+  font-family: 'Nunito', 'Comic Sans MS', 'Arial', sans-serif !important;
+  line-height: 1.4 !important;
+  z-index: 100;
+  position: relative;
+  opacity: 1 !important;
+  visibility: visible !important;
+  width: auto !important;
+  height: auto !important;
+  min-height: 40px;
+  white-space: nowrap;
 }
 
 .back-button:hover {
-  background-color: #f7fafc;
+  background: rgba(102, 126, 234, 0.2) !important;
+  color: #4c51bf !important;
   transform: translateX(-3px);
+  box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3) !important;
+  border-color: #4c51bf !important;
+}
+
+.back-button:focus,
+.back-button:active {
+  color: #4c51bf !important;
+  background: rgba(102, 126, 234, 0.15) !important;
+  border-color: #4c51bf !important;
+}
+
+/* Super specific rule to override any global button styles */
+.login-improved-container .login-improved-card .login-form-container .back-button {
+  background: rgba(102, 126, 234, 0.1) !important;
+  border: 2px solid #667eea !important;
+  color: #667eea !important;
+  font-size: 1rem !important;
+  font-weight: 700 !important;
+  padding: 12px 20px !important;
+  display: inline-flex !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  z-index: 1000 !important;
+}
+
+.login-improved-container .login-improved-card .login-form-container .back-button:hover {
+  background: rgba(102, 126, 234, 0.2) !important;
+  color: #4c51bf !important;
 }
 
 .selected-role-header {
