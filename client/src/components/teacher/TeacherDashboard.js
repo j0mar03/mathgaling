@@ -34,10 +34,25 @@ const TeacherDashboard = () => {
   const [allStudents, setAllStudents] = useState([]); // All students across classrooms
   const [showAddStudentModal, setShowAddStudentModal] = useState(false); // State for add student to classroom modal
   const [selectedClassroomForAddStudent, setSelectedClassroomForAddStudent] = useState(null); // Selected classroom for adding students
+  const [colorTheme, setColorTheme] = useState('blue-theme'); // New state for color themes - default blue
   const { user, token } = useAuth(); // Get user and token from context
 
   // Use the authenticated user's ID
   const teacherId = user?.id;
+  
+  // Load saved color theme on component mount
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('teacher-color-theme');
+    if (savedTheme) {
+      setColorTheme(savedTheme);
+    }
+  }, []);
+  
+  // Save color theme whenever it changes
+  const handleColorThemeChange = (newTheme) => {
+    setColorTheme(newTheme);
+    localStorage.setItem('teacher-color-theme', newTheme);
+  };
   
   useEffect(() => {
     const fetchData = async () => {
@@ -357,14 +372,57 @@ const TeacherDashboard = () => {
   };
 
   return (
-    <div className="teacher-dashboard">
-      <div className="dashboard-header">
+    <div className={`teacher-dashboard ${colorTheme}`}>
+      <div className={`dashboard-header ${colorTheme}`}>
         <div className="header-content">
           <div className="header-text">
             <h1>Welcome, {teacher?.name || 'Teacher'}!</h1>
             <p>Intelligent Tutoring System Dashboard</p>
           </div>
           <div className="header-actions">
+            {/* Color Theme Selector */}
+            <div className="color-theme-selector">
+              <span className="theme-label">Colors:</span>
+              <div className="theme-buttons">
+                <button 
+                  className={`theme-btn blue ${colorTheme === 'blue-theme' ? 'active' : ''}`}
+                  onClick={() => handleColorThemeChange('blue-theme')}
+                  title="Blue Theme"
+                  style={{backgroundColor: '#74b9ff'}}
+                ></button>
+                <button 
+                  className={`theme-btn green ${colorTheme === 'green-theme' ? 'active' : ''}`}
+                  onClick={() => handleColorThemeChange('green-theme')}
+                  title="Green Theme"
+                  style={{backgroundColor: '#81c784'}}
+                ></button>
+                <button 
+                  className={`theme-btn peach ${colorTheme === 'peach-theme' ? 'active' : ''}`}
+                  onClick={() => handleColorThemeChange('peach-theme')}
+                  title="Peach Theme"
+                  style={{backgroundColor: '#ffab91'}}
+                ></button>
+                <button 
+                  className={`theme-btn purple ${colorTheme === 'purple-theme' ? 'active' : ''}`}
+                  onClick={() => handleColorThemeChange('purple-theme')}
+                  title="Purple Theme"
+                  style={{backgroundColor: '#b39ddb'}}
+                ></button>
+                <button 
+                  className={`theme-btn teal ${colorTheme === 'teal-theme' ? 'active' : ''}`}
+                  onClick={() => handleColorThemeChange('teal-theme')}
+                  title="Teal Theme"
+                  style={{backgroundColor: '#4dd0e1'}}
+                ></button>
+              </div>
+            </div>
+            
+            <button 
+              className="action-button secondary"
+              onClick={handleAddClassroomClick}
+            >
+              <span>🏫</span> Add Classroom
+            </button>
             <button 
               className="action-button primary"
               onClick={() => handleCreateStudentClick()}
@@ -565,7 +623,6 @@ const TeacherDashboard = () => {
       <div className="classrooms-section">
         <div className="section-header">
           <h2>Your Classrooms</h2>
-          <button className="add-button" onClick={handleAddClassroomClick}>+ Add Classroom</button>
         </div>
         
         <div className="classrooms-grid">

@@ -12,6 +12,37 @@
   overflow: hidden;
 }
 
+/* Color Theme Support for Header */
+.dashboard-header.blue-theme {
+  background: linear-gradient(135deg, #74b9ff 0%, #0984e3 50%, #dae8fc 100%);
+  border-color: #74b9ff;
+  box-shadow: 0 8px 20px rgba(116, 185, 255, 0.3);
+}
+
+.dashboard-header.green-theme {
+  background: linear-gradient(135deg, #81c784 0%, #66bb6a 50%, #c8e6c9 100%);
+  border-color: #66bb6a;
+  box-shadow: 0 8px 20px rgba(129, 199, 132, 0.3);
+}
+
+.dashboard-header.peach-theme {
+  background: linear-gradient(135deg, #ffab91 0%, #ff8a65 50%, #ffe0b2 100%);
+  border-color: #ff8a65;
+  box-shadow: 0 8px 20px rgba(255, 171, 145, 0.3);
+}
+
+.dashboard-header.purple-theme {
+  background: linear-gradient(135deg, #b39ddb 0%, #9575cd 50%, #d1c4e9 100%);
+  border-color: #9575cd;
+  box-shadow: 0 8px 20px rgba(179, 157, 219, 0.3);
+}
+
+.dashboard-header.teal-theme {
+  background: linear-gradient(135deg, #4dd0e1 0%, #26c6da 50%, #b2ebf2 100%);
+  border-color: #26c6da;
+  box-shadow: 0 8px 20px rgba(77, 208, 225, 0.3);
+}
+
 .dashboard-header::before {
   content: '';
   position: absolute;
@@ -60,6 +91,63 @@
   gap: 1rem;
   flex-wrap: wrap;
   align-items: flex-start;
+}
+
+/* Color Theme Selector */
+.color-theme-selector {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.15);
+  padding: 6px 10px;
+  border-radius: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+.theme-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  margin-right: 4px;
+}
+
+.theme-buttons {
+  display: flex;
+  gap: 6px;
+}
+
+.theme-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.theme-btn:hover {
+  transform: scale(1.15);
+  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.3);
+}
+
+.theme-btn.active {
+  border-color: #ffffff;
+  transform: scale(1.1);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.4);
+}
+
+.theme-btn.active::after {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
 }
 
 .action-button {
@@ -2851,6 +2939,11 @@
   .header-actions {
     flex-direction: column;
     gap: 0.75rem;
+  }
+  
+  .color-theme-selector {
+    align-self: center;
+    order: -1; /* Show theme selector first on mobile */
   }
   
   .action-button {
