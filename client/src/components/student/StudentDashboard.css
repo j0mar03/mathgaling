@@ -382,6 +382,67 @@
   background: linear-gradient(135deg, #059669, #047857);
 }
 
+/* Color theme support for progress-button */
+.orange-theme .progress-button {
+  background: linear-gradient(135deg, #ff9f43 0%, #f39c12 100%);
+  box-shadow: 0 8px 24px rgba(255, 159, 67, 0.4);
+}
+
+.orange-theme .progress-button:hover {
+  background: linear-gradient(135deg, #f39c12, #e67e22);
+  box-shadow: 0 12px 32px rgba(255, 159, 67, 0.5);
+}
+
+.blue-theme .progress-button {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.4);
+}
+
+.blue-theme .progress-button:hover {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  box-shadow: 0 12px 32px rgba(59, 130, 246, 0.5);
+}
+
+.green-theme .progress-button {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
+}
+
+.green-theme .progress-button:hover {
+  background: linear-gradient(135deg, #059669, #047857);
+  box-shadow: 0 12px 32px rgba(16, 185, 129, 0.5);
+}
+
+.peach-theme .progress-button {
+  background: linear-gradient(135deg, #fb7185 0%, #f43f5e 100%);
+  box-shadow: 0 8px 24px rgba(251, 113, 133, 0.4);
+}
+
+.peach-theme .progress-button:hover {
+  background: linear-gradient(135deg, #f43f5e, #e11d48);
+  box-shadow: 0 12px 32px rgba(251, 113, 133, 0.5);
+}
+
+.purple-theme .progress-button {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  box-shadow: 0 8px 24px rgba(139, 92, 246, 0.4);
+}
+
+.purple-theme .progress-button:hover {
+  background: linear-gradient(135deg, #7c3aed, #6d28d9);
+  box-shadow: 0 12px 32px rgba(139, 92, 246, 0.5);
+}
+
+.teal-theme .progress-button {
+  background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+  box-shadow: 0 8px 24px rgba(6, 182, 212, 0.4);
+}
+
+.teal-theme .progress-button:hover {
+  background: linear-gradient(135deg, #0891b2, #0e7490);
+  box-shadow: 0 12px 32px rgba(6, 182, 212, 0.5);
+}
+
 .button-icon {
   font-size: 1.4rem;
 }
@@ -413,6 +474,61 @@
   right: 0;
   height: 4px;
   background: linear-gradient(135deg, #10b981, #059669);
+}
+
+/* Color theme support for learning-path-focus */
+.orange-theme .learning-path-focus {
+  border: 1px solid rgba(255, 159, 67, 0.2);
+  box-shadow: 0 12px 32px rgba(255, 159, 67, 0.15);
+}
+
+.orange-theme .learning-path-focus::before {
+  background: linear-gradient(135deg, #ff9f43, #f39c12);
+}
+
+.blue-theme .learning-path-focus {
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  box-shadow: 0 12px 32px rgba(59, 130, 246, 0.15);
+}
+
+.blue-theme .learning-path-focus::before {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+}
+
+.green-theme .learning-path-focus {
+  border: 1px solid rgba(5, 150, 105, 0.2);
+  box-shadow: 0 12px 32px rgba(5, 150, 105, 0.15);
+}
+
+.green-theme .learning-path-focus::before {
+  background: linear-gradient(135deg, #059669, #047857);
+}
+
+.peach-theme .learning-path-focus {
+  border: 1px solid rgba(251, 113, 133, 0.2);
+  box-shadow: 0 12px 32px rgba(251, 113, 133, 0.15);
+}
+
+.peach-theme .learning-path-focus::before {
+  background: linear-gradient(135deg, #fb7185, #f43f5e);
+}
+
+.purple-theme .learning-path-focus {
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  box-shadow: 0 12px 32px rgba(139, 92, 246, 0.15);
+}
+
+.purple-theme .learning-path-focus::before {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+}
+
+.teal-theme .learning-path-focus {
+  border: 1px solid rgba(6, 182, 212, 0.2);
+  box-shadow: 0 12px 32px rgba(6, 182, 212, 0.15);
+}
+
+.teal-theme .learning-path-focus::before {
+  background: linear-gradient(135deg, #06b6d4, #0891b2);
 }
 
 .activities-section {
@@ -650,6 +766,73 @@
   background: linear-gradient(135deg, #059669, #047857);
   box-shadow: 0 12px 32px rgba(16, 185, 129, 0.4);
   color: white;
+}
+
+/* Color theme support for practice-button */
+.orange-theme .practice-button {
+  background: linear-gradient(135deg, #ff9f43 0%, #f39c12 100%);
+  border-color: #e67e22;
+  box-shadow: 0 8px 24px rgba(255, 159, 67, 0.3);
+}
+
+.orange-theme .practice-button:hover {
+  background: linear-gradient(135deg, #f39c12, #e67e22);
+  box-shadow: 0 12px 32px rgba(255, 159, 67, 0.4);
+}
+
+.blue-theme .practice-button {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  border-color: #1d4ed8;
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
+}
+
+.blue-theme .practice-button:hover {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  box-shadow: 0 12px 32px rgba(59, 130, 246, 0.4);
+}
+
+.green-theme .practice-button {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border-color: #047857;
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3);
+}
+
+.green-theme .practice-button:hover {
+  background: linear-gradient(135deg, #059669, #047857);
+  box-shadow: 0 12px 32px rgba(16, 185, 129, 0.4);
+}
+
+.peach-theme .practice-button {
+  background: linear-gradient(135deg, #fb7185 0%, #f43f5e 100%);
+  border-color: #e11d48;
+  box-shadow: 0 8px 24px rgba(251, 113, 133, 0.3);
+}
+
+.peach-theme .practice-button:hover {
+  background: linear-gradient(135deg, #f43f5e, #e11d48);
+  box-shadow: 0 12px 32px rgba(251, 113, 133, 0.4);
+}
+
+.purple-theme .practice-button {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  border-color: #6d28d9;
+  box-shadow: 0 8px 24px rgba(139, 92, 246, 0.3);
+}
+
+.purple-theme .practice-button:hover {
+  background: linear-gradient(135deg, #7c3aed, #6d28d9);
+  box-shadow: 0 12px 32px rgba(139, 92, 246, 0.4);
+}
+
+.teal-theme .practice-button {
+  background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+  border-color: #0e7490;
+  box-shadow: 0 8px 24px rgba(6, 182, 212, 0.3);
+}
+
+.teal-theme .practice-button:hover {
+  background: linear-gradient(135deg, #0891b2, #0e7490);
+  box-shadow: 0 12px 32px rgba(6, 182, 212, 0.4);
 }
 
 .challenge-button {
