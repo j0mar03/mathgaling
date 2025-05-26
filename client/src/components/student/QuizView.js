@@ -34,7 +34,7 @@ const QuizView = () => {
   const [searchingNextTopic, setSearchingNextTopic] = useState(false); // Loading state for next topic search
   const [nextTopicSearchComplete, setNextTopicSearchComplete] = useState(false); // Track if search is done
   const [finalScoreCalculated, setFinalScoreCalculated] = useState(0); // Store final score for consistent display
-  const [showTopicInfo, setShowTopicInfo] = useState(true); // Toggle for topic information visibility
+  const [showTopicInfo, setShowTopicInfo] = useState(false); // Toggle for topic information visibility - default hide
 
   useEffect(() => {
     // Reset state when location changes (new quiz)
@@ -687,47 +687,104 @@ const QuizView = () => {
     }
 
     return (
-      <div className="quiz-completion">
-        <h2>Quiz Complete!</h2>
-
-        <div className="quiz-summary">
-          <div className="summary-card">
-            <h3>Your Score</h3>
-            <div className="score-display">
-              <div className="score-circle">
-                <span className="score-number">{score}</span>
-                <span className="score-total">/ {questions.length}</span>
-              </div>
-              <div className="score-percentage">
-                {(scorePercentage * 100).toFixed(0)}%
-              </div>
+      <div className="enhanced-quiz">
+        <div className="quiz-completion enhanced-completion">
+          <div className="completion-header">
+            <h2>🎉 Quiz Complete!</h2>
+            <div className="completion-badge">
+              <span className="badge-icon">✨</span>
+              <span className="badge-text">Well Done!</span>
             </div>
-            <div className="time-display">
-              <span>Time Spent: {Math.floor(timeSpent / 60)}:{(timeSpent % 60).toString().padStart(2, '0')}</span>
-            </div>
-            <p><strong>Status:</strong> {masteryStatusText}</p>
           </div>
 
-          <div className="feedback-section">
-            <p className="score">
-              📊 Progress: {currentKcName} – {currentKcStatusText}
-            </p>
-            {showUnlockMessage && (
-              <p className="unlock-message" style={{ color: '#2ecc71', fontWeight: 'bold' }}>
-                🔓 Keep going to unlock the next topic!
-              </p>
-            )}
+          <div className="quiz-summary enhanced-summary">
+            <div className="summary-card enhanced-summary-card">
+              <h3>Your Performance</h3>
+              <div className="score-display enhanced-score-display">
+                <div className="score-circle enhanced-score-circle">
+                  <div className="score-inner">
+                    <span className="score-number">{score}</span>
+                    <span className="score-total">/ {questions.length}</span>
+                  </div>
+                  <div className="score-ring">
+                    <svg className="progress-ring" width="140" height="140">
+                      <circle
+                        className="progress-ring-background"
+                        stroke="rgba(255,255,255,0.2)"
+                        strokeWidth="8"
+                        fill="transparent"
+                        r="60"
+                        cx="70"
+                        cy="70"
+                      />
+                      <circle
+                        className="progress-ring-progress"
+                        stroke="url(#scoreGradient)"
+                        strokeWidth="8"
+                        fill="transparent"
+                        r="60"
+                        cx="70"
+                        cy="70"
+                        strokeDasharray={`${2 * Math.PI * 60}`}
+                        strokeDashoffset={`${2 * Math.PI * 60 * (1 - scorePercentage)}`}
+                        transform="rotate(-90 70 70)"
+                      />
+                    </svg>
+                    <defs>
+                      <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="#56ab2f" />
+                        <stop offset="100%" stopColor="#a8e6cf" />
+                      </linearGradient>
+                    </defs>
+                  </div>
+                </div>
+                <div className="score-details">
+                  <div className="score-percentage enhanced-percentage">
+                    {(scorePercentage * 100).toFixed(0)}%
+                  </div>
+                  <div className="score-status">{masteryStatusText}</div>
+                </div>
+              </div>
+              <div className="metrics-row">
+                <div className="metric-item">
+                  <span className="metric-icon">⏱️</span>
+                  <span className="metric-label">Time</span>
+                  <span className="metric-value">{Math.floor(timeSpent / 60)}:{(timeSpent % 60).toString().padStart(2, '0')}</span>
+                </div>
+                <div className="metric-item">
+                  <span className="metric-icon">🎯</span>
+                  <span className="metric-label">Accuracy</span>
+                  <span className="metric-value">{(scorePercentage * 100).toFixed(0)}%</span>
+                </div>
+                <div className="metric-item">
+                  <span className="metric-icon">📊</span>
+                  <span className="metric-label">Status</span>
+                  <span className="metric-value">{masteryStatusText}</span>
+                </div>
+              </div>
+            </div>
+
+          <div className="feedback-section enhanced-feedback">
+            <div className="topic-progress">
+              <span className="topic-icon">📚</span>
+              <div className="topic-details">
+                <h4>{currentKcName}</h4>
+                <div className="progress-status">
+                  <span className="status-text">{currentKcStatusText}</span>
+                  {showUnlockMessage && (
+                    <div className="unlock-message">
+                      <span className="unlock-icon">🔓</span>
+                      <span>Keep going to unlock the next topic!</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
 
-          <div className="action-buttons">
-            {/* Fixed button layout with clear separation */}
-            <div className="primary-actions" style={{ 
-              display: 'flex', 
-              flexDirection: 'column', 
-              gap: '1rem', 
-              alignItems: 'center',
-              marginBottom: '1rem'
-            }}>
+          <div className="action-buttons enhanced-actions">
+            {/* Enhanced button layout */}
+            <div className="primary-actions enhanced-primary-actions">
               {/* Continue to Next Topic Button (if available) */}
               {(() => {
                 const performedWell = (actualPerformance >= 0.75 || scorePercentage >= 0.75);
@@ -737,25 +794,8 @@ const QuizView = () => {
                 // Show loading state while searching
                 if (performedWell && searchingNextTopic) {
                   return (
-                    <div className="loading-container" style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      padding: '1rem',
-                      background: 'linear-gradient(135deg, #f39c12, #e67e22)',
-                      borderRadius: '15px',
-                      color: 'white',
-                      minWidth: '250px'
-                    }}>
-                      <div style={{
-                        width: '30px',
-                        height: '30px',
-                        border: '3px solid rgba(255,255,255,0.3)',
-                        borderTop: '3px solid white',
-                        borderRadius: '50%',
-                        animation: 'spin 1s linear infinite',
-                        marginBottom: '0.5rem'
-                      }}></div>
+                    <div className="loading-next-topic">
+                      <div className="loading-spinner"></div>
                       <span>🔍 Finding Next Topic...</span>
                     </div>
                   );
@@ -766,34 +806,10 @@ const QuizView = () => {
                   return (
                     <button 
                       onClick={handleContinueToNextTopic} 
-                      className="continue-to-next-button"
-                      style={{
-                        background: 'linear-gradient(135deg, #27ae60, #2ecc71)',
-                        color: 'white',
-                        border: 'none',
-                        padding: '1rem 2rem',
-                        borderRadius: '25px',
-                        fontSize: '1.1rem',
-                        fontWeight: 'bold',
-                        cursor: 'pointer',
-                        transition: 'all 0.3s ease',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem',
-                        minWidth: '250px',
-                        justifyContent: 'center',
-                        boxShadow: '0 4px 15px rgba(39, 174, 96, 0.3)'
-                      }}
-                      onMouseOver={(e) => {
-                        e.target.style.transform = 'translateY(-2px)';
-                        e.target.style.boxShadow = '0 6px 20px rgba(39, 174, 96, 0.4)';
-                      }}
-                      onMouseOut={(e) => {
-                        e.target.style.transform = 'translateY(0)';
-                        e.target.style.boxShadow = '0 4px 15px rgba(39, 174, 96, 0.3)';
-                      }}
+                      className="continue-to-next-button enhanced-continue-btn"
                     >
-                      🚀 Continue to Next Topic!
+                      <span className="btn-icon">🚀</span>
+                      <span>Continue to Next Topic!</span>
                     </button>
                   );
                 }
@@ -810,34 +826,10 @@ const QuizView = () => {
                   return (
                     <button 
                       onClick={handleRetryQuiz} 
-                      className="retry-quiz-button"
-                      style={{
-                        background: 'linear-gradient(135deg, #3498db, #5dade2)',
-                        color: 'white',
-                        border: 'none',
-                        padding: '0.8rem 1.8rem',
-                        borderRadius: '20px',
-                        fontSize: '1rem',
-                        fontWeight: '600',
-                        cursor: 'pointer',
-                        transition: 'all 0.3s ease',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.5rem',
-                        minWidth: '200px',
-                        justifyContent: 'center',
-                        boxShadow: '0 3px 10px rgba(52, 152, 219, 0.3)'
-                      }}
-                      onMouseOver={(e) => {
-                        e.target.style.transform = 'translateY(-2px)';
-                        e.target.style.boxShadow = '0 5px 15px rgba(52, 152, 219, 0.4)';
-                      }}
-                      onMouseOut={(e) => {
-                        e.target.style.transform = 'translateY(0)';
-                        e.target.style.boxShadow = '0 3px 10px rgba(52, 152, 219, 0.3)';
-                      }}
+                      className="retry-quiz-button enhanced-retry-btn"
                     >
-                      🔁 Try Again
+                      <span className="btn-icon">🔁</span>
+                      <span>Try Again</span>
                     </button>
                   );
                 }
@@ -847,31 +839,13 @@ const QuizView = () => {
             </div>
             
             {/* Navigation buttons */}
-            <div className="navigation-buttons" style={{
-              display: 'flex',
-              gap: '1rem',
-              justifyContent: 'center',
-              flexWrap: 'wrap'
-            }}>
+            <div className="navigation-buttons enhanced-nav-buttons">
               <button 
                 onClick={handleBackToDashboard} 
-                className="nav-button"
-                style={{
-                  background: 'linear-gradient(135deg, #6c757d, #8b939d)',
-                  color: 'white',
-                  border: 'none',
-                  padding: '0.8rem 1.5rem',
-                  borderRadius: '20px',
-                  fontSize: '1rem',
-                  fontWeight: '500',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem'
-                }}
+                className="nav-button enhanced-nav-btn home-btn"
               >
-                🏠 Back to Dashboard
+                <span className="btn-icon">🏠</span>
+                <span>Back to Dashboard</span>
               </button>
               <button 
                 onClick={async () => {
@@ -885,66 +859,46 @@ const QuizView = () => {
                   }));
                   window.location.href = '/student/progress?refresh=' + Date.now();
                 }}
-                className="nav-button"
-                style={{
-                  background: 'linear-gradient(135deg, #8e44ad, #9b59b6)',
-                  color: 'white',
-                  border: 'none',
-                  padding: '0.8rem 1.5rem',
-                  borderRadius: '20px',
-                  fontSize: '1rem',
-                  fontWeight: '500',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem'
-                }}
+                className="nav-button enhanced-nav-btn progress-btn"
               >
-                📊 View Progress
+                <span className="btn-icon">📊</span>
+                <span>View Progress</span>
               </button>
             </div>
           </div>
 
-          <p className="encouragement-quote" style={{ fontStyle: 'italic', margin: '1rem 0', color: '#7f8c8d' }}>
-            💬 "{encouragingQuote}"
-          </p>
+          <div className="encouragement-section">
+            <div className="quote-container">
+              <span className="quote-icon">💬</span>
+              <p className="encouragement-quote">"{encouragingQuote}"</p>
+            </div>
+          </div>
 
           {/* Show struggling KCs if any */}
           {strugglingKCs.length > 0 && (
-            <div style={{ 
-              backgroundColor: '#fff3cd', 
-              border: '1px solid #ffeaa7', 
-              borderRadius: '8px', 
-              padding: '1rem', 
-              margin: '1rem 0' 
-            }}>
-              <h4 style={{ color: '#856404', margin: '0 0 0.5rem 0' }}>📚 Recommended Practice Topics:</h4>
-              <ul style={{ margin: '0', paddingLeft: '1.5rem' }}>
+            <div className="struggling-kcs-section">
+              <h4>📚 Recommended Practice Topics:</h4>
+              <div className="recommendations-list">
                 {strugglingKCs.slice(0, 3).map((kc, index) => (
-                  <li key={index} style={{ color: '#856404', marginBottom: '0.25rem' }}>
-                    {kc.name} (Mastery: {(kc.current_mastery * 100).toFixed(0)}%)
-                  </li>
+                  <div key={index} className="recommendation-item">
+                    <span className="rec-name">{kc.name}</span>
+                    <span className="rec-mastery">Mastery: {(kc.current_mastery * 100).toFixed(0)}%</span>
+                  </div>
                 ))}
-              </ul>
+              </div>
             </div>
           )}
 
           {/* Question breakdown */}
           {answeredQuestions.length > 0 && (
-            <details style={{ marginTop: '2rem', textAlign: 'left' }}>
-              <summary style={{ cursor: 'pointer', fontWeight: 'bold', marginBottom: '1rem' }}>
-                Show Question Breakdown
+            <details className="question-breakdown">
+              <summary className="breakdown-toggle">
+                <span className="toggle-icon">📋</span>
+                <span>Show Question Breakdown</span>
               </summary>
-              <div style={{ marginTop: '1rem' }}>
+              <div className="breakdown-content">
                 {answeredQuestions.map((item, index) => (
-                  <div key={index} style={{ 
-                    padding: '1rem', 
-                    margin: '0.5rem 0', 
-                    border: `2px solid ${item.isCorrect ? '#2ecc71' : '#e74c3c'}`,
-                    borderRadius: '8px',
-                    backgroundColor: item.isCorrect ? '#eafaf1' : '#fdedec'
-                  }}>
+                  <div key={index} className={`breakdown-item ${item.isCorrect ? 'correct' : 'incorrect'}`}>
                     <h4>Question {item.questionNumber}: {item.knowledgeComponent}</h4>
                     <p><strong>Q:</strong> {item.questionText}</p>
                     {item.options && (
@@ -974,6 +928,7 @@ const QuizView = () => {
               </div>
             </details>
           )}
+          </div>
         </div>
       </div>
     );
