@@ -5104,7 +5104,7 @@ exports.handler = async (event, context) => {
         .from('responses')
         .select('*')
         .eq('student_id', studentId)
-        .order('created_at', { ascending: false })
+        .order('createdAt', { ascending: false })
         .limit(100);
       
       if (responsesError) {
@@ -5180,9 +5180,9 @@ exports.handler = async (event, context) => {
         .from('responses')
         .select('*')
         .eq('student_id', studentId)
-        .gte('created_at', weekStart.toISOString())
-        .lte('created_at', weekEnd.toISOString())
-        .order('created_at', { ascending: false });
+        .gte('createdAt', weekStart.toISOString())
+        .lte('createdAt', weekEnd.toISOString())
+        .order('createdAt', { ascending: false });
       
       if (responsesError) {
         console.error('[Weekly Report] Error fetching weekly responses:', responsesError);
@@ -5216,7 +5216,7 @@ exports.handler = async (event, context) => {
       
       if (weeklyResponses) {
         weeklyResponses.forEach(response => {
-          const responseDate = new Date(response.created_at);
+          const responseDate = new Date(response.createdAt);
           const dayName = days[responseDate.getDay()];
           dailyActivity[dayName].questions++;
           if (response.correct) {
@@ -5481,7 +5481,7 @@ exports.handler = async (event, context) => {
           )
         `)
         .eq('student_id', studentId)
-        .gte('timestamp', oneWeekAgo.toISOString())
+        .gte('createdAt', oneWeekAgo.toISOString())
         .order('createdAt', { ascending: false });
       
       // Calculate weekly stats
