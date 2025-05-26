@@ -35,7 +35,6 @@ import ParentDashboard from './components/parent/ParentDashboard';
 import ChildProgressView from './components/parent/ChildProgressView';
 import WeeklyReportView from './components/parent/WeeklyReportView';
 import ParentProfile from './components/parent/ParentProfile'; // Import ParentProfile
-import ChildProgressDebug from './components/parent/ChildProgressDebug'; // Import debug component
 
 // Admin Interface Components
 import AdminDashboard from './components/admin/AdminDashboard'; // Import AdminDashboard
@@ -199,9 +198,6 @@ function App() {
               <ProtectedRoute allowedRoles={['parent']}>
                 <WeeklyReportView />
               </ProtectedRoute>
-            } />
-            <Route path="/debug/child-progress" element={
-              <ChildProgressDebug />
             } />
 
             {/* PDF Review Routes (Accessible by Teacher and Admin) */}

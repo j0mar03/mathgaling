@@ -35,54 +35,70 @@ const ChildProgressView = () => {
         console.log(`[ChildProgressView] Starting to fetch data for child ID: ${id}`);
         
         // Fetch student profile
-        console.log(`[ChildProgressView] Fetching student profile for ID: ${id}`);
-        const studentResponse = await axios.get(`/api/students/${id}`);
-        console.log(`[ChildProgressView] Student profile response:`, studentResponse.data);
-        setStudent(studentResponse.data);
-        
-        // Fetch knowledge states
-        console.log(`[ChildProgressView] Fetching knowledge states for student ID: ${id}`);
-        const knowledgeStatesResponse = await axios.get(`/api/students/${id}/knowledge-states`);
-        console.log(`[ChildProgressView] Knowledge states response:`, knowledgeStatesResponse.data?.length || 0, 'items');
-        setKnowledgeStates(knowledgeStatesResponse.data);
-        
-        // Fetch learning path
-        console.log(`[ChildProgressView] Fetching learning path for student ID: ${id}`);
-        const learningPathResponse = await axios.get(`/api/students/${id}/learning-path`);
-        console.log(`[ChildProgressView] Learning path response:`, learningPathResponse.data);
-        setLearningPath(learningPathResponse.data);
-        
-        // Fetch weekly report
-        console.log(`[ChildProgressView] Fetching weekly report for student ID: ${id}`);
-        const weeklyReportResponse = await axios.get(`/api/parents/students/${id}/weekly-report`);
-        console.log(`[ChildProgressView] Weekly report response:`, weeklyReportResponse.data);
-        setWeeklyReport(weeklyReportResponse.data);
-        
-        // Fetch detailed performance
-        console.log(`[ChildProgressView] Fetching detailed performance for student ID: ${id}`);
-        const performanceResponse = await axios.get(`/api/students/${id}/detailed-performance`);
-        console.log(`[ChildProgressView] Performance response:`, performanceResponse.data);
-        setPerformanceData(performanceResponse.data);
-        
-        if (performanceResponse.data.recentResponses) {
-          setRecentResponses(performanceResponse.data.recentResponses);
+        try {
+          console.log(`[ChildProgressView] Fetching student profile for ID: ${id}`);
+          const studentResponse = await axios.get(`/api/students/${id}`);
+          console.log(`[ChildProgressView] ✅ Student profile SUCCESS:`, studentResponse.data);
+          setStudent(studentResponse.data);
+        } catch (studentError) {
+          console.error(`[ChildProgressView] ❌ Student profile FAILED:`, studentError);
+          throw new Error(`Student profile failed: ${studentError.response?.status} - ${studentError.message}`);
         }
         
-        console.log(`[ChildProgressView] All data fetched successfully for child ID: ${id}`);
+        // Fetch knowledge states
+        try {
+          console.log(`[ChildProgressView] Fetching knowledge states for student ID: ${id}`);
+          const knowledgeStatesResponse = await axios.get(`/api/students/${id}/knowledge-states`);
+          console.log(`[ChildProgressView] ✅ Knowledge states SUCCESS:`, knowledgeStatesResponse.data?.length || 0, 'items');
+          setKnowledgeStates(knowledgeStatesResponse.data);
+        } catch (ksError) {
+          console.error(`[ChildProgressView] ❌ Knowledge states FAILED:`, ksError);
+          throw new Error(`Knowledge states failed: ${ksError.response?.status} - ${ksError.message}`);
+        }
+        
+        // Fetch learning path
+        try {
+          console.log(`[ChildProgressView] Fetching learning path for student ID: ${id}`);
+          const learningPathResponse = await axios.get(`/api/students/${id}/learning-path`);
+          console.log(`[ChildProgressView] ✅ Learning path SUCCESS:`, learningPathResponse.data);
+          setLearningPath(learningPathResponse.data);
+        } catch (lpError) {
+          console.error(`[ChildProgressView] ❌ Learning path FAILED:`, lpError);
+          throw new Error(`Learning path failed: ${lpError.response?.status} - ${lpError.message}`);
+        }
+        
+        // Fetch weekly report
+        try {
+          console.log(`[ChildProgressView] Fetching weekly report for student ID: ${id}`);
+          const weeklyReportResponse = await axios.get(`/api/parents/students/${id}/weekly-report`);
+          console.log(`[ChildProgressView] ✅ Weekly report SUCCESS:`, weeklyReportResponse.data);
+          setWeeklyReport(weeklyReportResponse.data);
+        } catch (wrError) {
+          console.error(`[ChildProgressView] ❌ Weekly report FAILED:`, wrError);
+          throw new Error(`Weekly report failed: ${wrError.response?.status} - ${wrError.message}`);
+        }
+        
+        // Fetch detailed performance
+        try {
+          console.log(`[ChildProgressView] Fetching detailed performance for student ID: ${id}`);
+          const performanceResponse = await axios.get(`/api/students/${id}/detailed-performance`);
+          console.log(`[ChildProgressView] ✅ Detailed performance SUCCESS:`, performanceResponse.data);
+          setPerformanceData(performanceResponse.data);
+          
+          if (performanceResponse.data.recentResponses) {
+            setRecentResponses(performanceResponse.data.recentResponses);
+          }
+        } catch (dpError) {
+          console.error(`[ChildProgressView] ❌ Detailed performance FAILED:`, dpError);
+          throw new Error(`Detailed performance failed: ${dpError.response?.status} - ${dpError.message}`);
+        }
+        
+        console.log(`[ChildProgressView] 🎉 All data fetched successfully for child ID: ${id}`);
         setLoading(false);
       } catch (err) {
-        console.error(`[ChildProgressView] Error fetching child data for ID ${id}:`, err);
-        console.error(`[ChildProgressView] Error details:`, {
-          message: err.message,
-          status: err.response?.status,
-          statusText: err.response?.statusText,
-          data: err.response?.data,
-          config: {
-            url: err.config?.url,
-            method: err.config?.method
-          }
-        });
-        setError('Failed to load your child\'s data. Please try again later.');
+        console.error(`[ChildProgressView] 💥 FATAL ERROR fetching child data for ID ${id}:`, err);
+        console.error(`[ChildProgressView] 📋 Full error object:`, err);
+        setError(`Failed to load your child's data: ${err.message}`);
         setLoading(false);
       }
     };

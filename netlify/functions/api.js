@@ -4733,6 +4733,8 @@ exports.handler = async (event, context) => {
       const pathParts = path.split('/');
       let studentId = pathParts[pathParts.indexOf('students') + 1];
       
+      console.log(`[Netlify] Detailed performance endpoint - studentId from path: "${studentId}"`);
+      
       // Handle /api/students/me/detailed-performance - extract ID from token
       if (studentId === 'me') {
         const authHeader = event.headers.authorization || event.headers.Authorization;
@@ -4758,6 +4760,20 @@ exports.handler = async (event, context) => {
             body: JSON.stringify({ error: 'Invalid authorization token' })
           };
         }
+      }
+      
+      // Validate final studentId (whether from path or token)
+      if (!studentId || isNaN(parseInt(studentId))) {
+        console.error(`[Netlify] Invalid studentId for detailed-performance: "${studentId}"`);
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({ 
+            error: 'Invalid Student ID',
+            received: studentId,
+            expected: 'numeric value'
+          })
+        };
       }
       
       console.log(`[Netlify] Getting detailed performance for student ${studentId}`);
@@ -4865,36 +4881,110 @@ exports.handler = async (event, context) => {
       const pathParts = path.split('/');
       const studentId = pathParts[pathParts.indexOf('students') + 1];
       
+      console.log(`[Netlify] Learning path endpoint - studentId from path: "${studentId}"`);
+      
+      if (!studentId || isNaN(parseInt(studentId))) {
+        console.error(`[Netlify] Invalid studentId for learning-path: "${studentId}"`);
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({ 
+            error: 'Invalid Student ID',
+            received: studentId,
+            expected: 'numeric value'
+          })
+        };
+      }
+      
       const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
       const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
       
       const supabase = createClient(supabaseUrl, supabaseKey);
       
-      // Get learning path for student
-      const { data, error } = await supabase
+      // Get learning path for student with knowledge components
+      const { data: learningPath, error: lpError } = await supabase
         .from('learning_paths')
-        .select(`
-          *,
-          knowledge_components (*)
-        `)
+        .select('*')
         .eq('student_id', studentId)
-        .order('position');
+        .single();
       
-      if (error) {
+      if (lpError) {
+        console.log(`[Netlify] No learning path found for student ${studentId}, creating default path`);
+        
+        // If no learning path exists, create a basic one with the student's sequence data
+        const { data: student, error: studentError } = await supabase
+          .from('students')
+          .select('grade_level')
+          .eq('id', studentId)
+          .single();
+          
+        if (studentError) {
+          return {
+            statusCode: 404,
+            headers,
+            body: JSON.stringify({
+              error: 'Student not found',
+              message: studentError.message
+            })
+          };
+        }
+        
+        // Get knowledge components for the student's grade level
+        const { data: gradeKCs, error: kcError } = await supabase
+          .from('knowledge_components')
+          .select('*')
+          .eq('grade_level', student.grade_level || 3)
+          .order('curriculum_code');
+          
+        if (kcError) {
+          return {
+            statusCode: 500,
+            headers,
+            body: JSON.stringify({
+              error: 'Failed to fetch knowledge components',
+              message: kcError.message
+            })
+          };
+        }
+        
+        // Create a simple learning path sequence
+        const sequence = gradeKCs.map((kc, index) => ({
+          knowledge_component_id: kc.id,
+          name: kc.name,
+          curriculum_code: kc.curriculum_code,
+          position: index + 1,
+          status: 'pending',
+          mastery: 0
+        }));
+        
+        const data = {
+          id: null,
+          student_id: parseInt(studentId),
+          sequence: sequence,
+          status: 'active'
+        };
+        
         return {
-          statusCode: 500,
+          statusCode: 200,
           headers,
-          body: JSON.stringify({
-            error: 'Failed to fetch learning path',
-            message: error.message
-          })
+          body: JSON.stringify(data)
         };
       }
       
+      // If learning path exists, process it
+      if (learningPath && learningPath.sequence) {
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify(learningPath)
+        };
+      }
+      
+      // If learning path exists but has no sequence, return it as-is
       return {
         statusCode: 200,
         headers,
-        body: JSON.stringify(data || [])
+        body: JSON.stringify(learningPath || { sequence: [] })
       };
       
     } catch (error) {
@@ -5347,6 +5437,21 @@ exports.handler = async (event, context) => {
       const pathParts = path.split('/');
       const studentId = pathParts[pathParts.indexOf('students') + 1];
       
+      console.log(`[Netlify] Weekly report endpoint - studentId from path: "${studentId}"`);
+      
+      if (!studentId || isNaN(parseInt(studentId))) {
+        console.error(`[Netlify] Invalid studentId for weekly-report: "${studentId}"`);
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({ 
+            error: 'Invalid Student ID',
+            received: studentId,
+            expected: 'numeric value'
+          })
+        };
+      }
+      
       const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
       const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
       
@@ -5632,6 +5737,21 @@ exports.handler = async (event, context) => {
     try {
       const pathParts = path.split('/');
       const studentId = pathParts[pathParts.indexOf('students') + 1];
+      
+      console.log(`[Netlify] Knowledge states endpoint - studentId from path: "${studentId}"`);
+      
+      if (!studentId || isNaN(parseInt(studentId))) {
+        console.error(`[Netlify] Invalid studentId for knowledge-states: "${studentId}"`);
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({ 
+            error: 'Invalid Student ID',
+            received: studentId,
+            expected: 'numeric value'
+          })
+        };
+      }
       
       const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
       const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
