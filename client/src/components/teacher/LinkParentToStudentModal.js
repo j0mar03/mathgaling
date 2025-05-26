@@ -56,7 +56,7 @@ const LinkParentToStudentModal = ({ student, classroomId, onClose, onLinked }) =
 
             console.log('Linking parent:', parentId, 'to student:', student.id, 'Student object:', student);
             
-            await axios.post('/api/teacher/parent-student-links', {
+            const response = await axios.post('/api/teacher/parent-student-links', {
                 parent_id: parentId,
                 student_id: student.id,
                 classroom_id: classroomId
@@ -64,12 +64,38 @@ const LinkParentToStudentModal = ({ student, classroomId, onClose, onLinked }) =
                 headers: { Authorization: `Bearer ${token}` }
             });
 
+            console.log('Link created successfully:', response.data);
+
             // Refresh the linked parents list
             await fetchData();
             
         } catch (err) {
             console.error('Error linking parent to student:', err);
-            setError(err.response?.data?.error || 'Failed to link parent');
+            
+            let errorMessage = 'Failed to link parent';
+            
+            if (err.response?.data) {
+                const errorData = err.response.data;
+                if (errorData.instructions) {
+                    errorMessage = `${errorData.message} Instructions: ${errorData.instructions}`;
+                } else if (errorData.message) {
+                    errorMessage = errorData.message;
+                } else if (errorData.error) {
+                    errorMessage = errorData.error;
+                }
+                
+                // Log debug information
+                if (errorData.debug) {
+                    console.error('Debug info:', errorData.debug);
+                }
+                if (errorData.details) {
+                    console.error('Error details:', errorData.details);
+                }
+            } else {
+                errorMessage = err.message || 'Network error occurred';
+            }
+            
+            setError(errorMessage);
         } finally {
             setLinking(false);
         }

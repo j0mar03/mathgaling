@@ -6361,6 +6361,8 @@ exports.handler = async (event, context) => {
     try {
       const { parent_id, student_id } = JSON.parse(body);
       
+      console.log('[Admin Link] Received request:', { parent_id, student_id });
+      
       if (!parent_id || !student_id) {
         return {
           statusCode: 400,
@@ -6377,60 +6379,158 @@ exports.handler = async (event, context) => {
       
       const supabase = createClient(supabaseUrl, supabaseKey);
       
+      // First, verify that both parent and student exist
+      console.log('[Admin Link] Verifying parent and student exist...');
+      
+      const { data: parent, error: parentError } = await supabase
+        .from('parents')
+        .select('id, name, auth_id')
+        .eq('id', parent_id)
+        .single();
+      
+      if (parentError || !parent) {
+        console.log('[Admin Link] Parent not found:', parentError);
+        return {
+          statusCode: 404,
+          headers,
+          body: JSON.stringify({
+            error: 'Parent not found',
+            message: `Parent with ID ${parent_id} does not exist`,
+            debug: parentError?.message
+          })
+        };
+      }
+      
+      const { data: student, error: studentError } = await supabase
+        .from('students')
+        .select('id, name, auth_id, grade_level')
+        .eq('id', student_id)
+        .single();
+      
+      if (studentError || !student) {
+        console.log('[Admin Link] Student not found:', studentError);
+        return {
+          statusCode: 404,
+          headers,
+          body: JSON.stringify({
+            error: 'Student not found',
+            message: `Student with ID ${student_id} does not exist`,
+            debug: studentError?.message
+          })
+        };
+      }
+      
+      console.log('[Admin Link] Found parent:', parent.name, 'and student:', student.name);
+      
+      // Check if the parent_students table exists
+      console.log('[Admin Link] Ensuring parent_students table exists...');
+      
+      const { error: tableCheckError } = await supabase
+        .from('parent_students')
+        .select('*')
+        .limit(1);
+      
+      if (tableCheckError && (tableCheckError.message.includes('does not exist') || tableCheckError.code === 'PGRST116')) {
+        console.log('[Admin Link] parent_students table missing. Please run the setup script in Supabase.');
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Database setup required',
+            message: 'The parent_students table does not exist. Please run the database setup script.',
+            instructions: 'Run the SQL script in /scripts/fix-parent-linking-corrected.sql in your Supabase dashboard.',
+            debug: tableCheckError.message
+          })
+        };
+      }
+      
       // Check if link already exists
-      const { data: existingLink } = await supabase
+      console.log('[Admin Link] Checking for existing link...');
+      const { data: existingLink, error: linkCheckError } = await supabase
         .from('parent_students')
         .select('*')
         .eq('parent_id', parent_id)
         .eq('student_id', student_id)
-        .single();
+        .maybeSingle();
+      
+      if (linkCheckError) {
+        console.log('[Admin Link] Error checking existing link:', linkCheckError);
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Database error',
+            message: 'Failed to check existing link',
+            debug: linkCheckError.message
+          })
+        };
+      }
       
       if (existingLink) {
+        console.log('[Admin Link] Link already exists');
         return {
-          statusCode: 400,
+          statusCode: 409,
           headers,
           body: JSON.stringify({
             error: 'Link already exists',
-            message: 'This parent is already linked to this student'
+            message: `${parent.name} is already linked to ${student.name}`
           })
         };
       }
       
       // Create the link
+      console.log('[Admin Link] Creating new link...');
       const { data, error } = await supabase
         .from('parent_students')
         .insert({
           parent_id: parseInt(parent_id),
           student_id: parseInt(student_id)
-        });
+        })
+        .select();
       
       if (error) {
+        console.log('[Admin Link] Insert failed:', error);
         return {
           statusCode: 500,
           headers,
           body: JSON.stringify({
             error: 'Failed to create link',
-            message: error.message
+            message: error.message,
+            details: {
+              code: error.code,
+              hint: error.hint,
+              parent_id: parseInt(parent_id),
+              student_id: parseInt(student_id)
+            }
           })
         };
       }
+      
+      console.log('[Admin Link] Link created successfully:', data);
       
       return {
         statusCode: 201,
         headers,
         body: JSON.stringify({
           success: true,
-          message: 'Parent-student link created successfully'
+          message: `Successfully linked ${parent.name} to ${student.name}`,
+          data: {
+            parent: { id: parent.id, name: parent.name },
+            student: { id: student.id, name: student.name },
+            link: data?.[0] || { parent_id: parseInt(parent_id), student_id: parseInt(student_id) }
+          }
         })
       };
       
     } catch (error) {
+      console.log('[Admin Link] Unexpected error:', error);
       return {
         statusCode: 500,
         headers,
         body: JSON.stringify({
           error: 'Server error',
-          message: error.message
+          message: error.message,
+          stack: error.stack
         })
       };
     }
@@ -6562,81 +6662,184 @@ exports.handler = async (event, context) => {
       
       const supabase = createClient(supabaseUrl, supabaseKey);
       
+      // First, verify that both parent and student exist
+      console.log('[Teacher Link] Verifying parent and student exist...');
+      
+      const { data: parent, error: parentError } = await supabase
+        .from('parents')
+        .select('id, name, auth_id')
+        .eq('id', parent_id)
+        .single();
+      
+      if (parentError || !parent) {
+        console.log('[Teacher Link] Parent not found:', parentError);
+        return {
+          statusCode: 404,
+          headers,
+          body: JSON.stringify({
+            error: 'Parent not found',
+            message: `Parent with ID ${parent_id} does not exist`,
+            debug: parentError?.message
+          })
+        };
+      }
+      
+      const { data: student, error: studentError } = await supabase
+        .from('students')
+        .select('id, name, auth_id, grade_level')
+        .eq('id', student_id)
+        .single();
+      
+      if (studentError || !student) {
+        console.log('[Teacher Link] Student not found:', studentError);
+        return {
+          statusCode: 404,
+          headers,
+          body: JSON.stringify({
+            error: 'Student not found',
+            message: `Student with ID ${student_id} does not exist`,
+            debug: studentError?.message
+          })
+        };
+      }
+      
+      console.log('[Teacher Link] Found parent:', parent.name, 'and student:', student.name);
+      
       // Verify teacher has access to this student (through classroom)
       if (classroom_id) {
-        const { data: classroomStudent } = await supabase
+        console.log('[Teacher Link] Verifying classroom access...');
+        const { data: classroomStudent, error: classroomError } = await supabase
           .from('classroom_students')
           .select('*')
           .eq('classroom_id', classroom_id)
           .eq('student_id', student_id)
           .single();
         
-        if (!classroomStudent) {
+        if (classroomError || !classroomStudent) {
+          console.log('[Teacher Link] Classroom verification failed:', classroomError);
           return {
             statusCode: 403,
             headers,
             body: JSON.stringify({
               error: 'Access denied',
-              message: 'This student is not in your classroom'
+              message: `Student ${student.name} is not in classroom ${classroom_id}`,
+              debug: classroomError?.message
             })
           };
         }
+        console.log('[Teacher Link] Classroom access verified');
+      }
+      
+      // Check if the parent_students table exists
+      console.log('[Teacher Link] Ensuring parent_students table exists...');
+      
+      // Try to query the table structure first
+      const { error: tableCheckError } = await supabase
+        .from('parent_students')
+        .select('*')
+        .limit(1);
+      
+      if (tableCheckError && (tableCheckError.message.includes('does not exist') || tableCheckError.code === 'PGRST116')) {
+        console.log('[Teacher Link] parent_students table missing. Please run the setup script in Supabase.');
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Database setup required',
+            message: 'The parent_students table does not exist. Please contact your administrator to run the database setup script.',
+            instructions: 'Run the SQL script in /scripts/fix-parent-linking-corrected.sql in your Supabase dashboard.',
+            debug: tableCheckError.message
+          })
+        };
       }
       
       // Check if link already exists
-      const { data: existingLink } = await supabase
+      console.log('[Teacher Link] Checking for existing link...');
+      const { data: existingLink, error: linkCheckError } = await supabase
         .from('parent_students')
         .select('*')
         .eq('parent_id', parent_id)
         .eq('student_id', student_id)
-        .single();
+        .maybeSingle(); // Use maybeSingle instead of single to avoid error when no row found
+      
+      if (linkCheckError) {
+        console.log('[Teacher Link] Error checking existing link:', linkCheckError);
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Database error',
+            message: 'Failed to check existing link',
+            debug: linkCheckError.message
+          })
+        };
+      }
       
       if (existingLink) {
+        console.log('[Teacher Link] Link already exists');
         return {
-          statusCode: 400,
+          statusCode: 409, // Conflict status code
           headers,
           body: JSON.stringify({
             error: 'Link already exists',
-            message: 'This parent is already linked to this student'
+            message: `${parent.name} is already linked to ${student.name}`
           })
         };
       }
       
       // Create the link
+      console.log('[Teacher Link] Creating new link...');
       const { data, error } = await supabase
         .from('parent_students')
         .insert({
           parent_id: parseInt(parent_id),
           student_id: parseInt(student_id)
-        });
+        })
+        .select(); // Return the inserted data
       
       if (error) {
+        console.log('[Teacher Link] Insert failed:', error);
         return {
           statusCode: 500,
           headers,
           body: JSON.stringify({
             error: 'Failed to create link',
-            message: error.message
+            message: error.message,
+            details: {
+              code: error.code,
+              hint: error.hint,
+              parent_id: parseInt(parent_id),
+              student_id: parseInt(student_id)
+            }
           })
         };
       }
+      
+      console.log('[Teacher Link] Link created successfully:', data);
       
       return {
         statusCode: 201,
         headers,
         body: JSON.stringify({
           success: true,
-          message: 'Parent-student link created successfully'
+          message: `Successfully linked ${parent.name} to ${student.name}`,
+          data: {
+            parent: { id: parent.id, name: parent.name },
+            student: { id: student.id, name: student.name },
+            link: data?.[0] || { parent_id: parseInt(parent_id), student_id: parseInt(student_id) }
+          }
         })
       };
       
     } catch (error) {
+      console.log('[Teacher Link] Unexpected error:', error);
       return {
         statusCode: 500,
         headers,
         body: JSON.stringify({
           error: 'Server error',
-          message: error.message
+          message: error.message,
+          stack: error.stack
         })
       };
     }
