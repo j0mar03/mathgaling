@@ -1099,20 +1099,25 @@
 
 .kc-analysis-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 20px;
+  align-items: start;
 }
 
 .kc-analysis-card {
   background: white;
   border-radius: 16px;
-  padding: 24px;
+  padding: 20px;
   box-shadow: 0 4px 16px rgba(0,0,0,0.08);
   transition: all 0.3s ease;
   border: 1px solid #e2e8f0;
-  min-height: 280px;
+  min-height: 320px;
+  max-height: 400px;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  word-wrap: break-word;
+  word-break: break-word;
 }
 
 .kc-analysis-card:hover {
@@ -1137,22 +1142,28 @@
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 16px;
-  min-height: 60px;
+  min-height: 70px;
+  max-height: 90px;
+  overflow: hidden;
 }
 
 .kc-title {
   flex: 1;
   margin-right: 12px;
-  min-height: 50px;
+  min-height: 60px;
+  max-height: 80px;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
+  overflow: hidden;
+  word-wrap: break-word;
+  word-break: break-word;
 }
 
 .kc-code {
   font-weight: 800;
   color: #2c3e50;
-  font-size: 1rem;
+  font-size: 0.9rem;
   margin-bottom: 6px;
   font-family: 'Segoe UI', monospace;
   background: #f1f5f9;
@@ -1160,33 +1171,43 @@
   border-radius: 6px;
   display: inline-block;
   width: fit-content;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .kc-name {
   color: #334155;
-  font-size: 0.9rem;
-  line-height: 1.5;
+  font-size: 0.85rem;
+  line-height: 1.4;
   font-weight: 600;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
   text-overflow: ellipsis;
-  height: 2.7em;
+  height: 3.6em;
   margin-top: 4px;
+  word-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
 }
 
 .priority-indicator {
-  padding: 8px 14px;
-  border-radius: 20px;
-  font-size: 0.75rem;
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 0.7rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
   white-space: nowrap;
-  min-width: 80px;
+  min-width: 70px;
+  max-width: 90px;
   text-align: center;
   flex-shrink: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .priority-indicator.high {
@@ -1207,33 +1228,50 @@
 .kc-metrics {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
+  gap: 12px;
   margin-bottom: 16px;
   flex: 1;
+  min-height: 80px;
+  max-height: 100px;
 }
 
 .metric {
   text-align: center;
   background: #f8fafc;
-  padding: 12px 8px;
-  border-radius: 10px;
+  padding: 10px 6px;
+  border-radius: 8px;
   border: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+  word-wrap: break-word;
 }
 
 .metric-label {
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: #64748b;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.3px;
-  line-height: 1.2;
+  letter-spacing: 0.2px;
+  line-height: 1.1;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-wrap: break-word;
+  hyphens: auto;
 }
 
 .metric-value {
   font-weight: 800;
-  font-size: 1.2rem;
-  line-height: 1.1;
+  font-size: 1.1rem;
+  line-height: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .metric-value.critical {
@@ -1249,8 +1287,9 @@
 }
 
 .kc-distribution {
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   margin-top: auto;
+  flex-shrink: 0;
 }
 
 .distribution-bar {
@@ -1292,19 +1331,28 @@
   margin-top: auto;
   padding-top: 12px;
   border-top: 1px solid #e2e8f0;
+  flex-shrink: 0;
+  min-height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .kc-detail-btn {
   color: #3b82f6;
   text-decoration: none;
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   transition: all 0.3s ease;
-  padding: 10px 20px;
+  padding: 8px 16px;
   border: 2px solid #3b82f6;
-  border-radius: 24px;
+  border-radius: 20px;
   display: inline-block;
   background: linear-gradient(135deg, transparent, rgba(59, 130, 246, 0.05));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .kc-detail-btn:hover {
@@ -1364,6 +1412,48 @@
 
 .error-close:hover {
   opacity: 0.8;
+}
+
+/* Enhanced Text Wrapping for KC Cards */
+.kc-analysis-card * {
+  word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.kc-analysis-card h1,
+.kc-analysis-card h2,
+.kc-analysis-card h3,
+.kc-analysis-card h4,
+.kc-analysis-card h5,
+.kc-analysis-card h6 {
+  hyphens: auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.kc-analysis-card p,
+.kc-analysis-card span,
+.kc-analysis-card div {
+  overflow-wrap: break-word;
+  word-break: break-word;
+  hyphens: auto;
+}
+
+/* Force text to stay within bounds */
+.kc-analysis-card .kc-name,
+.kc-analysis-card .metric-label,
+.kc-analysis-card .kc-code {
+  max-width: 100%;
+  overflow: hidden;
+}
+
+/* Ensure grid items don't expand beyond container */
+.kc-analysis-grid > .kc-analysis-card {
+  max-width: 100%;
+  overflow: hidden;
 }
 
 /* Responsive Design */

@@ -16,6 +16,19 @@
   border-radius: 12px;
   margin-bottom: 2rem;
   box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.header-content {
+  flex: 1;
+}
+
+.header-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
 }
 
 .classroom-header h1 {
@@ -29,6 +42,30 @@
   margin: 0.25rem 0;
   font-size: 1.1rem;
   opacity: 0.95;
+}
+
+.classroom-stats {
+  display: flex;
+  gap: 2rem;
+  margin-top: 1rem;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: white;
+}
+
+.stat-label {
+  font-size: 0.9rem;
+  opacity: 0.9;
+  color: white;
 }
 
 /* Students Section */
@@ -454,6 +491,66 @@
 }
 
 /* Button Styles */
+.button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.button.secondary {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.button.secondary:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+}
+
+.button.overview {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.button.overview:hover {
+  background: linear-gradient(135deg, #5a67d8 0%, #6b46c1 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+}
+
+.button.detailed {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+  box-shadow: 0 4px 12px rgba(240, 147, 251, 0.3);
+}
+
+.button.detailed:hover {
+  background: linear-gradient(135deg, #e879f9 0%, #ef4444 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(240, 147, 251, 0.4);
+}
+
+.button:not(.secondary):not(.overview):not(.detailed) {
+  background-color: #28a745;
+  color: white;
+}
+
+.button:not(.secondary):not(.overview):not(.detailed):hover {
+  background-color: #218838;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(40,167,69,0.2);
+}
+
 .add-button {
   padding: 0.75rem 1.5rem;
   background-color: #28a745;
@@ -742,6 +839,22 @@
 
 /* Responsive Design for Compact KC Table */
 @media (max-width: 768px) {
+  .classroom-header {
+    flex-direction: column;
+    gap: 1.5rem;
+    text-align: center;
+  }
+
+  .header-actions {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .classroom-stats {
+    justify-content: center;
+    gap: 1rem;
+  }
+
   .table-header-compact,
   .kc-row-compact {
     grid-template-columns: 1fr;
@@ -769,6 +882,26 @@
   }
   
   .mastery-summary {
+    gap: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .classroom-header {
+    padding: 1.5rem;
+  }
+
+  .header-actions {
+    gap: 0.5rem;
+  }
+
+  .button {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+  }
+
+  .classroom-stats {
+    flex-direction: column;
     gap: 0.5rem;
   }
 }

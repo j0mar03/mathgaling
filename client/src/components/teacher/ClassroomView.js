@@ -7,6 +7,8 @@ import { useAuth } from '../../context/AuthContext'; // Import useAuth
 import './TeacherDashboard.css';
 import './ClassroomView.css';
 import LinkParentToStudentModal from './LinkParentToStudentModal'; // Import Link Parent Modal
+import OverviewPerformanceModal from './OverviewPerformanceModal';
+import DetailedPerformanceModal from './DetailedPerformanceModal';
 
 // Register ChartJS components
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
@@ -25,6 +27,8 @@ const ClassroomView = () => {
   const [selectedStudents, setSelectedStudents] = useState([]); // State for selected students
   const [linkingStudent, setLinkingStudent] = useState(null); // State for student being linked to parent
   const [showLinkParentModal, setShowLinkParentModal] = useState(false); // State for link parent modal
+  const [showOverviewModal, setShowOverviewModal] = useState(false); // State for overview performance modal
+  const [showDetailedModal, setShowDetailedModal] = useState(false); // State for detailed performance modal
   const { user } = useAuth();
   const teacherId = user?.id; // Use logged-in teacher's ID
   
@@ -331,6 +335,24 @@ const ClassroomView = () => {
           }}
         />
       )}
+
+      {/* Overview Performance Modal */}
+      <OverviewPerformanceModal
+        isOpen={showOverviewModal}
+        onClose={() => setShowOverviewModal(false)}
+        classroomData={classroom}
+        performance={performance}
+        knowledgeComponents={knowledgeComponents}
+      />
+
+      {/* Detailed Performance Modal */}
+      <DetailedPerformanceModal
+        isOpen={showDetailedModal}
+        onClose={() => setShowDetailedModal(false)}
+        classroomData={classroom}
+        performance={performance}
+        knowledgeComponents={knowledgeComponents}
+      />
       <div className="classroom-header">
         <div className="header-content">
           <h1>{classroom?.name || 'Classroom'}</h1>
@@ -358,6 +380,18 @@ const ClassroomView = () => {
         </div>
         <div className="header-actions">
           <Link to="/teacher" className="button secondary">Back to Dashboard</Link>
+          <button 
+            className="button overview" 
+            onClick={() => setShowOverviewModal(true)}
+          >
+            📊 Overview
+          </button>
+          <button 
+            className="button detailed" 
+            onClick={() => setShowDetailedModal(true)}
+          >
+            📋 Detailed
+          </button>
           <button className="button">Manage Classroom</button>
         </div>
       </div>
