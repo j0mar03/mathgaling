@@ -49,6 +49,7 @@ const ClassroomViewEnhanced = () => {
         setStudents(studentsResponse.data);
         
         const performanceResponse = await axios.get(`/api/classrooms/${id}/performance`);
+        console.log('[ClassroomViewEnhanced] Performance data received:', performanceResponse.data);
         setPerformance(performanceResponse.data);
         
         const kcResponse = await axios.get(`/api/classrooms/${id}/knowledge-components`);
@@ -685,6 +686,14 @@ const ClassroomViewEnhanced = () => {
               const daysSinceActive = lastActive ? 
                 Math.floor((new Date() - lastActive) / (1000 * 60 * 60 * 24)) : 999;
 
+              // Debug logging for each student
+              console.log(`[ClassroomViewEnhanced] Student ${student.student?.name} activity data:`, {
+                lastActive: student.performance?.lastActive,
+                lastActiveDate: lastActive,
+                daysSinceActive: daysSinceActive,
+                fullPerformanceData: student.performance
+              });
+
               return (
                 <div 
                   key={student.student.id} 
@@ -724,6 +733,12 @@ const ClassroomViewEnhanced = () => {
                     <div className="activity-info">
                       <div className="activity-date">
                         {lastActive ? lastActive.toLocaleDateString() : 'Never'}
+                        {/* Debug display for development */}
+                        {process.env.NODE_ENV === 'development' && (
+                          <div style={{fontSize: '10px', color: '#666'}}>
+                            Raw: {student.performance?.lastActive || 'null'}
+                          </div>
+                        )}
                       </div>
                       {daysSinceActive < 999 && (
                         <div className={`activity-status ${daysSinceActive <= 1 ? 'recent' : daysSinceActive <= 3 ? 'moderate' : 'old'}`}>
