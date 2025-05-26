@@ -4,6 +4,7 @@ import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import { getMotivationalQuote } from './QuizEnhancer';
 import './PracticeQuizView.css'; // Use PracticeQuizView styles
+import './QuizView.css'; // Enhanced QuizView styles
 import './QuizCompleteEnhanced.css'; // Enhanced completion styles
 
 const QuizView = () => {
@@ -33,6 +34,7 @@ const QuizView = () => {
   const [searchingNextTopic, setSearchingNextTopic] = useState(false); // Loading state for next topic search
   const [nextTopicSearchComplete, setNextTopicSearchComplete] = useState(false); // Track if search is done
   const [finalScoreCalculated, setFinalScoreCalculated] = useState(0); // Store final score for consistent display
+  const [showTopicInfo, setShowTopicInfo] = useState(true); // Toggle for topic information visibility
 
   useEffect(() => {
     // Reset state when location changes (new quiz)
@@ -980,39 +982,52 @@ const QuizView = () => {
   const currentQuestion = questions[currentQuestionIndex];
 
   return (
-    <div className="practice-quiz">
+    <div className="practice-quiz enhanced-quiz">
       <div className="quiz-header">
-        <h2>Math Mastery Quiz</h2>
+        <div className="quiz-header-main">
+          <h2>Math Mastery Quiz</h2>
+          
+          {/* Toggle Button for Topic Information */}
+          {(currentQuestion.knowledge_component || kcDetails) && (
+            <button 
+              className="topic-toggle-btn"
+              onClick={() => setShowTopicInfo(!showTopicInfo)}
+              title={showTopicInfo ? "Hide topic information" : "Show topic information"}
+            >
+              {showTopicInfo ? '👁️ Hide Topic' : '👁️‍🗨️ Show Topic'}
+            </button>
+          )}
+        </div>
         
         {/* Knowledge Component Information */}
-        {(currentQuestion.knowledge_component || kcDetails) && (
-          <div className="kc-info" style={{
-            backgroundColor: '#f8f9fa',
-            padding: '1rem',
-            borderRadius: '10px',
-            margin: '1rem 0',
-            textAlign: 'center'
-          }}>
-            <h3 style={{ color: '#2c3e50', margin: '0 0 0.5rem 0', fontSize: '1.1rem' }}>
+        {showTopicInfo && (currentQuestion.knowledge_component || kcDetails) && (
+          <div className="kc-info enhanced-kc-info">
+            <h3>
               📚 Topic: {currentQuestion.knowledge_component?.name || kcDetails?.name}
             </h3>
             {(currentQuestion.knowledge_component?.curriculum_code || kcDetails?.curriculum_code) && (
-              <span style={{ fontSize: '0.9rem', color: '#7f8c8d' }}>
+              <span className="kc-code">
                 Code: {currentQuestion.knowledge_component?.curriculum_code || kcDetails?.curriculum_code}
               </span>
             )}
-            <div style={{ fontSize: '0.9em', color: '#666', marginTop: '5px' }}>
+            <div className="kc-description">
               🎯 Mastery assessment to improve your understanding of this topic
             </div>
           </div>
         )}
         
         <div className="quiz-progress">
-          Question {currentQuestionIndex + 1} of {questions.length}
+          <span className="progress-text">Question {currentQuestionIndex + 1} of {questions.length}</span>
+          <div className="progress-bar">
+            <div className="progress-fill" style={{ width: `${((currentQuestionIndex + 1) / questions.length) * 100}%` }}></div>
+          </div>
         </div>
         {currentQuestion.difficulty && (
           <div className="question-difficulty">
-            Difficulty: {currentQuestion.difficulty}/5
+            <span className="difficulty-stars">
+              {'⭐'.repeat(currentQuestion.difficulty)}
+            </span>
+            <span className="difficulty-text">Difficulty: {currentQuestion.difficulty}/5</span>
           </div>
         )}
       </div>
