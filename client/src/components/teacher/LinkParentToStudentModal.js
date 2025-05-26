@@ -71,11 +71,17 @@ const LinkParentToStudentModal = ({ student, classroomId, onClose, onLinked }) =
             
         } catch (err) {
             console.error('Error linking parent to student:', err);
+            console.error('Full error object:', JSON.stringify(err, null, 2));
+            console.error('Response data:', err.response?.data);
+            console.error('Response status:', err.response?.status);
+            console.error('Response headers:', err.response?.headers);
             
             let errorMessage = 'Failed to link parent';
             
             if (err.response?.data) {
                 const errorData = err.response.data;
+                console.error('Parsed error data:', errorData);
+                
                 if (errorData.instructions) {
                     errorMessage = `${errorData.message} Instructions: ${errorData.instructions}`;
                 } else if (errorData.message) {
@@ -90,6 +96,9 @@ const LinkParentToStudentModal = ({ student, classroomId, onClose, onLinked }) =
                 }
                 if (errorData.details) {
                     console.error('Error details:', errorData.details);
+                }
+                if (errorData.stack) {
+                    console.error('Server stack trace:', errorData.stack);
                 }
             } else {
                 errorMessage = err.message || 'Network error occurred';

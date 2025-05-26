@@ -24,7 +24,7 @@ exports.handler = async (event, context) => {
   
   // Get the actual path from the request
   let path = event.path;
-  const { httpMethod } = event;
+  const { httpMethod, body } = event;
   
   // In Netlify, the path might be /.netlify/functions/api
   // We need to extract the actual API path from the rawUrl or headers
@@ -6359,6 +6359,17 @@ exports.handler = async (event, context) => {
   // POST /api/admin/parent-student-links - Link a parent to a student
   if (path === '/api/admin/parent-student-links' && httpMethod === 'POST') {
     try {
+      if (!body) {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({
+            error: 'Missing request body',
+            message: 'Request body is required for this endpoint'
+          })
+        };
+      }
+      
       const { parent_id, student_id } = JSON.parse(body);
       
       console.log('[Admin Link] Received request:', { parent_id, student_id });
@@ -6640,7 +6651,23 @@ exports.handler = async (event, context) => {
   
   // POST /api/teacher/parent-student-links - Teacher links a parent to a student
   if (path === '/api/teacher/parent-student-links' && httpMethod === 'POST') {
+    console.log('[Teacher Link] Endpoint hit - starting processing');
+    console.log('[Teacher Link] Request path:', path);
+    console.log('[Teacher Link] Request method:', httpMethod);
+    console.log('[Teacher Link] Request body:', body);
+    
     try {
+      if (!body) {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({
+            error: 'Missing request body',
+            message: 'Request body is required for this endpoint'
+          })
+        };
+      }
+      
       const { parent_id, student_id, classroom_id } = JSON.parse(body);
       
       console.log('[Teacher Link] Received request:', { parent_id, student_id, classroom_id });
@@ -6832,14 +6859,21 @@ exports.handler = async (event, context) => {
       };
       
     } catch (error) {
-      console.log('[Teacher Link] Unexpected error:', error);
+      console.error('[Teacher Link] Unexpected error:', error);
+      console.error('[Teacher Link] Error stack:', error.stack);
+      console.error('[Teacher Link] Error name:', error.name);
+      console.error('[Teacher Link] Error code:', error.code);
+      
       return {
         statusCode: 500,
         headers,
         body: JSON.stringify({
           error: 'Server error',
           message: error.message,
-          stack: error.stack
+          stack: error.stack,
+          name: error.name,
+          code: error.code,
+          timestamp: new Date().toISOString()
         })
       };
     }
