@@ -28,6 +28,16 @@ ChartJS.register(
 
 const StudentProgress = () => {
   console.log('🟢 [StudentProgress] STUDENT PROGRESS COMPONENT LOADING - This should be the student view');
+  
+  // Load color theme from localStorage to match dashboard
+  const [colorTheme, setColorTheme] = useState('orange-theme');
+  
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('student-color-theme');
+    if (savedTheme) {
+      setColorTheme(savedTheme);
+    }
+  }, []);
   const [loading, setLoading] = useState(true);
   const [student, setStudent] = useState(null);
   const [knowledgeStates, setKnowledgeStates] = useState([]);
@@ -457,7 +467,7 @@ const StudentProgress = () => {
   };
   
   return (
-    <div className="student-progress">
+    <div className={`student-progress ${colorTheme}`}>
       <div className="progress-header">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
           <div>
