@@ -5136,6 +5136,21 @@ exports.handler = async (event, context) => {
       const pathParts = path.split('/');
       const studentId = pathParts[pathParts.indexOf('students') + 1];
       
+      console.log(`[Netlify] Weekly report endpoint (v1) - studentId from path: "${studentId}"`);
+      
+      if (!studentId || isNaN(parseInt(studentId))) {
+        console.error(`[Netlify] Invalid studentId for weekly-report (v1): "${studentId}"`);
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({ 
+            error: 'Invalid Student ID',
+            received: studentId,
+            expected: 'numeric value'
+          })
+        };
+      }
+      
       console.log('[Weekly Report] Generating weekly report for student:', studentId);
       
       const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
@@ -5174,45 +5189,76 @@ exports.handler = async (event, context) => {
         };
       }
       
+      // Get student's current knowledge states to calculate mastery
+      const { data: knowledgeStates } = await supabase
+        .from('knowledge_states')
+        .select('p_mastery')
+        .eq('student_id', studentId);
+      
+      // Calculate overall mastery
+      const averageMastery = knowledgeStates && knowledgeStates.length > 0 
+        ? knowledgeStates.reduce((sum, ks) => sum + (ks.p_mastery || 0), 0) / knowledgeStates.length 
+        : 0;
+      
       // Calculate weekly metrics
       const totalQuestions = weeklyResponses ? weeklyResponses.length : 0;
       const correctAnswers = weeklyResponses ? 
         weeklyResponses.filter(r => r.correct).length : 0;
-      const weeklyAccuracy = totalQuestions > 0 ? (correctAnswers / totalQuestions) * 100 : 0;
+      const incorrectAnswers = totalQuestions - correctAnswers;
+      const correctRate = totalQuestions > 0 ? (correctAnswers / totalQuestions) : 0;
       
       // Calculate time spent
       const totalTimeSpent = weeklyResponses ? 
         weeklyResponses.reduce((sum, r) => sum + (r.time_spent || 0), 0) : 0;
       
-      // Group by day
-      const dailyActivity = {};
+      // Create daily activity array format for charts
+      const dailyActivity = [];
       const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
       
-      days.forEach(day => {
-        dailyActivity[day] = { questions: 0, correct: 0, timeSpent: 0 };
-      });
-      
-      if (weeklyResponses) {
-        weeklyResponses.forEach(response => {
-          const responseDate = new Date(response.createdAt);
-          const dayName = days[responseDate.getDay()];
-          dailyActivity[dayName].questions++;
-          if (response.correct) {
-            dailyActivity[dayName].correct++;
-          }
-          dailyActivity[dayName].timeSpent += response.time_spent || 0;
+      for (let i = 0; i < 7; i++) {
+        const date = new Date(weekStart);
+        date.setDate(weekStart.getDate() + i);
+        const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        
+        const dayResponses = (weeklyResponses || []).filter(r => {
+          const responseDate = new Date(r.createdAt);
+          return responseDate.toDateString() === date.toDateString();
+        });
+        
+        dailyActivity.push({
+          date: dateStr,
+          timeSpent: dayResponses.reduce((sum, r) => sum + (r.time_spent || 0), 0),
+          questionsAnswered: dayResponses.length
         });
       }
       
+      // Calculate active days
+      const activeDays = dailyActivity.filter(day => day.questionsAnswered > 0).length;
+      
+      // Calculate weekly change (simplified calculation for now)
+      const previousWeekMastery = Math.max(0.2, averageMastery - 0.05); // Mock previous week data
+      const weeklyChange = averageMastery - previousWeekMastery;
+
       const weeklyReport = {
+        weeklyProgress: {
+          averageMastery: averageMastery,
+          weeklyChange: weeklyChange,
+          totalTimeSpent: totalTimeSpent,
+          correctRate: correctRate,
+          totalQuestionsAnswered: totalQuestions,
+          activeDays: activeDays,
+          dailyActivity: dailyActivity
+        },
         weekStart: weekStart.toISOString(),
         weekEnd: weekEnd.toISOString(),
         totalQuestions,
         correctAnswers,
-        accuracy: weeklyAccuracy,
+        incorrectAnswers,
+        partiallyCorrectAnswers: 0, // For compatibility
+        accuracy: correctRate * 100,
         totalTimeSpent,
-        dailyActivity,
-        activeDays: Object.values(dailyActivity).filter(day => day.questions > 0).length
+        activeDays,
+        recommendations: [] // Placeholder for future recommendations
       };
       
       console.log('[Weekly Report] Report generated:', weeklyReport);
@@ -5477,12 +5523,51 @@ exports.handler = async (event, context) => {
         .gte('createdAt', oneWeekAgo.toISOString())
         .order('createdAt', { ascending: false });
       
+      // Get student's current knowledge states to calculate mastery
+      const { data: knowledgeStates } = await supabase
+        .from('knowledge_states')
+        .select('p_mastery')
+        .eq('student_id', studentId);
+      
+      // Calculate overall mastery
+      const averageMastery = knowledgeStates && knowledgeStates.length > 0 
+        ? knowledgeStates.reduce((sum, ks) => sum + (ks.p_mastery || 0), 0) / knowledgeStates.length 
+        : 0;
+      
       // Calculate weekly stats
       const totalQuizzes = weeklyResponses?.length || 0;
-      const correctAnswers = (weeklyResponses || []).filter(r => r.is_correct).length;
-      const accuracy = totalQuizzes > 0 ? (correctAnswers / totalQuizzes) * 100 : 0;
+      const correctAnswers = (weeklyResponses || []).filter(r => r.correct || r.is_correct).length;
+      const incorrectAnswers = totalQuizzes - correctAnswers;
+      const correctRate = totalQuizzes > 0 ? (correctAnswers / totalQuizzes) : 0;
       
-      // Group by knowledge component
+      // Calculate time spent (sum of time_spent values)
+      const totalTimeSpent = (weeklyResponses || []).reduce((sum, r) => sum + (r.time_spent || 0), 0);
+      
+      // Calculate daily activity
+      const dailyActivity = [];
+      const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        
+        const dayResponses = (weeklyResponses || []).filter(r => {
+          const responseDate = new Date(r.createdAt || r.created_at);
+          return responseDate.toDateString() === date.toDateString();
+        });
+        
+        dailyActivity.push({
+          date: dateStr,
+          timeSpent: dayResponses.reduce((sum, r) => sum + (r.time_spent || 0), 0),
+          questionsAnswered: dayResponses.length
+        });
+      }
+      
+      // Calculate active days
+      const activeDays = dailyActivity.filter(day => day.questionsAnswered > 0).length;
+      
+      // Group by knowledge component for detailed breakdown
       const kcPerformance = {};
       (weeklyResponses || []).forEach(response => {
         const kcId = response.content_items?.knowledge_component_id;
@@ -5497,7 +5582,7 @@ exports.handler = async (event, context) => {
             };
           }
           kcPerformance[kcId].total++;
-          if (response.is_correct) {
+          if (response.correct || response.is_correct) {
             kcPerformance[kcId].correct++;
           }
         }
@@ -5507,13 +5592,25 @@ exports.handler = async (event, context) => {
         statusCode: 200,
         headers,
         body: JSON.stringify({
+          weeklyProgress: {
+            averageMastery: averageMastery,
+            weeklyChange: averageMastery > 0.3 ? 0.05 : 0.02, // Mock weekly improvement
+            totalTimeSpent: totalTimeSpent,
+            correctRate: correctRate,
+            totalQuestionsAnswered: totalQuizzes,
+            activeDays: activeDays,
+            dailyActivity: dailyActivity
+          },
           weekStart: oneWeekAgo.toISOString(),
           weekEnd: new Date().toISOString(),
           totalQuizzesTaken: totalQuizzes,
           correctAnswers: correctAnswers,
-          averageAccuracy: accuracy,
+          incorrectAnswers: incorrectAnswers,
+          partiallyCorrectAnswers: 0, // For compatibility
+          averageAccuracy: correctRate * 100,
           knowledgeComponentPerformance: Object.values(kcPerformance),
-          recentActivity: weeklyResponses || []
+          recentActivity: weeklyResponses || [],
+          recommendations: [] // Placeholder for future recommendations
         })
       };
       
