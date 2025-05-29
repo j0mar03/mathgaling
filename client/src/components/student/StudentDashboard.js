@@ -248,41 +248,84 @@ const StudentDashboard = () => {
           mastery: kc.mastery
         })));
         
-        // PRIORITY 1: Use the kid-friendly-next-activity API response if it has a valid KC
-        if (fetchedNextActivity && fetchedNextActivity.kc_id && !fetchedNextActivity.completed_sequence) {
-          console.log('[StudentDashboard] Using kid-friendly-next-activity API response:', fetchedNextActivity);
+        // PRIORITY 1: Use the kid-friendly-next-activity API response 
+        // This should be the primary source of truth for what the student should do next
+        if (fetchedNextActivity && fetchedNextActivity.type) {
+          console.log('[StudentDashboard] Processing kid-friendly-next-activity API response:', fetchedNextActivity);
           
-          let displayName = fetchedNextActivity.kc_name || fetchedNextActivity.name || "Your Next Learning Adventure!";
-          let displayDescription = fetchedNextActivity.message || fetchedNextActivity.description || "Let's continue learning!";
+          // Handle completion scenarios (all topics mastered)
+          if (fetchedNextActivity.completed_sequence || fetchedNextActivity.all_mastered) {
+            console.log('[StudentDashboard] Student has completed sequence or mastered all topics');
+            determinedStep = {
+              id: null,
+              name: 'Perfect Mastery! 🏆',
+              description: fetchedNextActivity.message || 'Napakahusay! Lahat ng paksa ay natapos na. Mag-review tayo!',
+              emoji: '🏆',
+              mastery: 100,
+              difficulty: 'mastered',
+              type: 'review',
+              isPrimary: true,
+              actionType: 'perfect',
+              buttonText: 'Review Topics'
+            };
+          } 
+          // Handle regular KC recommendation
+          else if (fetchedNextActivity.kc_id) {
+            console.log('[StudentDashboard] Using KC recommendation from API:', {
+              kc_id: fetchedNextActivity.kc_id,
+              kc_name: fetchedNextActivity.kc_name,
+              curriculum_code: fetchedNextActivity.curriculum_code
+            });
+            
+            let displayName = fetchedNextActivity.kc_name || fetchedNextActivity.name || "Your Next Learning Adventure!";
+            let displayDescription = fetchedNextActivity.message || fetchedNextActivity.description || "Let's continue learning!";
 
-          // Get emoji based on KC name (with partial matching)
-          let emoji = KC_ICONS.default;
-          for (const [key, value] of Object.entries(KC_ICONS)) {
-            if (displayName.toLowerCase().includes(key.toLowerCase()) || 
-                key.toLowerCase().includes(displayName.toLowerCase().split(' ')[0])) {
-              emoji = value;
-              break;
+            // Get emoji based on KC name (with partial matching)
+            let emoji = KC_ICONS.default;
+            for (const [key, value] of Object.entries(KC_ICONS)) {
+              if (displayName.toLowerCase().includes(key.toLowerCase()) || 
+                  key.toLowerCase().includes(displayName.toLowerCase().split(' ')[0])) {
+                emoji = value;
+                break;
+              }
+            }
+
+            determinedStep = { 
+              ...fetchedNextActivity,
+              id: fetchedNextActivity.kc_id,
+              name: displayName, 
+              description: displayDescription, 
+              isPrimary: true,
+              actionType: 'continue',
+              buttonText: 'Magpatuloy',
+              emoji: emoji,
+              type: 'kc',
+              kc_id: fetchedNextActivity.kc_id,
+              mastery: 0 // Will be updated from module data if available
+            };
+            
+            // Try to get mastery from module data
+            const kcFromModules = allKcsFromModules.find(kc => kc.id === fetchedNextActivity.kc_id);
+            if (kcFromModules) {
+              determinedStep.mastery = Math.round((kcFromModules.mastery || 0) * 100);
+              console.log('[StudentDashboard] Updated mastery from modules:', determinedStep.mastery);
             }
           }
-
-          determinedStep = { 
-            ...fetchedNextActivity,
-            id: fetchedNextActivity.kc_id,
-            name: displayName, 
-            description: displayDescription, 
-            isPrimary: true,
-            actionType: 'continue',
-            buttonText: 'Magpatuloy',
-            emoji: emoji,
-            type: 'kc',
-            kc_id: fetchedNextActivity.kc_id,
-            mastery: 0 // Will be updated from module data if available
-          };
-          
-          // Try to get mastery from module data
-          const kcFromModules = allKcsFromModules.find(kc => kc.id === fetchedNextActivity.kc_id);
-          if (kcFromModules) {
-            determinedStep.mastery = Math.round((kcFromModules.mastery || 0) * 100);
+          // Handle edge case where API returns no KC but student should explore
+          else {
+            console.log('[StudentDashboard] API returned no specific KC, student should explore');
+            determinedStep = {
+              id: null,
+              name: "Explore Math Topics!",
+              description: fetchedNextActivity.message || "Ready to explore different math topics?",
+              emoji: "🎯",
+              mastery: 0,
+              difficulty: 'medium',
+              type: 'explore',
+              isPrimary: true,
+              actionType: 'explore',
+              buttonText: 'Explore'
+            };
           }
         }
         
@@ -743,30 +786,52 @@ const StudentDashboard = () => {
                   <button
                     className="action-button practice-button"
                     onClick={() => {
-                      // Handle different action types
-                      if (currentLearningStep?.type === 'explore' || !currentLearningStep?.id) {
-                        // If no specific KC, go to mastery dashboard to explore all topics
+                      // Handle different action types based on API recommendations
+                      console.log('[StudentDashboard] Button clicked with action type:', currentLearningStep?.actionType);
+                      
+                      if (currentLearningStep?.actionType === 'perfect' || currentLearningStep?.type === 'review') {
+                        // Student has mastered all topics - go to mastery dashboard for review
+                        console.log('[StudentDashboard] Student completed all topics, going to mastery dashboard for review');
                         navigate('/student/mastery-dashboard');
-                      } else {
-                        // Use the KC ID from currentLearningStep if available
+                      } else if (currentLearningStep?.type === 'explore' || !currentLearningStep?.id) {
+                        // If no specific KC, go to mastery dashboard to explore all topics
+                        console.log('[StudentDashboard] No specific KC, going to mastery dashboard to explore');
+                        navigate('/student/mastery-dashboard');
+                      } else if (currentLearningStep?.kc_id || currentLearningStep?.id) {
+                        // Use the KC ID from currentLearningStep for targeted practice
                         let quizUrl = '/student/quiz?mode=sequential&limit=8';
                         
-                        if (currentLearningStep && currentLearningStep.kc_id) {
+                        if (currentLearningStep.kc_id) {
                           // Use kc_id if available (from the kid-friendly-next-activity API)
                           quizUrl = `/student/quiz?kc_id=${currentLearningStep.kc_id}&mode=sequential&limit=8`;
-                        } else if (currentLearningStep && currentLearningStep.id) {
-                          // Use id as KC ID
+                          console.log('[StudentDashboard] Using API-provided KC ID:', currentLearningStep.kc_id);
+                        } else if (currentLearningStep.id) {
+                          // Use id as KC ID (fallback)
                           quizUrl = `/student/quiz?kc_id=${currentLearningStep.id}&mode=sequential&limit=8`;
+                          console.log('[StudentDashboard] Using fallback KC ID:', currentLearningStep.id);
                         }
                         
-                        console.log('[StudentDashboard] Navigating to quiz with currentLearningStep:', currentLearningStep);
-                        console.log('[StudentDashboard] Quiz URL:', quizUrl);
+                        console.log('[StudentDashboard] Navigating to quiz with URL:', quizUrl);
                         navigate(quizUrl);
+                      } else {
+                        // Fallback - go to mastery dashboard
+                        console.log('[StudentDashboard] No KC ID available, fallback to mastery dashboard');
+                        navigate('/student/mastery-dashboard');
                       }
                     }}
                   >
                     <span className="play-icon">🎮</span>
-                    {isCompactView ? 'Let\'s Go!' : (currentLearningStep?.buttonText === 'Continue' ? 'Let\'s Continue!' : currentLearningStep?.buttonText === 'Start' ? 'Let\'s Start!' : 'Let\'s Play!')}
+{isCompactView ? 'Let\'s Go!' : (() => {
+                      // More intelligent button text based on action type
+                      if (currentLearningStep?.actionType === 'perfect') return 'Review Topics';
+                      if (currentLearningStep?.type === 'review') return 'Review & Practice';
+                      if (currentLearningStep?.type === 'explore') return 'Explore Topics';
+                      if (currentLearningStep?.actionType === 'continue') return 'Let\'s Continue!';
+                      if (currentLearningStep?.actionType === 'resume') return 'Continue Learning';
+                      if (currentLearningStep?.actionType === 'start') return 'Let\'s Start!';
+                      if (currentLearningStep?.buttonText) return currentLearningStep.buttonText;
+                      return 'Let\'s Learn!';
+                    })()}
                   </button>
                 </div>
               </div>
