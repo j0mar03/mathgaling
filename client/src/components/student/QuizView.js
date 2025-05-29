@@ -44,6 +44,15 @@ const QuizView = () => {
   const [finalScoreCalculated, setFinalScoreCalculated] = useState(0); // Store final score for consistent display
   const [showTopicInfo, setShowTopicInfo] = useState(false); // Toggle for topic information visibility - default hide
   const [soundsEnabled, setSoundsEnabled] = useState(isSoundEnabled()); // Sound toggle state
+  const [colorTheme, setColorTheme] = useState('orange-theme'); // Color theme state - matches student dashboard
+
+  // Load saved color theme on component mount
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('student-color-theme');
+    if (savedTheme) {
+      setColorTheme(savedTheme);
+    }
+  }, []);
 
   useEffect(() => {
     // Reset state when location changes (new quiz)
@@ -714,7 +723,7 @@ const QuizView = () => {
     }
 
     return (
-      <div className="enhanced-quiz">
+      <div className={`enhanced-quiz ${colorTheme}`}>
         <div className="quiz-completion enhanced-completion">
           <div className="completion-header">
             <h2>🎉 Quiz Complete!</h2>
@@ -971,7 +980,7 @@ const QuizView = () => {
   const currentQuestion = questions[currentQuestionIndex];
 
   return (
-    <div className="practice-quiz enhanced-quiz">
+    <div className={`practice-quiz enhanced-quiz ${colorTheme}`}>
       
       <div className="quiz-header">
         <div className="quiz-header-main">
