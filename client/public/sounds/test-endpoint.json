@@ -1,0 +1,12 @@
+{
+  "status": "success",
+  "message": "Sound files directory is accessible",
+  "available_files": [
+    "celebration-kids.mp3",
+    "celebration.mp3",
+    "correct-answer.mp3",
+    "correct-chime.mp3"
+  ],
+  "api_endpoint": "/api/sounds/",
+  "usage_instructions": "Access sound files via /api/sounds/{filename} or directly via /sounds/{filename}"
+}

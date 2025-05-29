@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sound API Debug Tool</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    h1, h2 {
+      color: #333;
+    }
+    
+    .test-section {
+      margin-bottom: 30px;
+      border: 1px solid #ddd;
+      padding: 15px;
+      border-radius: 5px;
+    }
+    
+    .test-results {
+      margin-top: 15px;
+      padding: 10px;
+      background: #f8f8f8;
+      border-radius: 5px;
+    }
+    
+    .result-item {
+      margin: 5px 0;
+      padding: 10px;
+      border-radius: 4px;
+    }
+    
+    .success {
+      background-color: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    
+    .error {
+      background-color: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    
+    .pending {
+      background-color: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffeeba;
+    }
+    
+    button {
+      padding: 8px 15px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 10px;
+      margin-top: 10px;
+    }
+    
+    button:hover {
+      background: #45a049;
+    }
+    
+    button.play {
+      background: #2196F3;
+    }
+    
+    button.play:hover {
+      background: #0b7dda;
+    }
+    
+    .controls {
+      margin-top: 20px;
+    }
+    
+    .env-info {
+      margin-top: 30px;
+      padding: 15px;
+      background-color: #e9ecef;
+      border-radius: 5px;
+      font-family: monospace;
+      white-space: pre-wrap;
+    }
+    
+    .debug-log {
+      margin-top: 20px;
+      max-height: 200px;
+      overflow: auto;
+      padding: 10px;
+      background-color: #f5f5f5;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-family: monospace;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <h1>Sound API Debug Tool</h1>
+  <p>This tool helps diagnose issues with sound file serving in the Netlify environment.</p>
+  
+  <div class="test-section">
+    <h2>1. Direct File Access Test (Public Folder)</h2>
+    <p>This tests if sound files are correctly placed in the public folder and accessible via direct URL.</p>
+    <div class="controls">
+      <button id="testPublicBtn">Test Public Files</button>
+    </div>
+    <div id="publicResults" class="test-results"></div>
+  </div>
+  
+  <div class="test-section">
+    <h2>2. API Access Test (/api/sounds/)</h2>
+    <p>This tests if the Netlify function API correctly serves sound files via the /api/sounds/ endpoint.</p>
+    <div class="controls">
+      <button id="testApiBtn">Test API Endpoint</button>
+    </div>
+    <div id="apiResults" class="test-results"></div>
+  </div>
+  
+  <div class="test-section">
+    <h2>3. Custom API Test</h2>
+    <p>Test a specific sound file path:</p>
+    <input type="text" id="customPath" placeholder="/sounds/custom-file.mp3 or /api/sounds/custom-file.mp3" style="width: 80%; padding: 8px; margin-right: 10px;">
+    <div class="controls">
+      <button id="testCustomBtn">Test Custom Path</button>
+    </div>
+    <div id="customResults" class="test-results"></div>
+  </div>
+  
+  <div class="env-info">
+    <h3>Environment Information:</h3>
+    <div id="envInfo">Gathering information...</div>
+  </div>
+  
+  <div class="debug-log">
+    <h3>Debug Log:</h3>
+    <div id="debugLog"></div>
+  </div>
+  
+  <script>
+    // Sound files to test
+    const soundFiles = [
+      'celebration.mp3',
+      'correct-answer.mp3',
+      'celebration-kids.mp3',
+      'correct-chime.mp3'
+    ];
+    
+    // Log to debug console
+    function logDebug(message) {
+      const debugLog = document.getElementById('debugLog');
+      const timestamp = new Date().toISOString().split('T')[1].split('.')[0];
+      debugLog.innerHTML += `[${timestamp}] ${message}\n`;
+      console.log(message);
+    }
+    
+    // Display environment info
+    function showEnvironmentInfo() {
+      const envInfo = document.getElementById('envInfo');
+      const info = {
+        'User Agent': navigator.userAgent,
+        'URL': window.location.href,
+        'Base URL': document.baseURI,
+        'Host': window.location.host,
+        'Protocol': window.location.protocol,
+        'Public URL': process.env.PUBLIC_URL || '(not set)',
+        'Network Type': navigator.connection ? navigator.connection.effectiveType : 'unknown',
+        'Time': new Date().toLocaleString()
+      };
+      
+      let infoHtml = '';
+      for (const [key, value] of Object.entries(info)) {
+        infoHtml += `<strong>${key}:</strong> ${value}\n`;
+      }
+      
+      envInfo.innerHTML = infoHtml;
+    }
+    
+    // Test direct file access
+    function testPublicFiles() {
+      const resultsDiv = document.getElementById('publicResults');
+      resultsDiv.innerHTML = '';
+      
+      soundFiles.forEach(file => {
+        const resultItem = document.createElement('div');
+        resultItem.className = 'result-item pending';
+        resultItem.textContent = `Testing ${file}...`;
+        resultsDiv.appendChild(resultItem);
+        
+        const publicUrl = `${window.location.origin}/sounds/${file}`;
+        logDebug(`Testing public URL: ${publicUrl}`);
+        
+        fetch(publicUrl, { method: 'HEAD' })
+          .then(response => {
+            if (!response.ok) {
+              throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            
+            // Create audio element to test loading
+            const audio = new Audio(publicUrl);
+            
+            // Create play button
+            const playButton = document.createElement('button');
+            playButton.textContent = 'Play';
+            playButton.className = 'play';
+            playButton.onclick = () => audio.play();
+            
+            resultItem.className = 'result-item success';
+            resultItem.textContent = `✅ ${file} (Public): Successfully loaded - ${response.headers.get('Content-Type') || 'unknown type'}, ${response.headers.get('Content-Length') || 'unknown'} bytes`;
+            resultItem.appendChild(playButton);
+            logDebug(`Success loading ${file} from public folder`);
+          })
+          .catch(error => {
+            resultItem.className = 'result-item error';
+            resultItem.textContent = `❌ ${file} (Public): ${error.message}`;
+            logDebug(`Error loading ${file} from public folder: ${error.message}`);
+          });
+      });
+    }
+    
+    // Test API access
+    function testApiEndpoint() {
+      const resultsDiv = document.getElementById('apiResults');
+      resultsDiv.innerHTML = '';
+      
+      soundFiles.forEach(file => {
+        const resultItem = document.createElement('div');
+        resultItem.className = 'result-item pending';
+        resultItem.textContent = `Testing API for ${file}...`;
+        resultsDiv.appendChild(resultItem);
+        
+        const apiUrl = `${window.location.origin}/api/sounds/${file}`;
+        logDebug(`Testing API URL: ${apiUrl}`);
+        
+        fetch(apiUrl)
+          .then(response => {
+            logDebug(`API Response status for ${file}: ${response.status}`);
+            
+            if (!response.ok) {
+              // Try to get error details
+              return response.text().then(text => {
+                try {
+                  const errorDetails = JSON.parse(text);
+                  throw new Error(`HTTP error! Status: ${response.status}, Details: ${JSON.stringify(errorDetails)}`);
+                } catch (e) {
+                  throw new Error(`HTTP error! Status: ${response.status}, Response: ${text.substring(0, 100)}...`);
+                }
+              });
+            }
+            
+            return response.blob();
+          })
+          .then(blob => {
+            const url = URL.createObjectURL(blob);
+            const audio = new Audio(url);
+            
+            // Create play button
+            const playButton = document.createElement('button');
+            playButton.textContent = 'Play';
+            playButton.className = 'play';
+            playButton.onclick = () => audio.play();
+            
+            resultItem.className = 'result-item success';
+            resultItem.textContent = `✅ ${file} (API): Successfully loaded - ${blob.type}, ${(blob.size / 1024).toFixed(2)}KB`;
+            resultItem.appendChild(playButton);
+            logDebug(`Success loading ${file} from API. Size: ${(blob.size / 1024).toFixed(2)}KB, Type: ${blob.type}`);
+          })
+          .catch(error => {
+            resultItem.className = 'result-item error';
+            resultItem.textContent = `❌ ${file} (API): ${error.message}`;
+            logDebug(`Error loading ${file} from API: ${error.message}`);
+          });
+      });
+    }
+    
+    // Test custom path
+    function testCustomPath() {
+      const customPath = document.getElementById('customPath').value.trim();
+      if (!customPath) {
+        alert('Please enter a file path to test');
+        return;
+      }
+      
+      const resultsDiv = document.getElementById('customResults');
+      resultsDiv.innerHTML = '';
+      
+      const resultItem = document.createElement('div');
+      resultItem.className = 'result-item pending';
+      resultItem.textContent = `Testing ${customPath}...`;
+      resultsDiv.appendChild(resultItem);
+      
+      // Build full URL
+      let fullUrl = customPath;
+      if (!customPath.startsWith('http') && !customPath.startsWith('/')) {
+        fullUrl = `/${customPath}`;
+      }
+      if (!customPath.startsWith('http')) {
+        fullUrl = `${window.location.origin}${fullUrl}`;
+      }
+      
+      logDebug(`Testing custom URL: ${fullUrl}`);
+      
+      fetch(fullUrl)
+        .then(response => {
+          logDebug(`Custom path response status: ${response.status}`);
+          
+          if (!response.ok) {
+            // Try to get error details
+            return response.text().then(text => {
+              try {
+                const errorDetails = JSON.parse(text);
+                throw new Error(`HTTP error! Status: ${response.status}, Details: ${JSON.stringify(errorDetails)}`);
+              } catch (e) {
+                throw new Error(`HTTP error! Status: ${response.status}, Response: ${text.substring(0, 100)}...`);
+              }
+            });
+          }
+          
+          return response.blob();
+        })
+        .then(blob => {
+          const url = URL.createObjectURL(blob);
+          const audio = new Audio(url);
+          
+          // Create play button
+          const playButton = document.createElement('button');
+          playButton.textContent = 'Play';
+          playButton.className = 'play';
+          playButton.onclick = () => audio.play();
+          
+          resultItem.className = 'result-item success';
+          resultItem.textContent = `✅ Custom path: Successfully loaded - ${blob.type}, ${(blob.size / 1024).toFixed(2)}KB`;
+          resultItem.appendChild(playButton);
+          logDebug(`Success loading custom path. Size: ${(blob.size / 1024).toFixed(2)}KB, Type: ${blob.type}`);
+        })
+        .catch(error => {
+          resultItem.className = 'result-item error';
+          resultItem.textContent = `❌ Custom path: ${error.message}`;
+          logDebug(`Error loading custom path: ${error.message}`);
+        });
+    }
+    
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+      logDebug('Sound API Debug Tool initialized');
+      showEnvironmentInfo();
+      
+      // Set up event listeners
+      document.getElementById('testPublicBtn').addEventListener('click', testPublicFiles);
+      document.getElementById('testApiBtn').addEventListener('click', testApiEndpoint);
+      document.getElementById('testCustomBtn').addEventListener('click', testCustomPath);
+      
+      // Optional: auto-run tests
+      // setTimeout(testPublicFiles, 500);
+      // setTimeout(testApiEndpoint, 1000);
+    });
+  </script>
+</body>
+</html>

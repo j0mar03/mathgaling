@@ -7445,6 +7445,105 @@ exports.handler = async (event, context) => {
     }
   }
   
+  // GET /api/sounds-debug - Debug endpoint for sound system
+  if (path === '/api/sounds-debug' && httpMethod === 'GET') {
+    try {
+      const fs = require('fs');
+      const pathModule = require('path');
+      
+      // Get environment info
+      const envInfo = {
+        NODE_ENV: process.env.NODE_ENV,
+        workingDir: process.cwd(),
+        functionDir: __dirname,
+        dirContents: {},
+        netlifyBuildId: process.env.NETLIFY_BUILD_ID || 'not available',
+        netlifyDeployId: process.env.DEPLOY_ID || 'not available',
+        netlifyContext: process.env.CONTEXT || 'development'
+      };
+      
+      // Check key directories
+      const dirsToCheck = [
+        '.',
+        './client',
+        './client/build',
+        './client/build/sounds',
+        './client/public',
+        './client/public/sounds',
+        '/opt/build/repo/client/build/sounds',
+        pathModule.join(__dirname, '..', '..', 'client', 'build', 'sounds')
+      ];
+      
+      for (const dir of dirsToCheck) {
+        try {
+          if (fs.existsSync(dir)) {
+            envInfo.dirContents[dir] = fs.readdirSync(dir);
+          } else {
+            envInfo.dirContents[dir] = `Directory does not exist`;
+          }
+        } catch (err) {
+          envInfo.dirContents[dir] = `Error reading directory: ${err.message}`;
+        }
+      }
+      
+      // Check for sound files
+      const soundFiles = ['correct-answer.mp3', 'correct-chime.mp3', 'celebration.mp3', 'celebration-kids.mp3'];
+      const soundStatus = {};
+      
+      for (const soundFile of soundFiles) {
+        const possiblePaths = [
+          pathModule.join(process.cwd(), 'client', 'public', 'sounds', soundFile),
+          pathModule.join(process.cwd(), 'client', 'build', 'sounds', soundFile),
+          pathModule.join('/opt/build/repo/client/build/sounds', soundFile),
+          pathModule.join(__dirname, '..', '..', 'client', 'public', 'sounds', soundFile),
+          pathModule.join(__dirname, '..', '..', 'client', 'build', 'sounds', soundFile),
+        ];
+        
+        soundStatus[soundFile] = {
+          found: false,
+          foundAt: null,
+          checkedPaths: possiblePaths
+        };
+        
+        for (const path of possiblePaths) {
+          try {
+            if (fs.existsSync(path)) {
+              soundStatus[soundFile].found = true;
+              soundStatus[soundFile].foundAt = path;
+              const stats = fs.statSync(path);
+              soundStatus[soundFile].fileSize = stats.size;
+              break;
+            }
+          } catch (err) {
+            // Skip errors
+          }
+        }
+      }
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          message: 'Sound system debug information',
+          environment: envInfo,
+          soundFiles: soundStatus,
+          serverTime: new Date().toISOString()
+        }, null, 2)
+      };
+    } catch (error) {
+      console.error('[ERROR] Error in sound debug endpoint:', error);
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Error generating sound debug information',
+          message: error.message,
+          stack: error.stack
+        })
+      };
+    }
+  }
+  
   // GET /api/sounds/:filename - Serve sound files
   if (path.includes('/api/sounds/') && httpMethod === 'GET') {
     try {
@@ -7454,41 +7553,126 @@ exports.handler = async (event, context) => {
       
       console.log('[DEBUG] Sound file request for filename:', filename);
       console.log('[DEBUG] Current working directory:', process.cwd());
+      console.log('[DEBUG] Path being accessed:', path);
+      console.log('[DEBUG] Environment variables:', JSON.stringify({
+        NODE_ENV: process.env.NODE_ENV,
+        NETLIFY: process.env.NETLIFY,
+        NETLIFY_DEV: process.env.NETLIFY_DEV,
+        NETLIFY_LOCAL: process.env.NETLIFY_LOCAL
+      }));
       
       // Try multiple possible sound file locations
       const possiblePaths = [
         pathModule.join(process.cwd(), 'client', 'public', 'sounds', filename),
         pathModule.join(process.cwd(), 'client', 'build', 'sounds', filename),
         pathModule.join('/opt/build/repo/client/build/sounds', filename), // Netlify build location
+        pathModule.join('/opt/build/repo/client/public/sounds', filename), // Additional Netlify build location
         pathModule.join(__dirname, '..', '..', 'client', 'public', 'sounds', filename),
         pathModule.join(__dirname, '..', '..', 'client', 'build', 'sounds', filename),
+        pathModule.join('/var/task/client/build/sounds', filename), // Lambda deployment path
+        pathModule.join('/var/task/client/public/sounds', filename), // Lambda deployment path
       ];
       
       console.log('[DEBUG] Checking possible sound file paths:', possiblePaths);
+      
+      // Check if the sound files directory exists
+      console.log('[DEBUG] Directory content check:');
+      for (const baseDir of [
+        pathModule.join(process.cwd(), 'client', 'public'),
+        pathModule.join(process.cwd(), 'client', 'build'),
+        pathModule.join('/opt/build/repo/client/build'),
+        pathModule.join('/opt/build/repo/client/public'),
+        pathModule.join(__dirname, '..', '..', 'client', 'public'),
+        pathModule.join(__dirname, '..', '..', 'client', 'build')
+      ]) {
+        try {
+          const soundsDir = pathModule.join(baseDir, 'sounds');
+          if (fs.existsSync(soundsDir)) {
+            console.log(`[DEBUG] Directory exists: ${soundsDir}`);
+            console.log(`[DEBUG] Contents: ${fs.readdirSync(soundsDir).join(', ')}`);
+          } else {
+            console.log(`[DEBUG] Directory does not exist: ${soundsDir}`);
+            // Check if base dir exists
+            if (fs.existsSync(baseDir)) {
+              console.log(`[DEBUG] Base directory exists: ${baseDir}`);
+              console.log(`[DEBUG] Base dir contents: ${fs.readdirSync(baseDir).join(', ')}`);
+            } else {
+              console.log(`[DEBUG] Base directory does not exist: ${baseDir}`);
+            }
+          }
+        } catch (dirError) {
+          console.log(`[DEBUG] Error checking directory ${baseDir}/sounds:`, dirError.message);
+        }
+      }
       
       let soundPath = null;
       let soundExists = false;
       
       for (const testPath of possiblePaths) {
         console.log('[DEBUG] Testing path:', testPath);
-        if (fs.existsSync(testPath)) {
-          soundPath = testPath;
-          soundExists = true;
-          console.log('[DEBUG] Found sound file at:', testPath);
-          break;
+        try {
+          if (fs.existsSync(testPath)) {
+            soundPath = testPath;
+            soundExists = true;
+            console.log('[DEBUG] Found sound file at:', testPath);
+            
+            // Get file stats
+            const stats = fs.statSync(testPath);
+            console.log('[DEBUG] File stats:', {
+              size: stats.size + ' bytes',
+              isFile: stats.isFile(),
+              created: stats.birthtime,
+              modified: stats.mtime
+            });
+            
+            break;
+          }
+        } catch (pathError) {
+          console.log(`[DEBUG] Error checking path ${testPath}:`, pathError.message);
         }
       }
       
       // Check if file exists
       if (!soundExists) {
         console.log('[DEBUG] Sound file not found in any location');
+        
+        // Check if we can find any sound files to help diagnose the issue
+        let availableSoundFiles = [];
+        try {
+          const soundDirs = [
+            pathModule.join(process.cwd(), 'client', 'public', 'sounds'),
+            pathModule.join(process.cwd(), 'client', 'build', 'sounds'),
+            pathModule.join('/opt/build/repo/client/build/sounds'),
+            pathModule.join(__dirname, '..', '..', 'client', 'public', 'sounds'),
+            pathModule.join(__dirname, '..', '..', 'client', 'build', 'sounds'),
+          ];
+          
+          for (const dir of soundDirs) {
+            if (fs.existsSync(dir)) {
+              const files = fs.readdirSync(dir);
+              if (files.length > 0) {
+                availableSoundFiles.push({ directory: dir, files });
+              }
+            }
+          }
+        } catch (err) {
+          console.error('[DEBUG] Error finding available sound files:', err);
+        }
+        
         return {
           statusCode: 404,
           headers,
           body: JSON.stringify({
             error: 'Sound file not found',
             filename: filename,
-            searchedPaths: possiblePaths
+            searchedPaths: possiblePaths,
+            availableSoundFiles,
+            environment: {
+              NODE_ENV: process.env.NODE_ENV,
+              NETLIFY: process.env.NETLIFY,
+              cwd: process.cwd(),
+              dirname: __dirname
+            }
           })
         };
       }
@@ -7503,6 +7687,8 @@ exports.handler = async (event, context) => {
       } else if (filename.endsWith('.ogg')) {
         contentType = 'audio/ogg';
       }
+      
+      console.log('[DEBUG] Serving sound file with content-type:', contentType, 'size:', fileData.length, 'bytes');
       
       // Return the sound file with proper headers
       return {
@@ -7523,7 +7709,14 @@ exports.handler = async (event, context) => {
         headers,
         body: JSON.stringify({
           error: 'Error serving sound file',
-          message: error.message
+          message: error.message,
+          stack: error.stack,
+          environment: {
+            NODE_ENV: process.env.NODE_ENV,
+            NETLIFY: process.env.NETLIFY,
+            cwd: process.cwd(),
+            dirname: __dirname
+          }
         })
       };
     }
@@ -7553,7 +7746,8 @@ exports.handler = async (event, context) => {
         '/api/classrooms/:id',
         '/api/messages/inbox',
         '/api/messages/:id/read',
-        '/api/sounds/:filename'
+        '/api/sounds/:filename',
+        '/api/sounds-debug'
       ]
     })
   };

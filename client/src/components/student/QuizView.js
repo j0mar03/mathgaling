@@ -8,6 +8,7 @@ import './PracticeQuizView.css'; // Use PracticeQuizView styles
 import './QuizView.css'; // Enhanced QuizView styles
 import './QuizCompleteEnhanced.css'; // Enhanced completion styles
 import './SoundControls.css'; // Sound controls styling
+import SoundDebugger from './SoundDebugger'; // Sound debugging component
 
 const QuizView = () => {
   const navigate = useNavigate();
@@ -963,6 +964,9 @@ const QuizView = () => {
 
   return (
     <div className="practice-quiz enhanced-quiz">
+      {/* Sound Debugger Component - remove in production */}
+      <SoundDebugger />
+      
       <div className="quiz-header">
         <div className="quiz-header-main">
           <h2>Math Mastery Quiz</h2>
