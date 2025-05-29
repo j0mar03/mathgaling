@@ -1,5 +1,11 @@
 import React, { useState } from 'react';
-import { testSoundLoading, playSound, playCorrectSound, playCelebrationSound } from '../../utils/soundUtils';
+import { 
+  testSoundLoading, 
+  playSound, 
+  playCorrectSound, 
+  playIncorrectSound, 
+  playCelebrationSound 
+} from '../../utils/soundUtils';
 
 /**
  * Debug component to test sound functionality and diagnose issues
@@ -131,6 +137,32 @@ const SoundDebugger = () => {
             }}
           >
             🔔 Chime
+          </button>
+          <button 
+            onClick={() => testPlaySound('incorrect-answer')}
+            style={{ 
+              padding: '5px 10px', 
+              backgroundColor: '#dc3545', 
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            ❌ Incorrect
+          </button>
+          <button 
+            onClick={() => playIncorrectSound()}
+            style={{ 
+              padding: '5px 10px', 
+              backgroundColor: '#bd2130', 
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer'
+            }}
+          >
+            🔊 Play Incorrect
           </button>
           <button 
             onClick={() => playCelebrationSound()}

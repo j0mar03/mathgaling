@@ -5,7 +5,8 @@
     "celebration-kids.mp3",
     "celebration.mp3",
     "correct-answer.mp3",
-    "correct-chime.mp3"
+    "correct-chime.mp3",
+    "incorrect-answer.mp3"
   ],
   "api_endpoint": "/api/sounds/",
   "usage_instructions": "Access sound files via /api/sounds/{filename} or directly via /sounds/{filename}"

@@ -3,7 +3,13 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import { getMotivationalQuote } from './QuizEnhancer';
-import { playCorrectSound, playCelebrationSound, isSoundEnabled, setSoundEnabled } from '../../utils/soundUtils';
+import { 
+  playCorrectSound, 
+  playCelebrationSound, 
+  playIncorrectSound, 
+  isSoundEnabled, 
+  setSoundEnabled 
+} from '../../utils/soundUtils';
 import './PracticeQuizView.css'; // Use PracticeQuizView styles
 import './QuizView.css'; // Enhanced QuizView styles
 import './QuizCompleteEnhanced.css'; // Enhanced completion styles
@@ -399,13 +405,16 @@ const QuizView = () => {
     setSubmitted(true);
     setCorrect(isCorrect);
     
-    if (isCorrect) {
-      setScore(prev => prev + 1);
-      // Play correct answer sound with a small delay
-      setTimeout(() => {
+    // Play appropriate sound with a small delay based on answer correctness
+    setTimeout(() => {
+      if (isCorrect) {
+        setScore(prev => prev + 1);
         playCorrectSound(0.5);
-      }, 300);
-    }
+      } else {
+        // Play incorrect answer sound at a lower volume
+        playIncorrectSound(0.3);
+      }
+    }, 300);
 
     // Store answered question details
     setAnsweredQuestions(prev => [
