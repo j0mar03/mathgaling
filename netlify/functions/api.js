@@ -7445,6 +7445,90 @@ exports.handler = async (event, context) => {
     }
   }
   
+  // GET /api/sounds/:filename - Serve sound files
+  if (path.includes('/api/sounds/') && httpMethod === 'GET') {
+    try {
+      const filename = path.split('/api/sounds/')[1];
+      const fs = require('fs');
+      const pathModule = require('path');
+      
+      console.log('[DEBUG] Sound file request for filename:', filename);
+      console.log('[DEBUG] Current working directory:', process.cwd());
+      
+      // Try multiple possible sound file locations
+      const possiblePaths = [
+        pathModule.join(process.cwd(), 'client', 'public', 'sounds', filename),
+        pathModule.join(process.cwd(), 'client', 'build', 'sounds', filename),
+        pathModule.join('/opt/build/repo/client/build/sounds', filename), // Netlify build location
+        pathModule.join(__dirname, '..', '..', 'client', 'public', 'sounds', filename),
+        pathModule.join(__dirname, '..', '..', 'client', 'build', 'sounds', filename),
+      ];
+      
+      console.log('[DEBUG] Checking possible sound file paths:', possiblePaths);
+      
+      let soundPath = null;
+      let soundExists = false;
+      
+      for (const testPath of possiblePaths) {
+        console.log('[DEBUG] Testing path:', testPath);
+        if (fs.existsSync(testPath)) {
+          soundPath = testPath;
+          soundExists = true;
+          console.log('[DEBUG] Found sound file at:', testPath);
+          break;
+        }
+      }
+      
+      // Check if file exists
+      if (!soundExists) {
+        console.log('[DEBUG] Sound file not found in any location');
+        return {
+          statusCode: 404,
+          headers,
+          body: JSON.stringify({
+            error: 'Sound file not found',
+            filename: filename,
+            searchedPaths: possiblePaths
+          })
+        };
+      }
+      
+      // Read and return the file
+      const fileData = fs.readFileSync(soundPath);
+      
+      // Determine correct content type based on extension
+      let contentType = 'audio/mpeg'; // Default for MP3
+      if (filename.endsWith('.wav')) {
+        contentType = 'audio/wav';
+      } else if (filename.endsWith('.ogg')) {
+        contentType = 'audio/ogg';
+      }
+      
+      // Return the sound file with proper headers
+      return {
+        statusCode: 200,
+        headers: {
+          ...headers,
+          'Content-Type': contentType,
+          'Content-Length': fileData.length,
+          'Cache-Control': 'public, max-age=86400' // Cache for 1 day
+        },
+        body: fileData.toString('base64'),
+        isBase64Encoded: true
+      };
+    } catch (error) {
+      console.error('[ERROR] Error serving sound file:', error);
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Error serving sound file',
+          message: error.message
+        })
+      };
+    }
+  }
+  
   // Default response
   return {
     statusCode: 404,
@@ -7468,7 +7552,8 @@ exports.handler = async (event, context) => {
         '/api/parents/:id', 
         '/api/classrooms/:id',
         '/api/messages/inbox',
-        '/api/messages/:id/read'
+        '/api/messages/:id/read',
+        '/api/sounds/:filename'
       ]
     })
   };

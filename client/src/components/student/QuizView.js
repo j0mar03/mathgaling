@@ -3,9 +3,11 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import { getMotivationalQuote } from './QuizEnhancer';
+import { playCorrectSound, playCelebrationSound, isSoundEnabled, setSoundEnabled } from '../../utils/soundUtils';
 import './PracticeQuizView.css'; // Use PracticeQuizView styles
 import './QuizView.css'; // Enhanced QuizView styles
 import './QuizCompleteEnhanced.css'; // Enhanced completion styles
+import './SoundControls.css'; // Sound controls styling
 
 const QuizView = () => {
   const navigate = useNavigate();
@@ -35,6 +37,7 @@ const QuizView = () => {
   const [nextTopicSearchComplete, setNextTopicSearchComplete] = useState(false); // Track if search is done
   const [finalScoreCalculated, setFinalScoreCalculated] = useState(0); // Store final score for consistent display
   const [showTopicInfo, setShowTopicInfo] = useState(false); // Toggle for topic information visibility - default hide
+  const [soundsEnabled, setSoundsEnabled] = useState(isSoundEnabled()); // Sound toggle state
 
   useEffect(() => {
     // Reset state when location changes (new quiz)
@@ -397,6 +400,10 @@ const QuizView = () => {
     
     if (isCorrect) {
       setScore(prev => prev + 1);
+      // Play correct answer sound with a small delay
+      setTimeout(() => {
+        playCorrectSound(0.5);
+      }, 300);
     }
 
     // Store answered question details
@@ -504,6 +511,12 @@ const QuizView = () => {
       
       setQuizCompleted(true);
       
+      // Play celebration sound if score is good (over 75%)
+      const scorePercentage = finalScore * 100;
+      if (scorePercentage >= 75) {
+        playCelebrationSound(0.6);
+      }
+      
       // Don't search for next topic here - let the useEffect handle it
       // This prevents the button from flickering
       if (false) {
@@ -569,6 +582,11 @@ const QuizView = () => {
   const handleRequestHint = () => {
     setShowHint(true);
     setHintRequests(prev => prev + 1);
+  };
+  
+  const toggleSounds = () => {
+    setSoundsEnabled(!soundsEnabled);
+    setSoundEnabled(!soundsEnabled);
   };
 
   const handleBackToDashboard = async () => {
@@ -864,6 +882,13 @@ const QuizView = () => {
                 <span className="btn-icon">📊</span>
                 <span>View Progress</span>
               </button>
+              <button
+                onClick={toggleSounds}
+                className={`nav-button sound-toggle-btn ${soundsEnabled ? 'sound-on' : 'sound-off'}`}
+              >
+                <span className="btn-icon">{soundsEnabled ? '🔊' : '🔇'}</span>
+                <span>{soundsEnabled ? 'Sounds On' : 'Sounds Off'}</span>
+              </button>
             </div>
           </div>
 
@@ -942,16 +967,28 @@ const QuizView = () => {
         <div className="quiz-header-main">
           <h2>Math Mastery Quiz</h2>
           
-          {/* Toggle Button for Topic Information */}
-          {(currentQuestion.knowledge_component || kcDetails) && (
-            <button 
-              className="topic-toggle-btn"
-              onClick={() => setShowTopicInfo(!showTopicInfo)}
-              title={showTopicInfo ? "Hide topic information" : "Show topic information"}
+          <div className="header-controls" style={{ display: "flex", gap: "10px" }}>
+            {/* Sound Toggle Button */}
+            <button
+              className={`sound-toggle-btn ${soundsEnabled ? 'sound-on' : 'sound-off'}`}
+              onClick={toggleSounds}
+              title={soundsEnabled ? "Turn off sounds" : "Turn on sounds"}
             >
-              {showTopicInfo ? '👁️ Hide Topic' : '👁️‍🗨️ Show Topic'}
+              <span className="btn-icon">{soundsEnabled ? '🔊' : '🔇'}</span>
+              <span>{soundsEnabled ? 'Sound On' : 'Sound Off'}</span>
             </button>
-          )}
+            
+            {/* Toggle Button for Topic Information */}
+            {(currentQuestion.knowledge_component || kcDetails) && (
+              <button 
+                className="topic-toggle-btn"
+                onClick={() => setShowTopicInfo(!showTopicInfo)}
+                title={showTopicInfo ? "Hide topic information" : "Show topic information"}
+              >
+                {showTopicInfo ? '👁️ Hide Topic' : '👁️‍🗨️ Show Topic'}
+              </button>
+            )}
+          </div>
         </div>
         
         {/* Knowledge Component Information */}

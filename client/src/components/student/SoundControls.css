@@ -1,0 +1,81 @@
+/* Sound Controls Styling */
+
+.sound-toggle-btn {
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 5px 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.sound-toggle-btn:hover {
+  background: #f5f5f5;
+  border-color: #ccc;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.sound-toggle-btn:active {
+  transform: scale(0.98);
+}
+
+.sound-toggle-btn .btn-icon {
+  font-size: 16px;
+}
+
+/* Sound animation for volume icon */
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+.sound-on .btn-icon {
+  animation: pulse 1.5s infinite;
+  color: #4CAF50;
+}
+
+/* Enhanced sound controls for quiz completion */
+.quiz-completion .sound-toggle-btn {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 8px 15px;
+  color: white;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.quiz-completion .sound-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+/* Kid-friendly styling for elementary students */
+.kid-friendly-sound-toggle {
+  font-family: 'Comic Sans MS', cursive;
+  border-radius: 50px;
+  background: linear-gradient(145deg, #FFD54F, #FFB74D);
+  border: 3px solid #FFA726;
+  padding: 10px 15px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.kid-friendly-sound-toggle:hover {
+  background: linear-gradient(145deg, #FFB74D, #FFA726);
+  transform: translateY(-2px);
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .sound-toggle-btn {
+    padding: 8px;
+  }
+  
+  .sound-toggle-btn span:not(.btn-icon) {
+    display: none;
+  }
+}
