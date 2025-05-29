@@ -2,7 +2,7 @@
 
 .student-dashboard-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 20%, #f093fb 40%, #f5576c 60%, #4facfe 80%, #00f2fe 100%);
+  background: linear-gradient(135deg, #fafbff 0%, #f7f8fc 20%, #fef7ff 40%, #fff5f8 60%, #f0f9ff 80%, #f0fffe 100%);
   background-size: 400% 400%;
   animation: gradientShift 15s ease infinite;
   padding: 24px;
@@ -103,7 +103,7 @@
 .theme-label {
   font-size: 0.9rem;
   font-weight: 600;
-  color: #4a5568;
+  color: #2d3748;
   margin-right: 8px;
 }
 
@@ -186,12 +186,12 @@
   text-align: center;
   margin-bottom: 32px;
   padding: 40px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #f8f9ff 0%, #f5f7ff 100%);
   border-radius: 24px;
-  color: white;
+  color: #1a202c;
   position: relative;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 12px 32px rgba(102, 126, 234, 0.3);
+  border: 1px solid rgba(200, 200, 200, 0.3);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
   overflow: hidden;
 }
 
@@ -213,33 +213,39 @@
 
 /* Enhanced Theme Support */
 .dashboard-header.orange-theme {
-  background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
-  box-shadow: 0 12px 32px rgba(249, 115, 22, 0.3);
+  background: linear-gradient(135deg, #fff9f5 0%, #fef3e2 100%);
+  box-shadow: 0 12px 32px rgba(249, 115, 22, 0.1);
+  border: 1px solid rgba(249, 115, 22, 0.2);
 }
 
 .dashboard-header.blue-theme {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  box-shadow: 0 12px 32px rgba(59, 130, 246, 0.3);
+  background: linear-gradient(135deg, #f0f7ff 0%, #e6f3ff 100%);
+  box-shadow: 0 12px 32px rgba(59, 130, 246, 0.1);
+  border: 1px solid rgba(59, 130, 246, 0.2);
 }
 
 .dashboard-header.green-theme {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
-  box-shadow: 0 12px 32px rgba(5, 150, 105, 0.3);
+  background: linear-gradient(135deg, #f0fdf8 0%, #e6fdf4 100%);
+  box-shadow: 0 12px 32px rgba(5, 150, 105, 0.1);
+  border: 1px solid rgba(5, 150, 105, 0.2);
 }
 
 .dashboard-header.peach-theme {
-  background: linear-gradient(135deg, #fb7185 0%, #f43f5e 100%);
-  box-shadow: 0 12px 32px rgba(251, 113, 133, 0.3);
+  background: linear-gradient(135deg, #fef7f7 0%, #fef1f2 100%);
+  box-shadow: 0 12px 32px rgba(251, 113, 133, 0.1);
+  border: 1px solid rgba(251, 113, 133, 0.2);
 }
 
 .dashboard-header.purple-theme {
-  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-  box-shadow: 0 12px 32px rgba(139, 92, 246, 0.3);
+  background: linear-gradient(135deg, #faf5ff 0%, #f5f1ff 100%);
+  box-shadow: 0 12px 32px rgba(139, 92, 246, 0.1);
+  border: 1px solid rgba(139, 92, 246, 0.2);
 }
 
 .dashboard-header.teal-theme {
-  background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
-  box-shadow: 0 12px 32px rgba(6, 182, 212, 0.3);
+  background: linear-gradient(135deg, #f0fdff 0%, #e6fffe 100%);
+  box-shadow: 0 12px 32px rgba(6, 182, 212, 0.1);
+  border: 1px solid rgba(6, 182, 212, 0.2);
 }
 
 /* Professional Messages Icon */
@@ -249,7 +255,7 @@
   right: 20px;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(10px);
-  color: #4a5568;
+  color: #2d3748;
   border: 2px solid rgba(59, 130, 246, 0.3);
   border-radius: 20px;
   padding: 12px 16px;
@@ -279,7 +285,7 @@
 .icon-label {
   font-size: 0.75rem;
   font-weight: 600;
-  color: #4a5568;
+  color: #2d3748;
 }
 
 .notification-badge {
@@ -307,33 +313,33 @@
 }
 
 .dashboard-header h1 {
-  color: white;
+  color: #1a202c;
   font-size: 2.8rem;
   margin-bottom: 16px;
   font-weight: 800;
-  text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  text-shadow: none;
   letter-spacing: -0.5px;
   position: relative;
   z-index: 1;
 }
 
 .dashboard-header .subtitle {
-  color: rgba(255, 255, 255, 0.95);
+  color: #2d3748;
   font-size: 1.3rem;
   margin-bottom: 16px;
   font-weight: 600;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  text-shadow: none;
   position: relative;
   z-index: 1;
 }
 
 .encouragement-text {
-  color: rgba(255, 255, 255, 0.9);
+  color: #2d3748;
   font-style: italic;
   font-size: 1.2rem;
   margin-bottom: 24px;
   font-weight: 500;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  text-shadow: none;
   position: relative;
   z-index: 1;
 }
@@ -575,7 +581,7 @@
 }
 
 .focus-header p {
-  color: #4a5568;
+  color: #2d3748;
   font-size: 1.2rem;
   margin-bottom: 24px;
   font-weight: 600;
@@ -622,7 +628,7 @@
 }
 
 .focus-description {
-  color: #4a5568;
+  color: #2d3748;
   font-size: 1.2rem;
   line-height: 1.6;
   margin-bottom: 24px;
@@ -658,7 +664,7 @@
 
 .detail-label {
   font-size: 0.85rem;
-  color: #718096;
+  color: #374151;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.8px;
@@ -1110,7 +1116,7 @@
 
 .more-indicator {
   font-size: 1rem;
-  color: #6b7280;
+  color: #374151;
   font-weight: 700;
   margin-left: 6px;
 }
@@ -1137,7 +1143,7 @@
 
 .stat-label {
   font-size: 1rem;
-  color: #4a5568;
+  color: #2d3748;
   font-weight: 600;
   text-transform: none;
   letter-spacing: normal;
@@ -1349,7 +1355,7 @@
   justify-content: center;
   min-height: 60vh;
   text-align: center;
-  color: #6b7280;
+  color: #374151;
 }
 
 .loading h2 {

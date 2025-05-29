@@ -30,7 +30,6 @@ const loadSound = (soundName) => {
     // In development, just use direct path
     : [`/sounds/${soundName}.mp3`];
   
-  console.log(`[Sound] Attempting to load sound "${soundName}" from paths: ${soundPaths.join(", ")}`);
   
   // Try the first path
   const soundPath = soundPaths[0];
@@ -43,7 +42,6 @@ const loadSound = (soundName) => {
     // If we have an alternative path, try that
     if (soundPaths.length > 1) {
       const fallbackPath = soundPaths[1];
-      console.log(`[Sound] Trying fallback path: ${fallbackPath}`);
       
       // Create and configure fallback audio object
       const fallbackAudio = new Audio(fallbackPath);
@@ -246,20 +244,15 @@ export const initSoundSettings = () => {
     const isProduction = window.location.hostname.includes('netlify.app') || 
                         !window.location.hostname.includes('localhost');
     
-    console.log(`[Sound System] Initialized (enabled: ${soundEnabled})`);
-    console.log(`[Sound System] Environment: ${isProduction ? 'Production' : 'Development'}`);
-    console.log(`[Sound System] Hostname: ${window.location.hostname}`);
-    console.log(`[Sound System] Sound path: ${isProduction ? '/api/sounds/...' : '/sounds/...'}`);
     
     // Preload sounds for better performance
     if (soundEnabled) {
       setTimeout(() => {
-        console.log('[Sound System] Preloading sounds...');
+        // Preload sounds silently
         loadSound('correct-answer');
         loadSound('correct-chime');
         loadSound('celebration-kids');
         loadSound('celebration');
-        console.log('[Sound System] Preloading complete');
       }, 2000); // Delay preloading to not block initial rendering
     }
   } catch (e) {
@@ -303,7 +296,6 @@ export const testSoundLoading = async () => {
       const audio = new Audio(path);
       
       // Log the test attempt
-      console.log(`[Sound Test] Testing path: ${path}`);
       
       // Create promise to track loading
       const loadResult = await new Promise((resolve) => {
@@ -352,7 +344,6 @@ export const testSoundLoading = async () => {
         ...loadResult
       });
       
-      console.log(`[Sound Test] Result for ${path}:`, loadResult);
       
     } catch (error) {
       console.error(`[Sound Test] Error testing ${path}:`, error);

@@ -484,11 +484,14 @@ exports.handler = async (event, context) => {
         } else {
           // Create new user record
           if (role === 'admin') {
+            const now = new Date().toISOString();
             const { data, error } = await supabase
               .from('Admins')
               .insert({
                 auth_id: signupEmail,
-                name: userData.name || 'New Admin'
+                name: userData.name || 'New Admin',
+                created_at: now,
+                updated_at: now
               })
               .select()
               .single();
@@ -1000,10 +1003,13 @@ exports.handler = async (event, context) => {
       
       // Create database record
       // Make sure grade_level is a number, not a string
+      const now = new Date().toISOString();
       const dbRecord = {
         auth_id: userData.email,
         name: userData.name,
         password: userData.password || 'temp123', // Add password field
+        created_at: now,
+        updated_at: now,
         ...(role === 'student' && { grade_level: parseInt(userData.grade_level) || 3 }),
         ...(role === 'teacher' && { subject: userData.subject_taught || userData.subject || 'Mathematics' })
       };
