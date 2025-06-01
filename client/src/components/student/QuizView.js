@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
@@ -1181,4 +1181,4 @@ const QuizView = () => {
   );
 };
 
-export default QuizView;
+export default React.memo(QuizView);
