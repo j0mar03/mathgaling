@@ -7,7 +7,7 @@
 }
 
 .app-header .logo {
-  font-size: 22px;
+  font-size: 24px;
   font-weight: bold;
 }
 
@@ -19,11 +19,44 @@
   align-items: flex-start;
 }
 
+.logo-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logo-icon {
+  font-size: 28px;
+  display: inline-block;
+  animation: gentle-bounce 2s infinite ease-in-out;
+}
+
+.logo-title {
+  font-size: 24px;
+  font-weight: bold;
+  color: #ecf0f1;
+}
+
 .logo-subtitle {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: normal;
-  opacity: 0.8;
-  margin-top: 2px;
+  opacity: 0.85;
+  margin-top: 3px;
+  color: #bdc3c7;
+  line-height: 1.2;
+}
+
+/* Kid-friendly gentle bounce animation */
+@keyframes gentle-bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-3px);
+  }
+  60% {
+    transform: translateY(-1px);
+  }
 }
 
 .app-header .main-nav {
@@ -102,6 +135,19 @@
 @media (max-width: 767px) {
   .app-header {
     padding: 15px;
+  }
+  
+  .logo-title {
+    font-size: 20px;
+  }
+  
+  .logo-icon {
+    font-size: 24px;
+  }
+  
+  .logo-subtitle {
+    font-size: 11px;
+    margin-top: 2px;
   }
   
   .app-header .main-nav {

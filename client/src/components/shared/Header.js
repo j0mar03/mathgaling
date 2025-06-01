@@ -63,8 +63,11 @@ const Header = ({ user, logout }) => {
       <div className="container">
         <div className="logo">
           <Link to="/">
-            Math Mastery ITS
-            <span className="logo-subtitle">Philippine Grade 3-4 Mathematics</span>
+            <div className="logo-main">
+              <span className="logo-icon">🎓</span>
+              <span className="logo-title">Mathgaling</span>
+            </div>
+            <span className="logo-subtitle">Intelligent Tutoring System for Philippine Grade Level</span>
           </Link>
         </div>
         

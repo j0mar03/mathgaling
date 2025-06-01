@@ -2454,21 +2454,28 @@ exports.handler = async (event, context) => {
       // Calculate consecutive day streak
       let streak = 0;
       const today = new Date();
-      const todayStr = today.toDateString();
+      
+      // Create a helper function to get date as YYYY-MM-DD string
+      const getDateString = (date) => {
+        return date.toISOString().split('T')[0];
+      };
+      
+      const todayStr = getDateString(today);
       
       // Get unique days with activity, sorted by date (most recent first)
       const uniqueDays = new Set();
       recentResponses?.forEach(response => {
-        const date = new Date(response.created_at).toDateString();
-        uniqueDays.add(date);
+        const date = new Date(response.created_at);
+        const dateStr = getDateString(date);
+        uniqueDays.add(dateStr);
       });
       
-      const sortedDays = Array.from(uniqueDays).sort((a, b) => new Date(b) - new Date(a));
+      const sortedDays = Array.from(uniqueDays).sort((a, b) => b.localeCompare(a));
       
       // Check if there's activity today or yesterday (to handle timezone differences)
       const yesterday = new Date(today);
       yesterday.setDate(yesterday.getDate() - 1);
-      const yesterdayStr = yesterday.toDateString();
+      const yesterdayStr = getDateString(yesterday);
       
       let currentDate = new Date(today);
       let startFromToday = sortedDays.includes(todayStr);
@@ -2482,7 +2489,7 @@ exports.handler = async (event, context) => {
       // Count consecutive days backwards from the starting date
       if (startFromToday) {
         for (let i = 0; i < 30; i++) { // Check up to 30 days back
-          const checkDateStr = currentDate.toDateString();
+          const checkDateStr = getDateString(currentDate);
           if (sortedDays.includes(checkDateStr)) {
             streak++;
             currentDate.setDate(currentDate.getDate() - 1);
@@ -4169,7 +4176,7 @@ exports.handler = async (event, context) => {
               averageScore: averageScore,
               questionsAnswered: questionsAnswered,
               timeSpent: totalTimeSpent,
-              lastActive: lastActive || enrollment.joined_at
+              lastActive: lastActive || null
             },
             intervention: {
               needed: needsIntervention,

@@ -205,7 +205,7 @@ function SignupImproved() {
         <div className="signup-improved-card success-card">
           <div className="success-content">
             <span className="success-icon">🎉</span>
-            <h2>Welcome to MathGaling!</h2>
+            <h2>Welcome to Mathgaling!</h2>
             <p>Your account has been created successfully.</p>
             <p className="redirect-text">Redirecting you to your dashboard...</p>
           </div>

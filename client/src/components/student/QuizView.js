@@ -668,7 +668,7 @@ const QuizView = () => {
   if (loading) {
     return (
       <div className="loading-container">
-        <h2>Loading Math Mastery Quiz...</h2>
+        <h2>Loading Mathgaling Quiz...</h2>
         <p>Please wait while we prepare your questions.</p>
       </div>
     );
@@ -984,7 +984,7 @@ const QuizView = () => {
       
       <div className="quiz-header">
         <div className="quiz-header-main">
-          <h2>Math Mastery Quiz</h2>
+          <h2>Mathgaling Quiz</h2>
           
           <div className="header-controls" style={{ display: "flex", gap: "10px" }}>
             {/* Sound Toggle Button */}
