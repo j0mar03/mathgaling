@@ -259,7 +259,7 @@
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(20px);
   border-radius: 20px;
-  padding: 2rem;
+  padding: 2rem 2rem 120px 2rem; /* Extra bottom padding to prevent content from being hidden behind sticky buttons */
   /* Enhanced shadow and glow for better depth */
   box-shadow: 
     0 10px 40px rgba(0, 0, 0, 0.15),
@@ -557,6 +557,23 @@
   animation: none;
 }
 
+/* Enhanced Quiz Actions - Fixed positioning to prevent button jumping */
+.enhanced-quiz .quiz-actions {
+  position: sticky;
+  bottom: 20px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: 20px;
+  padding: 1.5rem;
+  margin-top: 2rem;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 80px;
+}
+
 /* Enhanced Feedback */
 .enhanced-quiz .feedback {
   background: rgba(255, 255, 255, 0.9);
@@ -787,6 +804,10 @@
   .enhanced-quiz .quiz-actions {
     flex-direction: column;
     gap: 0.3rem;
+    position: sticky;
+    bottom: 10px;
+    padding: 1rem;
+    margin-top: 1.5rem;
   }
   
   .enhanced-quiz .submit-button,

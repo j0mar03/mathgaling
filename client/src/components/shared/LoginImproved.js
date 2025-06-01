@@ -112,7 +112,8 @@ const LoginImproved = () => {
     <div className="login-improved-container">
       <div className="login-improved-card">
         <div className="login-improved-header">
-          <h1>Welcome to MathGaling! 🌟</h1>
+          <img src="/logo.png" alt="MathGaling Logo" className="login-logo" />
+          <h1>Welcome to MathGaling!</h1>
           <p>Your Intelligent Math Learning System</p>
         </div>
 

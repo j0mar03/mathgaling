@@ -114,6 +114,37 @@ const StudentDashboard = () => {
         setLoading(false);
         return;
       }
+      
+      // Check for quiz completion and progression data
+      const progressionData = localStorage.getItem('student_progressed_to_next_topic');
+      const quizCompletedFlag = localStorage.getItem('quiz_completed');
+      const masteryUpdateData = localStorage.getItem('quiz_mastery_update');
+      
+      if (progressionData) {
+        try {
+          const progression = JSON.parse(progressionData);
+          console.log('[StudentDashboard] Processing student progression data:', progression);
+          console.log(`[StudentDashboard] Student completed KC ${progression.completedKcId} and moved to KC ${progression.nextKcId}`);
+          
+          // Clear the progression data to prevent repeated processing
+          localStorage.removeItem('student_progressed_to_next_topic');
+          localStorage.removeItem('quiz_completed');
+          localStorage.removeItem('quiz_mastery_update');
+          
+          // Add a small delay to ensure backend mastery updates have processed
+          console.log('[StudentDashboard] Waiting for backend mastery updates to process...');
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        } catch (err) {
+          console.error('[StudentDashboard] Error processing progression data:', err);
+        }
+      } else if (quizCompletedFlag) {
+        console.log('[StudentDashboard] Quiz completion detected, clearing flags and refreshing...');
+        localStorage.removeItem('quiz_completed');
+        localStorage.removeItem('quiz_mastery_update');
+        // Add a small delay for backend processing
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+      
       try {
         // Fetch student profile (with cache busting for Supabase)
         const studentResponse = await axios.get(`/api/students/${studentId}?_t=${Date.now()}`, {
@@ -590,7 +621,7 @@ const StudentDashboard = () => {
       console.log('[StudentDashboard] Cleaning up engagement interval');
       clearInterval(engagementInterval);
     };
-  }, [studentId, token]); // Add token to dependency array
+  }, [studentId, token, location.search]); // Add location.search to dependency array to trigger refresh when returning from quiz
   
   if (loading) {
     return (
@@ -949,16 +980,6 @@ const StudentDashboard = () => {
               <span className="button-subtitle">{!isCompactView && 'Learn with fun!'}</span>
             </button>
             
-            {!isCompactView && (
-              <button
-                className="action-button progress-button-alt"
-                onClick={() => navigate('/student/progress')}
-              >
-                <span className="button-emoji">🌟</span>
-                <span className="button-text">My Progress</span>
-                <span className="button-subtitle">See your growth!</span>
-              </button>
-            )}
           </div>
         </section>
       </div>

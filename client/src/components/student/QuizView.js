@@ -645,7 +645,7 @@ const QuizView = () => {
     window.location.reload();
   };
 
-  const handleContinueToNextTopic = () => {
+  const handleContinueToNextTopic = async () => {
     if (!nextKcIdForContinuation) {
       console.warn("Cannot continue, next KC ID not available. Navigating to dashboard.");
       // Set completion indicator before navigating
@@ -654,8 +654,28 @@ const QuizView = () => {
       return;
     }
     
-    // Set completion indicator for potential future returns to progress
+    // Set completion indicator and mastery update for current topic
     localStorage.setItem('quiz_completed', 'true');
+    localStorage.setItem('quiz_mastery_update', JSON.stringify({
+      kcId: kcDetails?.id || questions[0]?.knowledge_component?.id,
+      newMastery: actualKcMastery || masteryLevel,
+      timestamp: Date.now()
+    }));
+    
+    // Set progression indicator to track that student moved to next topic
+    localStorage.setItem('student_progressed_to_next_topic', JSON.stringify({
+      completedKcId: kcDetails?.id || questions[0]?.knowledge_component?.id,
+      nextKcId: nextKcIdForContinuation,
+      timestamp: Date.now(),
+      masteryAchieved: (actualKcMastery || masteryLevel) >= 0.75
+    }));
+    
+    console.log(`[QuizView] Student progressing from KC ${kcDetails?.id} to KC ${nextKcIdForContinuation}`);
+    console.log(`[QuizView] Current KC details:`, kcDetails);
+    console.log(`[QuizView] Mastery achieved: ${((actualKcMastery || masteryLevel) * 100).toFixed(1)}%`);
+    
+    // Small delay to ensure all data is saved
+    await new Promise(resolve => setTimeout(resolve, 500));
     
     // Navigate to the quiz with the next KC ID
     const nextUrl = `/student/quiz?kc_id=${nextKcIdForContinuation}&mode=sequential`;

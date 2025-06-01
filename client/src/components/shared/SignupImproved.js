@@ -218,7 +218,8 @@ function SignupImproved() {
     <div className="signup-improved-container">
       <div className="signup-improved-card">
         <div className="signup-improved-header">
-          <h1>Join MathGaling! 🚀</h1>
+          <img src="/logo.png" alt="MathGaling Logo" className="signup-logo" />
+          <h1>Join MathGaling!</h1>
           <p>Start your math learning journey today</p>
         </div>
 
