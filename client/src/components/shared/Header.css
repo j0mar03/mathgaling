@@ -1,10 +1,6 @@
 /* Header Styles */
 .app-header {
   background: linear-gradient(135deg, #0077C2 0%, #00A9E0 100%);
-  background-image: 
-    radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.08) 0%, transparent 50%),
-    radial-gradient(circle at 40% 40%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
   color: #ffffff;
   padding: 15px 0;
   box-shadow: 0 3px 8px rgba(0, 119, 194, 0.3);
