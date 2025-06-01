@@ -64,10 +64,9 @@ const Header = ({ user, logout }) => {
         <div className="logo">
           <Link to="/">
             <div className="logo-main">
-              <span className="logo-icon">🎓</span>
-              <span className="logo-title">Mathgaling</span>
+              <img src="/logo.png" alt="Mathgaling Logo" className="logo-icon" />
+              <span className="logo-subtitle">Intelligent Tutoring System for Philippine Grade Level</span>
             </div>
-            <span className="logo-subtitle">Intelligent Tutoring System for Philippine Grade Level</span>
           </Link>
         </div>
         

@@ -143,7 +143,10 @@ const ClassroomViewEnhanced = () => {
           urgencyReasons.push('Very low mastery level (< 30%)');
         }
         
-        if (daysSinceActive > 7) {
+        if (daysSinceActive >= 999) {
+          urgencyScore += 5;
+          urgencyReasons.push('Student has not started any quizzes yet');
+        } else if (daysSinceActive > 7) {
           urgencyScore += 15;
           urgencyReasons.push(`Inactive for ${daysSinceActive} days`);
         } else if (daysSinceActive > 3) {
@@ -691,6 +694,8 @@ const ClassroomViewEnhanced = () => {
                 lastActive: student.performance?.lastActive,
                 lastActiveDate: lastActive,
                 daysSinceActive: daysSinceActive,
+                masteryLevel: masteryPercent,
+                questionsAnswered: student.performance?.questionsAnswered || student.performance?.completedItems || 0,
                 fullPerformanceData: student.performance
               });
 
@@ -703,8 +708,11 @@ const ClassroomViewEnhanced = () => {
                     <div className="student-info">
                       <div className="student-name">{student.student.name}</div>
                       <div className="student-details">Grade {student.student.grade_level}</div>
-                      {daysSinceActive > 7 && (
+                      {daysSinceActive > 7 && daysSinceActive < 999 && (
                         <div className="inactive-warning">⚠️ Inactive {daysSinceActive} days</div>
+                      )}
+                      {daysSinceActive >= 999 && (
+                        <div className="no-activity-warning">📚 Ready to start learning</div>
                       )}
                     </div>
                   </div>
@@ -732,19 +740,25 @@ const ClassroomViewEnhanced = () => {
                   <div className="col-activity">
                     <div className="activity-info">
                       <div className="activity-date">
-                        {lastActive ? lastActive.toLocaleDateString() : 'Never'}
+                        {lastActive ? lastActive.toLocaleDateString() : 'No Quiz Activity'}
                         {/* Debug display for development */}
                         {process.env.NODE_ENV === 'development' && (
                           <div style={{fontSize: '10px', color: '#666'}}>
-                            Raw: {student.performance?.lastActive || 'null'}
+                            Raw: {student.performance?.lastActive || 'null'} | Questions: {student.performance?.questionsAnswered || student.performance?.completedItems || 0}
                           </div>
                         )}
                       </div>
-                      {daysSinceActive < 999 && (
+                      {daysSinceActive < 999 ? (
                         <div className={`activity-status ${daysSinceActive <= 1 ? 'recent' : daysSinceActive <= 3 ? 'moderate' : 'old'}`}>
                           {daysSinceActive === 0 ? 'Today' : 
                            daysSinceActive === 1 ? 'Yesterday' : 
                            `${daysSinceActive} days ago`}
+                        </div>
+                      ) : (
+                        <div className="activity-status never">
+                          {(student.performance?.questionsAnswered || student.performance?.completedItems || 0) > 0 
+                            ? 'Has attempted questions' 
+                            : 'Not started yet'}
                         </div>
                       )}
                     </div>
