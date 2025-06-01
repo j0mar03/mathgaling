@@ -60,17 +60,32 @@
 
 /* Modern mascot with subtle animation */
 .student-dashboard::before {
-  content: '🎓';
+  content: '';
   position: absolute;
   top: -12px;
   left: -12px;
-  font-size: 2.8rem;
-  background: linear-gradient(135deg, #fff, #f8f9fa);
+  width: 60px;
+  height: 60px;
+  background: url('../../assets/logo.png') center/contain no-repeat;
+  background-color: rgba(255, 255, 255, 0.95);
   border-radius: 50%;
-  padding: 12px;
+  padding: 8px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
   z-index: 10;
-  animation: mascotPulse 4s ease-in-out infinite;
+  animation: gentle-bounce 2s infinite ease-in-out;
+}
+
+/* Kid-friendly gentle bounce animation */
+@keyframes gentle-bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-3px);
+  }
+  60% {
+    transform: translateY(-1px);
+  }
 }
 
 @keyframes mascotPulse {

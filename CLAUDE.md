@@ -280,5 +280,135 @@ Maintain this URL structure: `/student/quiz/{id}?kc_id={kc_id}&mode=sequential&q
 
 The QuizView now provides a seamless, themed experience that perfectly complements the student dashboard while maintaining excellent usability and visual appeal.
 
+## Teacher Classroom Activity Debugging Fix (June 2025)
+
+### Fixed ClassroomViewEnhanced.js Activity Display Issues:
+- **Problem**: "Last Activity" column always showed "Never" and "Inactive days" always showed "999" for all students
+- **Root Cause**: Students had no responses in the database (hadn't taken quizzes yet), so `lastActive` was always null
+- **Investigation**: The API endpoint `/api/classrooms/:id/performance` correctly queries the responses table, but returns null for students with no quiz activity
+
+### Key Fixes Applied:
+
+1. **Enhanced Activity Display Logic**:
+   - Changed "Never" to "No Quiz Activity" for better user understanding
+   - Added fallback logic to check if students have attempted questions even without recorded responses
+   - Shows "Has attempted questions" vs "Not started yet" based on available data
+
+2. **Improved Inactive Days Handling**:
+   - Replaced confusing "999 days" with meaningful messages
+   - Added "📚 Ready to start learning" badge for students who haven't started
+   - Only shows "⚠️ Inactive X days" for students who were previously active
+
+3. **Better User Experience**:
+   - Added development debug information showing raw data and question counts
+   - Enhanced activity status classes with proper styling
+   - Improved intervention logic to handle never-active students appropriately
+
+4. **Enhanced CSS Styling**:
+   - Added `.activity-status.never` styling (dark background, white text)
+   - Added `.no-activity-warning` styling (light grey badge)
+   - Consistent visual hierarchy for different activity states
+
+### Technical Details:
+- **Files Modified**: 
+  - `/client/src/components/teacher/ClassroomViewEnhanced.js`
+  - `/client/src/components/teacher/ClassroomViewEnhanced.css`
+- **API Understanding**: Confirmed `/api/classrooms/:id/performance` works correctly but shows null for students without responses
+- **Data Flow**: Performance data comes from responses table joined with student records
+
+### How It Works Now:
+1. Teacher views classroom with student activity data
+2. Students without quiz responses show "No Quiz Activity" instead of "Never"
+3. Inactive days shows meaningful messages instead of "999"
+4. Visual indicators help teachers identify students who need encouragement to start
+5. Debug information available in development mode for troubleshooting
+
+### Benefits:
+- ✅ Clear, understandable activity status for teachers
+- ✅ Proper handling of students who haven't started quizzes yet
+- ✅ Better visual indicators for intervention needs
+- ✅ Enhanced debugging capabilities for future issues
+- ✅ More professional and user-friendly interface
+
+## Header Enhancement & Logo Integration (June 2025)
+
+### Replaced Graduation Cap with Custom PNG Logo:
+- **Problem**: Generic graduation cap emoji didn't represent the brand
+- **Solution**: Integrated custom "MATH GALING" owl logo with proper file management and styling
+
+### Logo Implementation:
+
+1. **File Management**:
+   - Added `logo.png` to `/client/public/` with proper permissions (644)
+   - Copied logo to `/client/src/assets/` for CSS compatibility
+   - Removed Windows zone identifier files for clean deployment
+
+2. **Header Logo Integration**:
+   - **Header.js**: Replaced `🎓` emoji with `<img src="/logo.png" alt="Mathgaling Logo" className="logo-icon" />`
+   - **Header.css**: Updated CSS from font-size to height/width dimensions
+   - **Removed Duplicate Text**: Eliminated "Mathgaling" text since logo contains it
+   - **Enhanced Subtitle**: Improved styling for "Intelligent Tutoring System for Philippine Grade Level"
+
+3. **Student Dashboard Logo**:
+   - **StudentDashboard.css**: Replaced graduation cap pseudo-element with logo image
+   - **Path**: Used `url('../../assets/logo.png')` for build compatibility
+   - **Animation**: Applied same gentle-bounce animation as header
+   - **Styling**: 60px circular container with white background and shadow
+
+### Background Color Enhancement:
+
+1. **Perfect Neutral Background**:
+   - **Changed from**: Blue gradient (`#0077C2` to `#00A9E0`)
+   - **Changed to**: Snow White to White Smoke gradient (`#FAFAFA` to `#F5F5F5`)
+   - **Rationale**: Neutral background makes colorful owl logo stand out vividly
+
+2. **Typography Updates**:
+   - **Text Color**: Updated to `#2c3e50` (dark) for excellent contrast
+   - **Navigation**: Dark text with subtle hover effects (`rgba(44, 62, 80, 0.1)`)
+   - **Active States**: White text on dark background for clear indication
+   - **Subtitle**: Enhanced color (`#4a5568`) and letter spacing for better readability
+
+### Logo Size Enhancement for Readability:
+
+1. **Significantly Larger Logo**:
+   - **Desktop**: Increased from 32px to **56px** (75% larger)
+   - **Mobile**: Increased from 28px to **42px** (50% larger)
+   - **Result**: "MATH GALING" text in logo now clearly readable
+
+2. **Improved Layout**:
+   - **Desktop**: Logo and subtitle side-by-side with 16px spacing
+   - **Mobile**: Stacked layout with 8px spacing
+   - **Subtitle**: Increased font size and improved typography (15px desktop, 12px mobile)
+
+### Technical Implementation:
+- **Files Modified**:
+  - `/client/src/components/shared/Header.js`
+  - `/client/src/components/shared/Header.css`
+  - `/client/src/components/student/StudentDashboard.css`
+- **Animation**: Maintained gentle-bounce animation across both locations
+- **Responsive**: Proper scaling across all device sizes
+- **Build Compatibility**: Ensured proper asset paths for production builds
+
+### Visual Design Principles:
+- **Maximum Icon Pop**: Neutral background showcases every color in the owl logo
+- **Perfect Readability**: All elements including red "MATH" and blue "GALING" text are crystal clear
+- **Clean & Modern**: Professional yet friendly appearance suitable for Grade 3-4 students
+- **Brand Consistency**: Logo appears in both header and student dashboard with same animation
+
+### Benefits Achieved:
+- 🦉 **Brand Identity**: Custom owl logo reinforces "wisdom and learning" theme
+- 📖 **Text Readability**: Logo text clearly visible at appropriate sizes
+- 🎨 **Visual Harmony**: Neutral background prevents color clashing with colorful logo
+- 👨‍🎓 **Kid-Friendly**: Playful bouncing animation engages young learners
+- 📱 **Responsive Design**: Perfect appearance across all devices
+- ✨ **Professional Polish**: Cohesive branding throughout the application
+
+The header now perfectly showcases the colorful "MATH GALING" owl logo with maximum visual impact and excellent readability, creating a strong brand presence throughout the application.
+
 ## Memories
-- Add to memory
+- Header background color changed to neutral Snow White/White Smoke gradient for maximum logo visibility
+- Custom PNG logo integrated in header and student dashboard with bouncing animation
+- Logo sized up significantly (56px desktop, 42px mobile) for text readability
+- ClassroomViewEnhanced activity display fixed - shows meaningful messages instead of "Never" and "999 days"
+- All changes tested and build successfully
+- Logo files properly managed with correct permissions for deployment
