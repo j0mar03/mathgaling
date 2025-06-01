@@ -139,20 +139,28 @@ const StudentDashboard = () => {
         }
 
         // Fetch kid-friendly next activity recommendation
-        const activityResponse = await axios.get(`/api/students/${studentId}/kid-friendly-next-activity`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        const fetchedNextActivity = activityResponse.data;
-        console.log('[StudentDashboard] Kid-friendly next activity response:', {
-          type: fetchedNextActivity?.type,
-          kc_id: fetchedNextActivity?.kc_id,
-          kc_name: fetchedNextActivity?.kc_name,
-          message: fetchedNextActivity?.message,
-          completed_sequence: fetchedNextActivity?.completed_sequence,
-          all_mastered: fetchedNextActivity?.all_mastered,
-          fullResponse: fetchedNextActivity
-        });
-        setNextActivity(fetchedNextActivity);
+        let fetchedNextActivity = null;
+        try {
+          const activityResponse = await axios.get(`/api/students/${studentId}/kid-friendly-next-activity`, {
+            headers: { Authorization: `Bearer ${token}` },
+            timeout: 10000 // 10 second timeout
+          });
+          fetchedNextActivity = activityResponse.data;
+          console.log('[StudentDashboard] Kid-friendly next activity response:', {
+            type: fetchedNextActivity?.type,
+            kc_id: fetchedNextActivity?.kc_id,
+            kc_name: fetchedNextActivity?.kc_name,
+            message: fetchedNextActivity?.message,
+            completed_sequence: fetchedNextActivity?.completed_sequence,
+            all_mastered: fetchedNextActivity?.all_mastered,
+            fullResponse: fetchedNextActivity
+          });
+          setNextActivity(fetchedNextActivity);
+        } catch (activityErr) {
+          console.error('[StudentDashboard] Error fetching next activity:', activityErr);
+          fetchedNextActivity = null;
+          setNextActivity(null);
+        }
 
         // Fetch consolidated dashboard data (with cache busting for Supabase)
         const dashboardResponse = await axios.get(`/api/students/${studentId}/dashboard?_t=${Date.now()}`, {
@@ -250,7 +258,14 @@ const StudentDashboard = () => {
         
         // PRIORITY 1: Use the kid-friendly-next-activity API response 
         // This should be the primary source of truth for what the student should do next
-        if (fetchedNextActivity && fetchedNextActivity.type) {
+        console.log('[StudentDashboard] Checking fetchedNextActivity:', {
+          exists: !!fetchedNextActivity,
+          hasType: !!fetchedNextActivity?.type,
+          hasKcId: !!fetchedNextActivity?.kc_id,
+          data: fetchedNextActivity
+        });
+        
+        if (fetchedNextActivity && (fetchedNextActivity.type || fetchedNextActivity.kc_id)) {
           console.log('[StudentDashboard] Processing kid-friendly-next-activity API response:', fetchedNextActivity);
           
           // Handle completion scenarios (all topics mastered)
@@ -724,7 +739,9 @@ const StudentDashboard = () => {
           <div className="progress-stats">
             <div className="streak-container">
               <span className="streak-icon">🔥</span>
-              <span className="streak-count">{learningStreak} Days</span>
+              <span className="streak-count">
+                {learningStreak > 0 ? `${learningStreak} days in a row!` : 'Start your streak today!'}
+              </span>
             </div>
             
             <div className="daily-progress">
@@ -747,7 +764,7 @@ const StudentDashboard = () => {
             <div className="focus-header">
               <h2>
                 {isCompactView ? (
-                  <><span className="number-blocks">1️⃣2️⃣3️⃣</span> Let's Start!</>
+                  <><span className="number-blocks">🎯📚✨</span> Let's Start!</>
                 ) : (
                   <><span className="adventure-icon">🚀</span> Your Next Math Adventure!</>
                 )}
@@ -801,14 +818,13 @@ const StudentDashboard = () => {
                         // Use the KC ID from currentLearningStep for targeted practice
                         let quizUrl = '/student/quiz?mode=sequential&limit=8';
                         
-                        if (currentLearningStep.kc_id) {
-                          // Use kc_id if available (from the kid-friendly-next-activity API)
-                          quizUrl = `/student/quiz?kc_id=${currentLearningStep.kc_id}&mode=sequential&limit=8`;
-                          console.log('[StudentDashboard] Using API-provided KC ID:', currentLearningStep.kc_id);
-                        } else if (currentLearningStep.id) {
-                          // Use id as KC ID (fallback)
-                          quizUrl = `/student/quiz?kc_id=${currentLearningStep.id}&mode=sequential&limit=8`;
-                          console.log('[StudentDashboard] Using fallback KC ID:', currentLearningStep.id);
+                        const kcIdToUse = currentLearningStep.kc_id || currentLearningStep.id;
+                        
+                        if (kcIdToUse) {
+                          quizUrl = `/student/quiz?kc_id=${kcIdToUse}&mode=sequential&limit=8`;
+                          console.log('[StudentDashboard] Using KC ID:', kcIdToUse, 'from:', currentLearningStep.kc_id ? 'API kc_id' : 'fallback id');
+                        } else {
+                          console.warn('[StudentDashboard] No KC ID found in currentLearningStep:', currentLearningStep);
                         }
                         
                         console.log('[StudentDashboard] Navigating to quiz with URL:', quizUrl);

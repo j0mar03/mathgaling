@@ -2,7 +2,7 @@
 
 .classroom-enhanced {
   min-height: 100vh;
-  background: #f8f9fa;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
   padding: 20px;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
@@ -1021,6 +1021,25 @@
   border: 1px solid #34495e;
   color: white;
   font-weight: 700;
+}
+
+/* Activity type indicators */
+.activity-type {
+  margin-left: 8px;
+  font-size: 0.9em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.activity-type.quiz {
+  background: rgba(40, 167, 69, 0.2);
+  color: #28a745;
+}
+
+.activity-type.session {
+  background: rgba(0, 123, 255, 0.2);
+  color: #007bff;
 }
 
 .no-activity-warning {

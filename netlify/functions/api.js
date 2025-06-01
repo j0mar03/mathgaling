@@ -4149,17 +4149,43 @@ exports.handler = async (event, context) => {
             .order('created_at', { ascending: false })
             .limit(50);
           
+          // Get engagement metrics for session activity tracking
+          const { data: engagementMetrics } = await supabase
+            .from('engagement_metrics')
+            .select('created_at, session_id, time_on_task')
+            .eq('student_id', studentId)
+            .order('created_at', { ascending: false })
+            .limit(10);
+          
           // Calculate performance metrics
           let questionsAnswered = 0;
           let correctAnswers = 0;
           let totalTimeSpent = 0;
           let lastActive = null;
+          let lastQuizActivity = null;
+          let lastSessionActivity = null;
           
+          // Process quiz responses
           if (recentResponses && recentResponses.length > 0) {
             questionsAnswered = recentResponses.length;
             correctAnswers = recentResponses.filter(r => r.correct).length;
             totalTimeSpent = recentResponses.reduce((sum, r) => sum + (r.time_spent || 0), 0);
-            lastActive = recentResponses[0].created_at;
+            lastQuizActivity = recentResponses[0].created_at;
+          }
+          
+          // Process engagement metrics (session activity)
+          if (engagementMetrics && engagementMetrics.length > 0) {
+            lastSessionActivity = engagementMetrics[0].created_at;
+          }
+          
+          // Determine most recent activity (quiz or session)
+          if (lastQuizActivity && lastSessionActivity) {
+            lastActive = new Date(lastQuizActivity) > new Date(lastSessionActivity) ? 
+              lastQuizActivity : lastSessionActivity;
+          } else if (lastQuizActivity) {
+            lastActive = lastQuizActivity;
+          } else if (lastSessionActivity) {
+            lastActive = lastSessionActivity;
           }
           
           const averageScore = questionsAnswered > 0 ? (correctAnswers / questionsAnswered) * 100 : 0;
@@ -4176,7 +4202,10 @@ exports.handler = async (event, context) => {
               averageScore: averageScore,
               questionsAnswered: questionsAnswered,
               timeSpent: totalTimeSpent,
-              lastActive: lastActive || null
+              lastActive: lastActive || null,
+              lastQuizActivity: lastQuizActivity || null,
+              lastSessionActivity: lastSessionActivity || null,
+              activityType: lastActive ? (lastActive === lastQuizActivity ? 'quiz' : 'session') : null
             },
             intervention: {
               needed: needsIntervention,

@@ -740,11 +740,22 @@ const ClassroomViewEnhanced = () => {
                   <div className="col-activity">
                     <div className="activity-info">
                       <div className="activity-date">
-                        {lastActive ? lastActive.toLocaleDateString() : 'No Quiz Activity'}
-                        {/* Debug display for development */}
+                        {lastActive ? (
+                          <>
+                            {lastActive.toLocaleDateString()}
+                            {student.performance?.activityType && (
+                              <span className={`activity-type ${student.performance.activityType}`}>
+                                {student.performance.activityType === 'quiz' ? '📝' : '💻'}
+                              </span>
+                            )}
+                          </>
+                        ) : 'No Activity'}
+                        {/* Enhanced debug display for development */}
                         {process.env.NODE_ENV === 'development' && (
                           <div style={{fontSize: '10px', color: '#666'}}>
-                            Raw: {student.performance?.lastActive || 'null'} | Questions: {student.performance?.questionsAnswered || student.performance?.completedItems || 0}
+                            Quiz: {student.performance?.lastQuizActivity ? new Date(student.performance.lastQuizActivity).toLocaleDateString() : 'None'} | 
+                            Session: {student.performance?.lastSessionActivity ? new Date(student.performance.lastSessionActivity).toLocaleDateString() : 'None'} | 
+                            Questions: {student.performance?.questionsAnswered || 0}
                           </div>
                         )}
                       </div>
@@ -756,9 +767,11 @@ const ClassroomViewEnhanced = () => {
                         </div>
                       ) : (
                         <div className="activity-status never">
-                          {(student.performance?.questionsAnswered || student.performance?.completedItems || 0) > 0 
+                          {student.performance?.lastSessionActivity && !student.performance?.lastQuizActivity
+                            ? '📚 Logged in but no quizzes' 
+                            : (student.performance?.questionsAnswered || student.performance?.completedItems || 0) > 0 
                             ? 'Has attempted questions' 
-                            : 'Not started yet'}
+                            : '🎯 Ready to start learning'}
                         </div>
                       )}
                     </div>

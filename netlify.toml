@@ -12,6 +12,13 @@
   # Node version
   NODE_VERSION = "18"
 
+# Redirect API image files to Netlify function with proper path preservation
+[[redirects]]
+  from = "/api/images/*"
+  to = "/.netlify/functions/api/images/:splat"
+  status = 200
+  force = true
+
 # Redirect API sound files to Netlify function with proper path preservation
 [[redirects]]
   from = "/api/sounds/*"
