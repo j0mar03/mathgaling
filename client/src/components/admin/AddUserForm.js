@@ -63,7 +63,7 @@ const AddUserForm = ({ onUserAdded, onCancel }) => {
         // Set login credential based on role and preference
         if (role === 'student' && useUsername && username) {
             payload.username = username;
-            payload.email = `${username}@student.mathgaling.com`; // Auto-generate email
+            payload.email = `${username}@student.mathtagumpay.com`; // Auto-generate email
         } else {
             payload.email = email;
         }

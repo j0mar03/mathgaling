@@ -438,7 +438,7 @@ exports.handler = async (event, context) => {
       // For students with username, create a standardized email
       let signupEmail = userData.email;
       if (userData.username && !userData.email) {
-        signupEmail = `${userData.username}@student.mathgaling.com`;
+        signupEmail = `${userData.username}@student.mathtagumpay.com`;
       }
       
       // Create auth user in Supabase
@@ -604,7 +604,7 @@ exports.handler = async (event, context) => {
       let loginEmail = email;
       if (username && !email) {
         // For students, create a standardized email from username
-        loginEmail = `${username}@student.mathgaling.com`;
+        loginEmail = `${username}@student.mathtagumpay.com`;
         console.log('🎓 Student login with username:', username, '-> email:', loginEmail);
       }
       

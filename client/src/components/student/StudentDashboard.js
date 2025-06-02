@@ -169,28 +169,56 @@ const StudentDashboard = () => {
           setUnreadMessages(0); // Set to 0 as fallback
         }
 
-        // Fetch kid-friendly next activity recommendation
+        // Check if there's QuizView KC detail stored in localStorage first
         let fetchedNextActivity = null;
-        try {
-          const activityResponse = await axios.get(`/api/students/${studentId}/kid-friendly-next-activity`, {
-            headers: { Authorization: `Bearer ${token}` },
-            timeout: 10000 // 10 second timeout
-          });
-          fetchedNextActivity = activityResponse.data;
-          console.log('[StudentDashboard] Kid-friendly next activity response:', {
-            type: fetchedNextActivity?.type,
-            kc_id: fetchedNextActivity?.kc_id,
-            kc_name: fetchedNextActivity?.kc_name,
-            message: fetchedNextActivity?.message,
-            completed_sequence: fetchedNextActivity?.completed_sequence,
-            all_mastered: fetchedNextActivity?.all_mastered,
-            fullResponse: fetchedNextActivity
-          });
-          setNextActivity(fetchedNextActivity);
-        } catch (activityErr) {
-          console.error('[StudentDashboard] Error fetching next activity:', activityErr);
-          fetchedNextActivity = null;
-          setNextActivity(null);
+        const storedKcDetails = localStorage.getItem('last_quiz_kc_details');
+        
+        if (storedKcDetails) {
+          try {
+            const kcDetails = JSON.parse(storedKcDetails);
+            console.log('[StudentDashboard] Using stored KC details from QuizView:', kcDetails);
+            
+            // Format the data to match expected structure
+            fetchedNextActivity = {
+              kc_id: kcDetails.id,
+              kc_name: kcDetails.name,
+              curriculum_code: kcDetails.curriculum_code,
+              description: kcDetails.description,
+              type: 'kc'
+            };
+            
+            setNextActivity(fetchedNextActivity);
+            // Remove the stored KC details to ensure fresh data next time
+            localStorage.removeItem('last_quiz_kc_details');
+          } catch (parseErr) {
+            console.error('[StudentDashboard] Error parsing stored KC details:', parseErr);
+            // Fall back to API if parsing fails
+          }
+        }
+        
+        // If no stored KC details, fall back to kid-friendly next activity API
+        if (!fetchedNextActivity) {
+          try {
+            const activityResponse = await axios.get(`/api/students/${studentId}/kid-friendly-next-activity`, {
+              headers: { Authorization: `Bearer ${token}` },
+              timeout: 10000 // 10 second timeout
+            });
+            fetchedNextActivity = activityResponse.data;
+            console.log('[StudentDashboard] Kid-friendly next activity response:', {
+              type: fetchedNextActivity?.type,
+              kc_id: fetchedNextActivity?.kc_id,
+              kc_name: fetchedNextActivity?.kc_name,
+              message: fetchedNextActivity?.message,
+              completed_sequence: fetchedNextActivity?.completed_sequence,
+              all_mastered: fetchedNextActivity?.all_mastered,
+              fullResponse: fetchedNextActivity
+            });
+            setNextActivity(fetchedNextActivity);
+          } catch (activityErr) {
+            console.error('[StudentDashboard] Error fetching next activity:', activityErr);
+            fetchedNextActivity = null;
+            setNextActivity(null);
+          }
         }
 
         // Fetch consolidated dashboard data (with cache busting for Supabase)
@@ -626,7 +654,7 @@ const StudentDashboard = () => {
   if (loading) {
     return (
       <div className="loading">
-        <h2>Loading your fun math adventure...</h2>
+        <h2>Loading your Math Tagumpay adventure...</h2>
         <p>Please wait while we prepare your learning journey!</p>
         <div className="loading-animation">🌟</div>
       </div>

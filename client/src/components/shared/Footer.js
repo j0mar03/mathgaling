@@ -6,7 +6,7 @@ const Footer = () => {
   return (
     <footer className="app-footer">
       <div className="footer-content">
-        <p>&copy; {currentYear} Mathgaling - Intelligent Tutoring System for Philippine Grade Level</p>
+        <p>&copy; {currentYear} Math Tagumpay - Intelligent Tutoring System for Philippine Grade Level</p>
         <div className="footer-links">
           <a href="#about">About</a>
           <a href="#privacy">Privacy Policy</a>

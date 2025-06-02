@@ -199,7 +199,7 @@ const QuizView = () => {
           const calculatedMasteryLevel = questions.length > 0 ? score / questions.length : 0;
           
           // Use actual KC mastery if available, otherwise fall back to quiz score
-          // For Math Mastery quizzes, if KC mastery update fails, use quiz score if it's good
+          // For Math Tagumpay quizzes, if KC mastery update fails, use quiz score if it's good
           const effectiveMastery = actualKcMastery > 0 ? actualKcMastery : calculatedMasteryLevel;
           
           // If quiz score is perfect but KC mastery seems low, trust the quiz score
@@ -619,6 +619,15 @@ const QuizView = () => {
       timestamp: Date.now()
     }));
     
+    // Store KC details for dashboard to use directly
+    if (kcDetails) {
+      console.log("[QuizView] Storing KC details for dashboard:", kcDetails);
+      localStorage.setItem('last_quiz_kc_details', JSON.stringify(kcDetails));
+    } else if (questions[0]?.knowledge_component) {
+      console.log("[QuizView] Storing question KC for dashboard:", questions[0].knowledge_component);
+      localStorage.setItem('last_quiz_kc_details', JSON.stringify(questions[0].knowledge_component));
+    }
+    
     // Force refresh of dashboard data by adding timestamp
     navigate('/student?refresh=' + Date.now());
   };
@@ -662,6 +671,15 @@ const QuizView = () => {
       timestamp: Date.now()
     }));
     
+    // Store KC details for dashboard to use directly
+    if (kcDetails) {
+      console.log("[QuizView] Storing KC details for dashboard on continuation:", kcDetails);
+      localStorage.setItem('last_quiz_kc_details', JSON.stringify(kcDetails));
+    } else if (questions[0]?.knowledge_component) {
+      console.log("[QuizView] Storing question KC for dashboard on continuation:", questions[0].knowledge_component);
+      localStorage.setItem('last_quiz_kc_details', JSON.stringify(questions[0].knowledge_component));
+    }
+    
     // Set progression indicator to track that student moved to next topic
     localStorage.setItem('student_progressed_to_next_topic', JSON.stringify({
       completedKcId: kcDetails?.id || questions[0]?.knowledge_component?.id,
@@ -688,7 +706,7 @@ const QuizView = () => {
   if (loading) {
     return (
       <div className="loading-container">
-        <h2>Loading Mathgaling Quiz...</h2>
+        <h2>Loading Math Tagumpay Quiz...</h2>
         <p>Please wait while we prepare your questions.</p>
       </div>
     );
@@ -1004,7 +1022,7 @@ const QuizView = () => {
       
       <div className="quiz-header">
         <div className="quiz-header-main">
-          <h2>Mathgaling Quiz</h2>
+          <h2>Math Tagumpay Quiz</h2>
           
           <div className="header-controls" style={{ display: "flex", gap: "10px" }}>
             {/* Sound Toggle Button */}

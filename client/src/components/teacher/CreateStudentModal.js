@@ -48,7 +48,7 @@ const CreateStudentModal = ({ onClose, onSuccess, classroomId }) => {
   const generateEmail = () => {
     const firstName = formData.name.split(' ')[0].toLowerCase();
     const randomNum = Math.floor(Math.random() * 9999);
-    const email = `${firstName}${randomNum}@mathgaling.student`;
+    const email = `${firstName}${randomNum}@mathtagumpay.student`;
     setFormData(prev => ({ ...prev, email }));
   };
 
@@ -68,7 +68,7 @@ const CreateStudentModal = ({ onClose, onSuccess, classroomId }) => {
       if (useUsername && formData.username) {
         // New style: username-based login
         signupData.username = formData.username;
-        signupData.email = `${formData.username}@student.mathgaling.com`;
+        signupData.email = `${formData.username}@student.mathtagumpay.com`;
       } else {
         // Legacy style: email-based login
         signupData.email = formData.email;
@@ -127,7 +127,7 @@ const CreateStudentModal = ({ onClose, onSuccess, classroomId }) => {
         ...signupResponse.data.student,
         credentials: {
           username: useUsername ? formData.username : undefined,
-          email: useUsername ? `${formData.username}@student.mathgaling.com` : formData.email,
+          email: useUsername ? `${formData.username}@student.mathtagumpay.com` : formData.email,
           password: formData.password,
           loginMethod: useUsername ? 'username' : 'email'
         }
@@ -361,7 +361,7 @@ const CreateStudentModal = ({ onClose, onSuccess, classroomId }) => {
                     <span>Username:</span> {formData.username}
                   </div>
                   <div className="credential-item">
-                    <span>Auto-generated Email:</span> {formData.username}@student.mathgaling.com
+                    <span>Auto-generated Email:</span> {formData.username}@student.mathtagumpay.com
                   </div>
                 </>
               ) : (

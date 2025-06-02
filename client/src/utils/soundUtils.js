@@ -1,5 +1,5 @@
 /**
- * Sound utilities for the MathGaling application
+ * Sound utilities for the Math Tagumpay application
  * Provides functions to play audio feedback for elementary students
  */
 

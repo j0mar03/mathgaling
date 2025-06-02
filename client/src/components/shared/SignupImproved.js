@@ -153,7 +153,7 @@ function SignupImproved() {
       // Role-specific data
       if (selectedRole === 'student') {
         signupData.username = formData.username;
-        signupData.email = `${formData.username}@student.mathgaling.com`; // Generate email from username
+        signupData.email = `${formData.username}@student.mathtagumpay.com`; // Generate email from username
         signupData.grade_level = parseInt(formData.grade_level);
         if (formData.parentEmail) {
           signupData.parent_email = formData.parentEmail;
@@ -205,7 +205,7 @@ function SignupImproved() {
         <div className="signup-improved-card success-card">
           <div className="success-content">
             <span className="success-icon">🎉</span>
-            <h2>Welcome to Mathgaling!</h2>
+            <h2>Welcome to Math Tagumpay!</h2>
             <p>Your account has been created successfully.</p>
             <p className="redirect-text">Redirecting you to your dashboard...</p>
           </div>
@@ -218,8 +218,8 @@ function SignupImproved() {
     <div className="signup-improved-container">
       <div className="signup-improved-card">
         <div className="signup-improved-header">
-          <img src="/logo.png" alt="MathGaling Logo" className="signup-logo" />
-          <h1>Join MathGaling!</h1>
+          <img src="/logo.png" alt="Math Tagumpay Logo" className="signup-logo" />
+          <h1>Join Math Tagumpay!</h1>
           <p>Start your math learning journey today</p>
         </div>
 
@@ -455,7 +455,7 @@ function SignupImproved() {
                       name="childUsername"
                       value={formData.childUsername}
                       onChange={handleInputChange}
-                      placeholder="Your child's MathGaling username"
+                      placeholder="Your child's Math Tagumpay username"
                       disabled={loading}
                       className="friendly-input"
                     />

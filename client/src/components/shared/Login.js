@@ -52,7 +52,7 @@ const Login = () => {
     <div className="login-container">
       <div className="login-card">
         <div className="login-header">
-          <h1>Welcome to Mathgaling!</h1>
+          <h1>Welcome to Math Tagumpay!</h1>
           <p>Let's start your math adventure!</p>
         </div>
         
