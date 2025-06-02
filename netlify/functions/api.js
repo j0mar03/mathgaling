@@ -2333,17 +2333,59 @@ exports.handler = async (event, context) => {
             
             // Check if this KC is mastered
             const mastery = recentKC.knowledge_states?.[0]?.p_mastery || 0;
+            console.log(`[Netlify] Current mastery for KC ${recentKC.curriculum_code} is ${mastery * 100}%`);
             
-            if (mastery < 0.95) {
+            const masteryThreshold = 0.95; // 95% mastery threshold
+            
+            if (mastery < masteryThreshold) {
               // Continue with this KC since it's not mastered yet
               nextKC = recentKC;
               console.log(`[Netlify] Using recent quiz KC as next activity: ${nextKC.name} (mastery: ${mastery})`);
             } else {
               // KC is mastered, find the next one in sequence
               const recentIndex = gradeKCs.findIndex(kc => kc.id === recentKC.id);
+              console.log(`[Netlify] KC index: ${recentIndex}, total KCs: ${gradeKCs.length}`);
+              
               if (recentIndex >= 0 && recentIndex < gradeKCs.length - 1) {
+                // Get next KC in sequence
                 nextKC = gradeKCs[recentIndex + 1];
-                console.log(`[Netlify] Recent KC mastered, moving to next: ${nextKC.name}`);
+                
+                // Check if the next KC already has some mastery
+                const nextKcMastery = nextKC.knowledge_states?.[0]?.p_mastery || 0;
+                console.log(`[Netlify] KC ${recentKC.curriculum_code} mastered at ${mastery * 100}%. Next KC ${nextKC.curriculum_code} has mastery of ${nextKcMastery * 100}%`);
+                
+                // If next KC is also mastered, continue searching
+                if (nextKcMastery >= masteryThreshold) {
+                  console.log(`[Netlify] Next KC ${nextKC.curriculum_code} is also mastered, continuing search...`);
+                  nextKC = null; // Reset so we'll continue searching
+                  
+                  // Search for the first non-mastered KC after the recent one
+                  for (let i = recentIndex + 1; i < gradeKCs.length; i++) {
+                    const candidateKc = gradeKCs[i];
+                    const candidateMastery = candidateKc.knowledge_states?.[0]?.p_mastery || 0;
+                    
+                    if (candidateMastery < masteryThreshold) {
+                      nextKC = candidateKc;
+                      console.log(`[Netlify] Found next unmastered KC: ${nextKC.curriculum_code}`);
+                      break;
+                    }
+                  }
+                } else {
+                  console.log(`[Netlify] Using next KC in sequence: ${nextKC.curriculum_code}`);
+                }
+              } else if (recentIndex === gradeKCs.length - 1) {
+                console.log(`[Netlify] Student has mastered the last KC in sequence: ${recentKC.curriculum_code}`);
+                return {
+                  statusCode: 200,
+                  headers,
+                  body: JSON.stringify({
+                    type: 'quiz',
+                    kc_id: null,
+                    message: 'Congratulations! You completed all topics!',
+                    completed_sequence: true,
+                    all_mastered: true
+                  })
+                };
               }
             }
           }

@@ -183,7 +183,7 @@ router.get('/:id/kid-friendly-next-activity', optionalAuth, async (req, res) => 
 
     let nextKc = null;
     
-    // NEW: First check for most recent quiz KC from responses
+    // First check for most recent quiz KC from responses
     try {
       // Get the student's most recent response to identify the KC they were working on
       const recentResponse = await Response.findOne({
@@ -204,17 +204,49 @@ router.get('/:id/kid-friendly-next-activity', optionalAuth, async (req, res) => 
         if (recentKc) {
           console.log(`[KidFriendlyNextActivity] Found recent quiz KC: ${recentKc.curriculum_code} (ID: ${recentKc.id})`);
           
-          // Continue with this KC if mastery is not yet achieved
+          // Get mastery for this KC
           const mastery = masteryMap[recentKc.id] || 0;
+          console.log(`[KidFriendlyNextActivity] Current mastery for KC ${recentKc.curriculum_code} is ${mastery * 100}%`);
+          
           if (mastery < masteryThreshold) {
+            // Continue with this KC if mastery is not yet achieved
             nextKc = recentKc;
             console.log(`[KidFriendlyNextActivity] Using recent quiz KC: ${nextKc.curriculum_code} (Mastery: ${mastery})`);
           } else {
             // If mastered, find the next one in sequence
             const recentKcIndex = allGradeKCs.findIndex(kc => kc.id === recentKc.id);
+            console.log(`[KidFriendlyNextActivity] KC index: ${recentKcIndex}, total KCs: ${allGradeKCs.length}`);
+            
             if (recentKcIndex !== -1 && recentKcIndex < allGradeKCs.length - 1) {
+              // Get next KC in sequence
               nextKc = allGradeKCs[recentKcIndex + 1];
-              console.log(`[KidFriendlyNextActivity] Recent KC mastered, moving to next: ${nextKc.curriculum_code}`);
+              
+              // Check if the next KC already has some mastery
+              const nextKcMastery = masteryMap[nextKc.id] || 0;
+              console.log(`[KidFriendlyNextActivity] KC ${recentKc.curriculum_code} mastered at ${mastery * 100}%. Next KC ${nextKc.curriculum_code} has mastery of ${nextKcMastery * 100}%`);
+              
+              // If next KC is also mastered, continue searching
+              if (nextKcMastery >= masteryThreshold) {
+                console.log(`[KidFriendlyNextActivity] Next KC ${nextKc.curriculum_code} is also mastered, continuing search...`);
+                nextKc = null; // Reset so we'll continue searching
+                
+                // Search for the first non-mastered KC after the recent one
+                for (let i = recentKcIndex + 1; i < allGradeKCs.length; i++) {
+                  const candidateKc = allGradeKCs[i];
+                  const candidateMastery = masteryMap[candidateKc.id] || 0;
+                  
+                  if (candidateMastery < masteryThreshold) {
+                    nextKc = candidateKc;
+                    console.log(`[KidFriendlyNextActivity] Found next unmastered KC: ${nextKc.curriculum_code}`);
+                    break;
+                  }
+                }
+              } else {
+                console.log(`[KidFriendlyNextActivity] Using next KC in sequence: ${nextKc.curriculum_code}`);
+              }
+            } else if (recentKcIndex === allGradeKCs.length - 1) {
+              console.log(`[KidFriendlyNextActivity] Student has mastered the last KC in sequence: ${recentKc.curriculum_code}`);
+              return res.json({ message: "Congratulations! You've completed all topics in this sequence!", completed_sequence: true, all_mastered: true });
             }
           }
         }

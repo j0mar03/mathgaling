@@ -296,7 +296,7 @@ const StudentDashboard = () => {
           data: fetchedNextActivity
         });
         
-        if (fetchedNextActivity && (fetchedNextActivity.type || fetchedNextActivity.kc_id)) {
+        if (fetchedNextActivity && (fetchedNextActivity.type || fetchedNextActivity.kc_id || fetchedNextActivity.completed_sequence)) {
           console.log('[StudentDashboard] Processing kid-friendly-next-activity API response:', fetchedNextActivity);
           
           // Handle completion scenarios (all topics mastered)
