@@ -2306,7 +2306,55 @@ exports.handler = async (event, context) => {
       
       // Find current KC index
       let nextKC = null;
-      if (currentKcCode) {
+      
+      // STEP 1: First try to get the most recent quiz KC from responses
+      try {
+        console.log('[Netlify] Checking for most recent quiz KC from responses...');
+        
+        // Query the most recent response for this student
+        const { data: recentResponses } = await supabase
+          .from('responses')
+          .select(`
+            *,
+            content_item:content_item_id (
+              knowledge_component_id
+            )
+          `)
+          .eq('student_id', studentId)
+          .order('created_at', { ascending: false })
+          .limit(1);
+        
+        if (recentResponses && recentResponses.length > 0 && recentResponses[0].content_item?.knowledge_component_id) {
+          const recentKcId = recentResponses[0].content_item.knowledge_component_id;
+          const recentKC = gradeKCs.find(kc => kc.id === recentKcId);
+          
+          if (recentKC) {
+            console.log(`[Netlify] Found recent KC from quiz: ${recentKC.name} (${recentKC.curriculum_code})`);
+            
+            // Check if this KC is mastered
+            const mastery = recentKC.knowledge_states?.[0]?.p_mastery || 0;
+            
+            if (mastery < 0.95) {
+              // Continue with this KC since it's not mastered yet
+              nextKC = recentKC;
+              console.log(`[Netlify] Using recent quiz KC as next activity: ${nextKC.name} (mastery: ${mastery})`);
+            } else {
+              // KC is mastered, find the next one in sequence
+              const recentIndex = gradeKCs.findIndex(kc => kc.id === recentKC.id);
+              if (recentIndex >= 0 && recentIndex < gradeKCs.length - 1) {
+                nextKC = gradeKCs[recentIndex + 1];
+                console.log(`[Netlify] Recent KC mastered, moving to next: ${nextKC.name}`);
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error('[Netlify] Error finding recent KC from responses:', error);
+        // Continue with other methods if this fails
+      }
+      
+      // STEP 2: If no KC from recent responses, try using current_kc_curriculum_code
+      if (!nextKC && currentKcCode) {
         const currentIndex = gradeKCs.findIndex(kc => kc.curriculum_code === currentKcCode);
         console.log(`[Netlify] Current KC index: ${currentIndex} out of ${gradeKCs.length}`);
         
@@ -2326,9 +2374,12 @@ exports.handler = async (event, context) => {
             })
           };
         }
-      } else {
-        // No current KC provided - find where student left off
-        console.log('[Netlify] No current KC provided, finding where student left off...');
+      } 
+      
+      // STEP 3: If still no KC, find first non-mastered KC
+      if (!nextKC) {
+        // No current KC provided or found - find where student left off
+        console.log('[Netlify] Finding first non-mastered KC...');
         
         // Find first non-mastered KC (mastery < 0.95)
         for (const kc of gradeKCs) {

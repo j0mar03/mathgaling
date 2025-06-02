@@ -619,15 +619,6 @@ const QuizView = () => {
       timestamp: Date.now()
     }));
     
-    // Store KC details for dashboard to use directly
-    if (kcDetails) {
-      console.log("[QuizView] Storing KC details for dashboard:", kcDetails);
-      localStorage.setItem('last_quiz_kc_details', JSON.stringify(kcDetails));
-    } else if (questions[0]?.knowledge_component) {
-      console.log("[QuizView] Storing question KC for dashboard:", questions[0].knowledge_component);
-      localStorage.setItem('last_quiz_kc_details', JSON.stringify(questions[0].knowledge_component));
-    }
-    
     // Force refresh of dashboard data by adding timestamp
     navigate('/student?refresh=' + Date.now());
   };
@@ -670,15 +661,6 @@ const QuizView = () => {
       newMastery: actualKcMastery || masteryLevel,
       timestamp: Date.now()
     }));
-    
-    // Store KC details for dashboard to use directly
-    if (kcDetails) {
-      console.log("[QuizView] Storing KC details for dashboard on continuation:", kcDetails);
-      localStorage.setItem('last_quiz_kc_details', JSON.stringify(kcDetails));
-    } else if (questions[0]?.knowledge_component) {
-      console.log("[QuizView] Storing question KC for dashboard on continuation:", questions[0].knowledge_component);
-      localStorage.setItem('last_quiz_kc_details', JSON.stringify(questions[0].knowledge_component));
-    }
     
     // Set progression indicator to track that student moved to next topic
     localStorage.setItem('student_progressed_to_next_topic', JSON.stringify({

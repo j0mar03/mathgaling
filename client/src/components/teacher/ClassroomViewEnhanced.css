@@ -9,12 +9,12 @@
 
 /* Enhanced Header - Modern Teacher-Friendly */
 .classroom-enhanced-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
   border-radius: 24px;
   padding: 32px;
   margin-bottom: 32px;
-  color: white;
-  box-shadow: 0 12px 40px rgba(102, 126, 234, 0.25);
+  color: #2c3e50;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
   position: relative;
   overflow: hidden;
 }
@@ -67,12 +67,13 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  background: rgba(255,255,255,0.25);
+  background: rgba(0,0,0,0.05);
   padding: 8px 16px;
   border-radius: 24px;
   font-size: 0.95rem;
   font-weight: 600;
-  border: 1px solid rgba(255,255,255,0.3);
+  border: 1px solid rgba(0,0,0,0.1);
+  color: #495057;
   backdrop-filter: blur(10px);
 }
 
@@ -97,18 +98,19 @@
 }
 
 .stat-card {
-  background: rgba(255,255,255,0.15);
+  background: white;
   border-radius: 15px;
   padding: 20px;
   text-align: center;
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255,255,255,0.2);
+  border: 1px solid rgba(0,0,0,0.1);
   transition: transform 0.3s ease, background 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
 
 .stat-card:hover {
   transform: translateY(-5px);
-  background: rgba(255,255,255,0.25);
+  background: rgba(0,0,0,0.02);
 }
 
 .stat-icon {
@@ -142,9 +144,9 @@
 }
 
 .view-toggle {
-  background: rgba(255,255,255,0.2);
-  border: 1px solid rgba(255,255,255,0.3);
-  color: white;
+  background: white;
+  border: 1px solid rgba(0,0,0,0.1);
+  color: #495057;
   padding: 12px 24px;
   border-radius: 25px;
   font-size: 0.95rem;
@@ -156,46 +158,48 @@
 }
 
 .view-toggle:hover {
-  background: rgba(255,255,255,0.3);
+  background: rgba(0,0,0,0.03);
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
 }
 
 .view-toggle.overview-btn {
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.3), rgba(118, 75, 162, 0.3));
-  border: 1px solid rgba(102, 126, 234, 0.5);
+  background: white;
+  border: 1px solid rgba(0,0,0,0.1);
+  color: #3b82f6;
 }
 
 .view-toggle.overview-btn:hover {
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.5), rgba(118, 75, 162, 0.5));
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+  background: rgba(59, 130, 246, 0.05);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.1);
 }
 
 .view-toggle.detailed-btn {
-  background: linear-gradient(135deg, rgba(240, 147, 251, 0.3), rgba(245, 87, 108, 0.3));
-  border: 1px solid rgba(240, 147, 251, 0.5);
+  background: white;
+  border: 1px solid rgba(0,0,0,0.1);
+  color: #f43f5e;
 }
 
 .view-toggle.detailed-btn:hover {
-  background: linear-gradient(135deg, rgba(240, 147, 251, 0.5), rgba(245, 87, 108, 0.5));
-  box-shadow: 0 6px 20px rgba(240, 147, 251, 0.3);
+  background: rgba(244, 63, 94, 0.05);
+  box-shadow: 0 6px 20px rgba(244, 63, 94, 0.1);
 }
 
 .back-button {
-  background: rgba(255,255,255,0.2);
-  color: white;
+  background: white;
+  color: #495057;
   padding: 12px 24px;
   border-radius: 25px;
   text-decoration: none;
   font-weight: 600;
-  border: 1px solid rgba(255,255,255,0.3);
+  border: 1px solid rgba(0,0,0,0.1);
   transition: all 0.3s ease;
 }
 
 .back-button:hover {
-  background: rgba(255,255,255,0.3);
+  background: rgba(0,0,0,0.03);
   transform: translateY(-2px);
-  color: white;
+  color: #2c3e50;
 }
 
 /* Loading and Error States */
@@ -255,17 +259,17 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 24px;
-  padding: 24px;
-  background: white;
-  border-radius: 16px;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
-  border: 1px solid #e2e8f0;
+  padding: 16px 0;
+  background: transparent;
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
 }
 
 .section-header.critical {
-  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-  color: white;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: transparent;
+  color: #ef4444;
+  border: none;
 }
 
 .section-header h2 {
@@ -277,18 +281,18 @@
 }
 
 .section-header.critical h2 {
-  color: white;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  color: #ef4444;
+  text-shadow: none;
 }
 
 .alert-count {
-  background: rgba(255,255,255,0.25);
+  background: rgba(239, 68, 68, 0.1);
   padding: 10px 18px;
   border-radius: 24px;
   font-weight: 700;
   font-size: 0.9rem;
-  border: 1px solid rgba(255,255,255,0.3);
-  backdrop-filter: blur(10px);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #ef4444;
 }
 
 .urgent-interventions-grid {

@@ -182,8 +182,50 @@ router.get('/:id/kid-friendly-next-activity', optionalAuth, async (req, res) => 
     }, {});
 
     let nextKc = null;
+    
+    // NEW: First check for most recent quiz KC from responses
+    try {
+      // Get the student's most recent response to identify the KC they were working on
+      const recentResponse = await Response.findOne({
+        where: { student_id: studentId },
+        order: [['createdAt', 'DESC']],
+        include: [{
+          model: ContentItem,
+          attributes: ['knowledge_component_id']
+        }],
+        limit: 1
+      });
+      
+      if (recentResponse && recentResponse.ContentItem && recentResponse.ContentItem.knowledge_component_id) {
+        // Find this KC in our list of all grade KCs
+        const recentKcId = recentResponse.ContentItem.knowledge_component_id;
+        const recentKc = allGradeKCs.find(kc => kc.id === recentKcId);
+        
+        if (recentKc) {
+          console.log(`[KidFriendlyNextActivity] Found recent quiz KC: ${recentKc.curriculum_code} (ID: ${recentKc.id})`);
+          
+          // Continue with this KC if mastery is not yet achieved
+          const mastery = masteryMap[recentKc.id] || 0;
+          if (mastery < masteryThreshold) {
+            nextKc = recentKc;
+            console.log(`[KidFriendlyNextActivity] Using recent quiz KC: ${nextKc.curriculum_code} (Mastery: ${mastery})`);
+          } else {
+            // If mastered, find the next one in sequence
+            const recentKcIndex = allGradeKCs.findIndex(kc => kc.id === recentKc.id);
+            if (recentKcIndex !== -1 && recentKcIndex < allGradeKCs.length - 1) {
+              nextKc = allGradeKCs[recentKcIndex + 1];
+              console.log(`[KidFriendlyNextActivity] Recent KC mastered, moving to next: ${nextKc.curriculum_code}`);
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.warn(`[KidFriendlyNextActivity] Error finding recent KC from responses:`, err);
+      // Continue with standard logic if there's an error
+    }
 
-    if (current_kc_curriculum_code) {
+    // If we haven't found a KC from recent quiz responses, use the standard logic
+    if (!nextKc && current_kc_curriculum_code) {
       const currentKcIndex = allGradeKCs.findIndex(kc => kc.curriculum_code === current_kc_curriculum_code);
       if (currentKcIndex !== -1 && currentKcIndex < allGradeKCs.length - 1) {
         nextKc = allGradeKCs[currentKcIndex + 1];
@@ -198,7 +240,7 @@ router.get('/:id/kid-friendly-next-activity', optionalAuth, async (req, res) => 
       }
     }
     
-    if (!nextKc) { // If no current_kc_curriculum_code or if fallback is needed
+    if (!nextKc) { // If no recent KC or current_kc_curriculum_code, or if fallback is needed
       for (const kc of allGradeKCs) {
         const mastery = masteryMap[kc.id] || 0; // Default to 0 if no state exists
         if (mastery < masteryThreshold) {
