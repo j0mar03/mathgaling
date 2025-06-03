@@ -2537,11 +2537,22 @@ exports.handler = async (event, context) => {
       const topicsCompleted = knowledgeStates?.filter(ks => ks.p_mastery >= 0.8).length || 0;
       
       // Calculate learning streak (consecutive days with activity)
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+      
+      // Get quiz responses from last 30 days
       const { data: recentResponses, error: responseError } = await supabase
         .from('responses')
         .select('created_at')
         .eq('student_id', studentId)
-        .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()) // Last 30 days
+        .gte('created_at', thirtyDaysAgo)
+        .order('created_at', { ascending: false });
+      
+      // Get engagement metrics from last 30 days (student login/dashboard activity)
+      const { data: recentEngagement, error: engagementError } = await supabase
+        .from('engagement_metrics')
+        .select('created_at')
+        .eq('student_id', studentId)
+        .gte('created_at', thirtyDaysAgo)
         .order('created_at', { ascending: false });
       
       // Calculate consecutive day streak
@@ -2555,10 +2566,19 @@ exports.handler = async (event, context) => {
       
       const todayStr = getDateString(today);
       
-      // Get unique days with activity, sorted by date (most recent first)
+      // Get unique days with activity from BOTH responses and engagement metrics
       const uniqueDays = new Set();
+      
+      // Add quiz response dates
       recentResponses?.forEach(response => {
         const date = new Date(response.created_at);
+        const dateStr = getDateString(date);
+        uniqueDays.add(dateStr);
+      });
+      
+      // Add engagement metrics dates (login/dashboard activity)
+      recentEngagement?.forEach(engagement => {
+        const date = new Date(engagement.created_at);
         const dateStr = getDateString(date);
         uniqueDays.add(dateStr);
       });
@@ -2591,6 +2611,19 @@ exports.handler = async (event, context) => {
           }
         }
       }
+      
+      // Debug logging for streak calculation
+      console.log('[Progress API] Streak calculation debug:', {
+        studentId: studentId,
+        totalResponseDays: recentResponses?.length || 0,
+        totalEngagementDays: recentEngagement?.length || 0,
+        uniqueActivityDays: sortedDays.length,
+        sortedDays: sortedDays.slice(0, 7), // Show first 7 days
+        todayStr: todayStr,
+        yesterdayStr: yesterdayStr,
+        startFromToday: startFromToday,
+        calculatedStreak: streak
+      });
       
       return {
         statusCode: 200,
@@ -2848,17 +2881,52 @@ exports.handler = async (event, context) => {
   // POST /api/students/:id/engagement - Track engagement
   if (path.includes('/engagement') && httpMethod === 'POST') {
     try {
-      // Just return success for now
+      const pathParts = path.split('/');
+      const studentId = pathParts[pathParts.indexOf('students') + 1];
+      const engagementData = JSON.parse(event.body);
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // Insert engagement metrics data
+      const { data, error } = await supabase
+        .from('engagement_metrics')
+        .insert([{
+          student_id: parseInt(studentId),
+          session_id: engagementData.sessionId || Date.now().toString(),
+          time_on_task: engagementData.timeOnTask || 60,
+          help_requests: engagementData.helpRequests || 0,
+          disengagement_indicators: engagementData.disengagementIndicators || {},
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        }]);
+      
+      if (error) {
+        console.error('Error inserting engagement metrics:', error);
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Database error',
+            message: error.message
+          })
+        };
+      }
+      
       return {
         statusCode: 200,
         headers,
         body: JSON.stringify({
           success: true,
-          message: 'Engagement tracked'
+          message: 'Engagement tracked successfully',
+          data: data
         })
       };
       
     } catch (error) {
+      console.error('Engagement endpoint error:', error);
       return {
         statusCode: 500,
         headers,

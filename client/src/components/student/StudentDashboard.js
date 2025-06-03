@@ -131,9 +131,9 @@ const StudentDashboard = () => {
           localStorage.removeItem('quiz_completed');
           localStorage.removeItem('quiz_mastery_update');
           
-          // Add a small delay to ensure backend mastery updates have processed
+          // Add a longer delay to ensure backend mastery updates have processed
           console.log('[StudentDashboard] Waiting for backend mastery updates to process...');
-          await new Promise(resolve => setTimeout(resolve, 2000));
+          await new Promise(resolve => setTimeout(resolve, 3000));
         } catch (err) {
           console.error('[StudentDashboard] Error processing progression data:', err);
         }
@@ -141,8 +141,8 @@ const StudentDashboard = () => {
         console.log('[StudentDashboard] Quiz completion detected, clearing flags and refreshing...');
         localStorage.removeItem('quiz_completed');
         localStorage.removeItem('quiz_mastery_update');
-        // Add a small delay for backend processing
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Add a longer delay for backend processing
+        await new Promise(resolve => setTimeout(resolve, 2000));
       }
       
       try {
@@ -169,28 +169,62 @@ const StudentDashboard = () => {
           setUnreadMessages(0); // Set to 0 as fallback
         }
 
-        // Fetch kid-friendly next activity recommendation
+        // Fetch kid-friendly next activity recommendation with retry logic for race conditions
         let fetchedNextActivity = null;
-        try {
-          const activityResponse = await axios.get(`/api/students/${studentId}/kid-friendly-next-activity`, {
-            headers: { Authorization: `Bearer ${token}` },
-            timeout: 10000 // 10 second timeout
-          });
-          fetchedNextActivity = activityResponse.data;
-          console.log('[StudentDashboard] Kid-friendly next activity response:', {
-            type: fetchedNextActivity?.type,
-            kc_id: fetchedNextActivity?.kc_id,
-            kc_name: fetchedNextActivity?.kc_name,
-            message: fetchedNextActivity?.message,
-            completed_sequence: fetchedNextActivity?.completed_sequence,
-            all_mastered: fetchedNextActivity?.all_mastered,
-            fullResponse: fetchedNextActivity
-          });
-          setNextActivity(fetchedNextActivity);
-        } catch (activityErr) {
-          console.error('[StudentDashboard] Error fetching next activity:', activityErr);
-          fetchedNextActivity = null;
-          setNextActivity(null);
+        const maxRetries = progressionData || quizCompletedFlag ? 3 : 1; // More retries if coming from quiz completion
+        let parsedProgression = null;
+        
+        // Parse progression data once outside the loop
+        if (progressionData) {
+          try {
+            parsedProgression = JSON.parse(progressionData);
+          } catch (e) {
+            console.error('[StudentDashboard] Error parsing progression data:', e);
+          }
+        }
+        
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+          try {
+            console.log(`[StudentDashboard] Fetching next activity (attempt ${attempt}/${maxRetries})`);
+            const activityResponse = await axios.get(`/api/students/${studentId}/kid-friendly-next-activity?_t=${Date.now()}&attempt=${attempt}`, {
+              headers: { Authorization: `Bearer ${token}` },
+              timeout: 10000 // 10 second timeout
+            });
+            fetchedNextActivity = activityResponse.data;
+            console.log('[StudentDashboard] Kid-friendly next activity response:', {
+              attempt: attempt,
+              type: fetchedNextActivity?.type,
+              kc_id: fetchedNextActivity?.kc_id,
+              kc_name: fetchedNextActivity?.kc_name,
+              message: fetchedNextActivity?.message,
+              completed_sequence: fetchedNextActivity?.completed_sequence,
+              all_mastered: fetchedNextActivity?.all_mastered,
+              fullResponse: fetchedNextActivity
+            });
+            
+            // If we're retrying due to progression and get the same KC, wait and retry
+            if (parsedProgression && attempt < maxRetries) {
+              if (fetchedNextActivity?.kc_id === parsedProgression.completedKcId) {
+                console.log(`[StudentDashboard] Still seeing completed KC ${parsedProgression.completedKcId}, retrying in ${attempt * 500}ms...`);
+                await new Promise(resolve => setTimeout(resolve, attempt * 500)); // Exponential backoff
+                continue;
+              }
+            }
+            
+            // Success - break out of retry loop
+            setNextActivity(fetchedNextActivity);
+            break;
+            
+          } catch (activityErr) {
+            console.error(`[StudentDashboard] Error fetching next activity (attempt ${attempt}):`, activityErr);
+            if (attempt === maxRetries) {
+              fetchedNextActivity = null;
+              setNextActivity(null);
+            } else {
+              // Wait before retrying
+              await new Promise(resolve => setTimeout(resolve, attempt * 500));
+            }
+          }
         }
 
         // Fetch consolidated dashboard data (with cache busting for Supabase)
