@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, LineElement, PointElement, ArcElement } from 'chart.js';
@@ -301,7 +301,7 @@ const ClassroomViewEnhanced = () => {
       .sort((a, b) => b.priorityScore - a.priorityScore);
   };
 
-  const handleRemoveStudent = async (studentIdToRemove, studentName) => {
+  const handleRemoveStudent = useCallback(async (studentIdToRemove, studentName) => {
     if (isProcessing) return;
 
     if (window.confirm(`Are you sure you want to remove ${studentName} from this classroom?`)) {
@@ -320,7 +320,7 @@ const ClassroomViewEnhanced = () => {
         setIsProcessing(false);
       }
     }
-  };
+  }, [id, isProcessing]);
 
   const handleLinkParent = (student) => {
     setLinkingStudent(student);

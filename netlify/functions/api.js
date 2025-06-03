@@ -10,7 +10,7 @@ exports.handler = async (event, context) => {
   const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS'
+    'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS'
   };
   
   // Handle preflight
@@ -4691,6 +4691,146 @@ exports.handler = async (event, context) => {
       
     } catch (error) {
       console.error('[Netlify] Error adding students to classroom:', error);
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
+  // DELETE /api/classrooms/:id/students/:studentId - Remove student from classroom
+  if (path.includes('/classrooms/') && path.includes('/students/') && httpMethod === 'DELETE') {
+    try {
+      const pathParts = path.split('/');
+      const classroomIndex = pathParts.indexOf('classrooms');
+      const studentsIndex = pathParts.indexOf('students');
+      
+      if (classroomIndex === -1 || studentsIndex === -1 || studentsIndex !== classroomIndex + 2) {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({
+            error: 'Invalid request',
+            message: 'Invalid URL format. Expected: /classrooms/:id/students/:studentId'
+          })
+        };
+      }
+      
+      const classroomId = pathParts[classroomIndex + 1];
+      const studentId = pathParts[studentsIndex + 1];
+      
+      console.log('[Netlify] Removing student from classroom:', { classroomId, studentId });
+      
+      if (!classroomId || !studentId) {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({
+            error: 'Invalid request',
+            message: 'Classroom ID and student ID are required'
+          })
+        };
+      }
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // First, check if the classroom exists
+      const { data: classroom, error: classroomError } = await supabase
+        .from('classrooms')
+        .select('id, name')
+        .eq('id', classroomId)
+        .single();
+        
+      if (classroomError || !classroom) {
+        console.error('[Netlify] Classroom not found:', classroomError);
+        return {
+          statusCode: 404,
+          headers,
+          body: JSON.stringify({
+            error: 'Classroom not found',
+            message: 'The specified classroom does not exist'
+          })
+        };
+      }
+      
+      // Check if the student exists
+      const { data: student, error: studentError } = await supabase
+        .from('students')
+        .select('id, name')
+        .eq('id', studentId)
+        .single();
+        
+      if (studentError || !student) {
+        console.error('[Netlify] Student not found:', studentError);
+        return {
+          statusCode: 404,
+          headers,
+          body: JSON.stringify({
+            error: 'Student not found',
+            message: 'The specified student does not exist'
+          })
+        };
+      }
+      
+      // Check if the student is actually in the classroom
+      const { data: enrollment, error: enrollmentError } = await supabase
+        .from('classroom_students')
+        .select('*')
+        .eq('classroom_id', classroomId)
+        .eq('student_id', studentId)
+        .single();
+        
+      if (enrollmentError || !enrollment) {
+        console.error('[Netlify] Student not enrolled in classroom:', enrollmentError);
+        return {
+          statusCode: 404,
+          headers,
+          body: JSON.stringify({
+            error: 'Student not enrolled',
+            message: 'The student is not enrolled in this classroom'
+          })
+        };
+      }
+      
+      // Remove the student from the classroom
+      const { error: deleteError } = await supabase
+        .from('classroom_students')
+        .delete()
+        .eq('classroom_id', classroomId)
+        .eq('student_id', studentId);
+        
+      if (deleteError) {
+        console.error('[Netlify] Failed to remove student from classroom:', deleteError);
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to remove student',
+            message: deleteError.message
+          })
+        };
+      }
+      
+      console.log('[Netlify] Successfully removed student from classroom');
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          success: true,
+          message: `Successfully removed ${student.name} from ${classroom.name}`
+        })
+      };
+      
+    } catch (error) {
+      console.error('[Netlify] Error removing student from classroom:', error);
       return {
         statusCode: 500,
         headers,

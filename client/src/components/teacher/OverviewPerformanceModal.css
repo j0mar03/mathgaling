@@ -24,9 +24,9 @@
   background: white;
   border-radius: 16px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  max-width: 1000px;
-  max-height: 90vh;
-  width: 95%;
+  max-width: 1400px;
+  max-height: 95vh;
+  width: 98%;
   overflow: hidden;
   animation: slideUp 0.3s ease-out;
 }
@@ -54,13 +54,13 @@
 
 .modal-header-content h2 {
   margin: 0 0 0.5rem 0;
-  font-size: 1.8rem;
+  font-size: 2rem;
   font-weight: 700;
 }
 
 .classroom-name {
   margin: 0;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
   opacity: 0.9;
   font-weight: 500;
 }
@@ -92,14 +92,15 @@
 /* Modal Content */
 .modal-content {
   padding: 2rem;
-  max-height: calc(90vh - 120px);
+  max-height: calc(95vh - 140px);
   overflow-y: auto;
+  overflow-x: hidden;
 }
 
 /* Metrics Grid */
 .metrics-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
 }
@@ -147,7 +148,7 @@
 
 .metric-content h3 {
   margin: 0;
-  font-size: 2rem;
+  font-size: 2.2rem;
   font-weight: 700;
   color: #2c3e50;
 }
@@ -156,7 +157,7 @@
   margin: 0.25rem 0 0 0;
   color: #5a6c7d;
   font-weight: 500;
-  font-size: 0.9rem;
+  font-size: 1rem;
 }
 
 /* Distribution Section */
@@ -170,7 +171,7 @@
 .distribution-section h3 {
   margin: 0 0 1.5rem 0;
   color: #2c3e50;
-  font-size: 1.3rem;
+  font-size: 1.4rem;
   font-weight: 600;
 }
 
@@ -272,7 +273,7 @@
 /* Insights Grid */
 .insights-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
 }
@@ -405,10 +406,21 @@
 }
 
 /* Responsive Design */
+@media (max-width: 1200px) {
+  .overview-modal {
+    max-width: 1200px;
+  }
+  
+  .insights-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 768px) {
   .overview-modal {
     width: 98%;
     max-height: 95vh;
+    max-width: 95vw;
   }
 
   .modal-header {
@@ -416,7 +428,7 @@
   }
 
   .modal-header-content h2 {
-    font-size: 1.5rem;
+    font-size: 1.6rem;
   }
 
   .modal-content {
@@ -424,7 +436,7 @@
   }
 
   .metrics-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 1rem;
   }
 
@@ -444,7 +456,7 @@
   }
 
   .metric-content h3 {
-    font-size: 1.5rem;
+    font-size: 1.8rem;
   }
 }
 

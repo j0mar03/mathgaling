@@ -46,7 +46,7 @@ const StudentProgress = () => {
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [topicsPerPage] = useState(12); // Number of topics to show per page
-  const [selectedArea, setSelectedArea] = useState('all'); // Filter by curriculum area
+  const [selectedQuarter, setSelectedQuarter] = useState('all'); // Filter by quarter
   const [showOnlyStarted, setShowOnlyStarted] = useState(false); // Filter by started status
   const { user, token } = useAuth(); // Get user AND token from context
 
@@ -294,11 +294,11 @@ const StudentProgress = () => {
   // Calculate pagination for topics
   const indexOfLastTopic = currentPage * topicsPerPage;
   const indexOfFirstTopic = indexOfLastTopic - topicsPerPage;
-  // Filter by curriculum area and started status
+  // Filter by quarter and started status
   const filteredKCs = combinedKCs.filter(kc => {
-    const matchesArea = selectedArea === 'all' || kc.curriculum_code?.includes(selectedArea);
+    const matchesQuarter = selectedQuarter === 'all' || kc.curriculum_code?.includes(selectedQuarter);
     const matchesStarted = !showOnlyStarted || kc.started;
-    return matchesArea && matchesStarted;
+    return matchesQuarter && matchesStarted;
   });
 
   // Sort by mastery, then by whether it's started, then by curriculum code, then by name
@@ -423,30 +423,31 @@ const StudentProgress = () => {
     }
   };
   
-  // Group combined KCs by curriculum area
+  // Group combined KCs by quarter and module
   const groupedCombinedKCs = combinedKCs.reduce((acc, kc) => {
     // curriculum_code should be directly on kc object now
     const code = kc.curriculum_code; 
-    const match = code?.match(/G\d+-([A-Z]+)-\d+/);
-    const area = match ? match[1] : 'Other';
+    // Match patterns like G3-Q1M1-KC01, G4-Q2M3-KC05, or Q1M1-KC01
+    const match = code?.match(/(Q[1-4]M[1-4])/);
+    const quarter = match ? match[1] : 'Other';
 
-    if (!acc[area]) {
-      acc[area] = [];
+    if (!acc[quarter]) {
+      acc[quarter] = [];
     }
-    acc[area].push(kc);
+    acc[quarter].push(kc);
     return acc;
   }, {});
   
-  // Calculate average mastery by area using combinedKCs
-  const areaAverages = Object.entries(groupedCombinedKCs).map(([area, kcsInArea]) => {
-    const totalMastery = kcsInArea.reduce((sum, kc) => sum + (kc.p_mastery || 0), 0);
-    // Average mastery should be based on all KCs in that area, not just started ones
-    const averageMastery = kcsInArea.length > 0 ? totalMastery / kcsInArea.length : 0;
+  // Calculate average mastery by quarter using combinedKCs
+  const quarterAverages = Object.entries(groupedCombinedKCs).map(([quarter, kcsInQuarter]) => {
+    const totalMastery = kcsInQuarter.reduce((sum, kc) => sum + (kc.p_mastery || 0), 0);
+    // Average mastery should be based on all KCs in that quarter, not just started ones
+    const averageMastery = kcsInQuarter.length > 0 ? totalMastery / kcsInQuarter.length : 0;
     
     return {
-      area,
+      quarter,
       averageMastery,
-      count: kcsInArea.length // Corrected from states.length to kcsInArea.length
+      count: kcsInQuarter.length
     };
   });
   
@@ -457,13 +458,24 @@ const StudentProgress = () => {
     return 'Kailangan pa ng practice (Needs Practice)';
   };
 
-  // Add Filipino translations for curriculum areas
-  const areaNames = {
-    'NS': 'Number Sense (Bilang)',
-    'GEO': 'Geometry (Heometriya)',
-    'MEAS': 'Measurement (Sukat)',
-    'ALG': 'Algebra (Alhebra)',
-    'STAT': 'Statistics (Estadistika)'
+  // Add names for quarters and modules
+  const quarterNames = {
+    'Q1M1': 'Quarter 1 Module 1',
+    'Q1M2': 'Quarter 1 Module 2', 
+    'Q1M3': 'Quarter 1 Module 3',
+    'Q1M4': 'Quarter 1 Module 4',
+    'Q2M1': 'Quarter 2 Module 1',
+    'Q2M2': 'Quarter 2 Module 2',
+    'Q2M3': 'Quarter 2 Module 3', 
+    'Q2M4': 'Quarter 2 Module 4',
+    'Q3M1': 'Quarter 3 Module 1',
+    'Q3M2': 'Quarter 3 Module 2',
+    'Q3M3': 'Quarter 3 Module 3',
+    'Q3M4': 'Quarter 3 Module 4',
+    'Q4M1': 'Quarter 4 Module 1',
+    'Q4M2': 'Quarter 4 Module 2',
+    'Q4M3': 'Quarter 4 Module 3',
+    'Q4M4': 'Quarter 4 Module 4'
   };
   
   return (
@@ -544,21 +556,32 @@ const StudentProgress = () => {
       {/* Filter Controls */}
       <div className="filter-controls">
         <div className="filter-group">
-          <label>Filter by Area:</label>
+          <label>Filter by Quarter:</label>
           <select 
-            value={selectedArea} 
+            value={selectedQuarter} 
             onChange={(e) => {
-              setSelectedArea(e.target.value);
+              setSelectedQuarter(e.target.value);
               setCurrentPage(1); // Reset to first page when filtering
             }}
             className="filter-select"
           >
-            <option value="all">All Areas</option>
-            <option value="NS">🔢 Number Sense</option>
-            <option value="GEO">📐 Geometry</option>
-            <option value="MEAS">📏 Measurement</option>
-            <option value="ALG">🧮 Algebra</option>
-            <option value="STAT">📊 Statistics</option>
+            <option value="all">All Quarters</option>
+            <option value="Q1M1">📘 Quarter 1 Module 1</option>
+            <option value="Q1M2">📘 Quarter 1 Module 2</option>
+            <option value="Q1M3">📘 Quarter 1 Module 3</option>
+            <option value="Q1M4">📘 Quarter 1 Module 4</option>
+            <option value="Q2M1">📗 Quarter 2 Module 1</option>
+            <option value="Q2M2">📗 Quarter 2 Module 2</option>
+            <option value="Q2M3">📗 Quarter 2 Module 3</option>
+            <option value="Q2M4">📗 Quarter 2 Module 4</option>
+            <option value="Q3M1">📙 Quarter 3 Module 1</option>
+            <option value="Q3M2">📙 Quarter 3 Module 2</option>
+            <option value="Q3M3">📙 Quarter 3 Module 3</option>
+            <option value="Q3M4">📙 Quarter 3 Module 4</option>
+            <option value="Q4M1">📕 Quarter 4 Module 1</option>
+            <option value="Q4M2">📕 Quarter 4 Module 2</option>
+            <option value="Q4M3">📕 Quarter 4 Module 3</option>
+            <option value="Q4M4">📕 Quarter 4 Module 4</option>
           </select>
         </div>
         
@@ -582,7 +605,7 @@ const StudentProgress = () => {
       </div>
       
       <div className="mastery-chart">
-        <h2>Mastery by Topic {selectedArea !== 'all' && `- ${areaNames[selectedArea] || selectedArea}`}</h2>
+        <h2>Mastery by Topic {selectedQuarter !== 'all' && `- ${selectedQuarter}`}</h2>
         
         {/* Bar Chart View - Now at the top and visible by default */}
         <div className="chart-container" style={{ marginBottom: '30px', height: '400px' }}>
@@ -720,17 +743,17 @@ const StudentProgress = () => {
       </div>
       
       <div className="curriculum-areas">
-        <h2>Progress by Curriculum Area</h2>
+        <h2>Progress by Quarter & Module</h2>
         <div className="area-cards">
-          {areaAverages.map(area => {
+          {quarterAverages.map(quarter => {
             const doughnutData = {
               labels: ['Mastered', 'Remaining'],
               datasets: [
                 {
-                  data: [area.averageMastery * 100, 100 - (area.averageMastery * 100)],
+                  data: [quarter.averageMastery * 100, 100 - (quarter.averageMastery * 100)],
                   backgroundColor: [
-                    area.averageMastery >= 0.8 ? 'rgba(46, 204, 113, 0.8)' :
-                    area.averageMastery >= 0.5 ? 'rgba(52, 152, 219, 0.8)' :
+                    quarter.averageMastery >= 0.8 ? 'rgba(46, 204, 113, 0.8)' :
+                    quarter.averageMastery >= 0.5 ? 'rgba(52, 152, 219, 0.8)' :
                     'rgba(231, 76, 60, 0.8)',
                     'rgba(234, 236, 238, 0.5)'
                   ],
@@ -753,39 +776,36 @@ const StudentProgress = () => {
               }
             };
             
-            const getAreaEmoji = (areaCode) => {
-              switch(areaCode) {
-                case 'NS': return '🔢';
-                case 'GEO': return '📐';
-                case 'MEAS': return '📏';
-                case 'ALG': return '🧮';
-                case 'STAT': return '📊';
-                default: return '📚';
-              }
+            const getQuarterEmoji = (quarterCode) => {
+              if (quarterCode.startsWith('Q1')) return '📘';
+              if (quarterCode.startsWith('Q2')) return '📗';
+              if (quarterCode.startsWith('Q3')) return '📙';
+              if (quarterCode.startsWith('Q4')) return '📕';
+              return '📚';
             };
             
             return (
-              <div key={area.area} className="area-card">
+              <div key={quarter.quarter} className="area-card">
                 <div className="area-header">
-                  <span className="area-emoji">{getAreaEmoji(area.area)}</span>
-                  <h3>{areaNames[area.area] || area.area}</h3>
+                  <span className="area-emoji">{getQuarterEmoji(quarter.quarter)}</span>
+                  <h3>{quarterNames[quarter.quarter] || quarter.quarter}</h3>
                 </div>
                 
                 <div className="area-chart-container">
                   <Doughnut data={doughnutData} options={doughnutOptions} />
                   <div className="doughnut-center">
-                    <span className="doughnut-percentage">{(area.averageMastery * 100).toFixed(0)}%</span>
+                    <span className="doughnut-percentage">{(quarter.averageMastery * 100).toFixed(0)}%</span>
                   </div>
                 </div>
                 
                 <div className="area-details">
-                  <p><strong>{area.count}</strong> topics</p>
+                  <p><strong>{quarter.count}</strong> topics</p>
                   <p className="mastery-label" style={{
-                    color: area.averageMastery >= 0.8 ? '#27ae60' :
-                           area.averageMastery >= 0.5 ? '#2980b9' :
+                    color: quarter.averageMastery >= 0.8 ? '#27ae60' :
+                           quarter.averageMastery >= 0.5 ? '#2980b9' :
                            '#c0392b'
                   }}>
-                    {getMasteryLabel(area.averageMastery)}
+                    {getMasteryLabel(quarter.averageMastery)}
                   </p>
                 </div>
               </div>
