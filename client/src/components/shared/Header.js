@@ -64,7 +64,7 @@ const Header = ({ user, logout }) => {
         <div className="logo">
           <Link to="/">
             <div className="logo-main">
-              <img src={`/newlog.png?v=${new Date().getTime()}`} alt="Math Tagumpay Logo" className="logo-icon" />
+              <img src={`/newlogo.png?v=${new Date().getTime()}`} alt="Math Tagumpay Logo" className="logo-icon" />
               <span className="logo-subtitle">Intelligent Tutoring System for Philippine Grade Level</span>
             </div>
           </Link>
