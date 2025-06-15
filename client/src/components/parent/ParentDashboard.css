@@ -471,9 +471,11 @@
   }
 }
 
+/* Enhanced Mobile Responsive Design */
 @media (max-width: 768px) {
   .parent-dashboard.fullwidth {
     padding: 1rem;
+    overflow-x: hidden;
   }
   
   .dashboard-summary {
@@ -490,6 +492,108 @@
   
   .child-card.enhanced {
     padding: 1.25rem;
+    min-height: 200px;
+  }
+  
+  /* Touch-friendly buttons */
+  .dashboard-actions button,
+  .resource-card button,
+  .child-card button {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 12px 20px;
+    font-size: 1rem;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  
+  /* Better mobile spacing */
+  .mastery-insights,
+  .learning-stats,
+  .progress-overview {
+    margin-bottom: 1.5rem;
+  }
+  
+  /* Mobile-friendly cards */
+  .insight-card {
+    flex-direction: column;
+    text-align: center;
+    padding: 1.5rem;
+  }
+  
+  .practice-suggestion {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .practice-icon {
+    margin-right: 0;
+    margin-bottom: 1rem;
+  }
+}
+
+/* Small phones */
+@media (max-width: 480px) {
+  .parent-dashboard.fullwidth {
+    padding: 0.75rem;
+  }
+  
+  .dashboard-header h1 {
+    font-size: 1.8rem;
+  }
+  
+  .insights-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .child-card.enhanced {
+    padding: 1rem;
+  }
+  
+  /* Larger touch targets for small screens */
+  .dashboard-actions button,
+  .resource-card button,
+  .child-card button {
+    min-height: 48px;
+    width: 100%;
+    margin-bottom: 8px;
+  }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+  /* Remove hover effects on touch devices */
+  .child-card.enhanced:hover,
+  .insight-card:hover,
+  .resource-card:hover {
+    transform: none;
+    box-shadow: inherit;
+  }
+  
+  /* Add active states for feedback */
+  .child-card.enhanced:active,
+  .insight-card:active,
+  .resource-card:active {
+    transform: scale(0.98);
+    transition: transform 0.1s;
+  }
+  
+  /* Touch-friendly button feedback */
+  .dashboard-actions button:active,
+  .resource-card button:active,
+  .child-card button:active {
+    transform: scale(0.95);
+  }
+  
+  /* Disable text selection on interactive elements */
+  .child-card,
+  .insight-card,
+  .resource-card,
+  button {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
   }
 }
 
@@ -562,6 +666,8 @@
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
   transition: transform 0.2s, box-shadow 0.2s;
   border-top: 3px solid transparent;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
 .insight-card:nth-child(1) {

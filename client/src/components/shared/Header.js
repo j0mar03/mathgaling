@@ -6,6 +6,7 @@ import './Header.css';
 const Header = ({ user, logout }) => {
   const location = useLocation();
   const [firstChildId, setFirstChildId] = useState(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   // Fetch children data for parent users
   useEffect(() => {
@@ -25,9 +26,19 @@ const Header = ({ user, logout }) => {
     fetchChildren();
   }, [user]);
   
+  // Close mobile menu when route changes
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [location]);
+
   // Determine active link based on current path
   const isActive = (path) => {
     return location.pathname.startsWith(path) ? 'active' : '';
+  };
+
+  // Toggle mobile menu
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
   };
   
   // More specific handler for teacher navigation
@@ -71,7 +82,17 @@ const Header = ({ user, logout }) => {
         </div>
         
         {user && (
-          <nav className="main-nav">
+          <>
+            <button 
+              className="mobile-menu-toggle"
+              onClick={toggleMobileMenu}
+              aria-label="Toggle navigation menu"
+            >
+              <span className="hamburger-line"></span>
+              <span className="hamburger-line"></span>
+              <span className="hamburger-line"></span>
+            </button>
+            <nav className={`main-nav ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
           {user.role === 'student' && ( // Use user.role
             <>
               <Link to="/student" className={location.pathname === '/student' || location.pathname === '/student/' ? 'active' : ''}>Dashboard</Link>
@@ -112,6 +133,7 @@ const Header = ({ user, logout }) => {
           
             <button onClick={logout} className="logout-button">Logout</button>
           </nav>
+          </>
         )}
       </div>
     </header>

@@ -139,6 +139,31 @@
   box-shadow: 0 3px 6px rgba(231, 76, 60, 0.3);
 }
 
+/* Mobile menu toggle button */
+.mobile-menu-toggle {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 10px;
+  position: relative;
+  z-index: 1001;
+}
+
+.hamburger-line {
+  display: block;
+  width: 28px;
+  height: 3px;
+  background-color: #005A9C;
+  margin: 5px 0;
+  transition: 0.3s;
+  border-radius: 2px;
+}
+
+.mobile-menu-toggle:hover .hamburger-line {
+  background-color: #003d6b;
+}
+
 /* Medium and larger screens */
 @media (min-width: 768px) {
   .app-header {
@@ -165,8 +190,61 @@
 
 /* Small screens */
 @media (max-width: 767px) {
+  .mobile-menu-toggle {
+    display: block;
+    position: fixed;
+    top: 15px;
+    right: 15px;
+  }
+  
+  .main-nav {
+    position: fixed;
+    top: 0;
+    right: -100%;
+    width: 280px;
+    height: 100vh;
+    background: linear-gradient(135deg, #FEFCF5 0%, #FFFDFA 100%);
+    box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+    transition: right 0.3s ease;
+    z-index: 1000;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 80px 20px 20px;
+    gap: 5px;
+    overflow-y: auto;
+  }
+  
+  .main-nav.mobile-open {
+    right: 0;
+  }
+  
+  .main-nav a {
+    display: block;
+    padding: 15px 20px;
+    width: 100%;
+    text-align: left;
+    font-size: 16px;
+    border-radius: 8px;
+    margin-bottom: 5px;
+  }
+  
+  .main-nav a:active {
+    background-color: rgba(0, 90, 156, 0.2);
+  }
+  
+  .logout-button {
+    width: 100%;
+    margin-top: 20px;
+    padding: 12px 20px;
+    font-size: 16px;
+  }
   .app-header {
     padding: 15px;
+    position: relative;
+  }
+  
+  .app-header .container {
+    padding-right: 60px;
   }
   
   .logo-main {
@@ -188,14 +266,52 @@
     letter-spacing: 0.2px;
   }
   
-  .app-header .main-nav {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
+  /* Overlay for mobile menu */
+  .main-nav.mobile-open::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: -1;
+  }
+}
+
+/* Touch-friendly improvements for mobile */
+@media (max-width: 767px) {
+  /* Ensure minimum touch target size of 44x44px */
+  .main-nav a,
+  .logout-button {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
   }
   
-  .logout-button {
-    margin-left: 0;
-    margin-top: 10px;
+  /* Prevent text selection during swipe */
+  .app-header {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+  
+  /* Improve tap feedback */
+  .main-nav a:active,
+  .logout-button:active {
+    transform: scale(0.98);
+  }
+}
+
+/* Landscape orientation for mobile */
+@media (max-width: 767px) and (orientation: landscape) {
+  .main-nav {
+    padding-top: 60px;
+  }
+  
+  .logo-icon {
+    height: 36px;
+    width: 36px;
   }
 }

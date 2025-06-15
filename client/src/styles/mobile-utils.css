@@ -1,0 +1,180 @@
+/* Mobile Utility Classes for MathGaling */
+/* These utility classes can be imported into components for consistent mobile behavior */
+
+/* Touch-friendly button mixin */
+.touch-friendly {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Remove text selection for interactive elements */
+.no-select {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Better scrolling on iOS */
+.smooth-scroll {
+  -webkit-overflow-scrolling: touch;
+  overflow-x: auto;
+}
+
+/* Touch feedback animation */
+.touch-feedback:active {
+  transform: scale(0.98);
+  transition: transform 0.1s ease;
+}
+
+/* Hide on mobile */
+@media (max-width: 768px) {
+  .hide-mobile {
+    display: none !important;
+  }
+}
+
+/* Show only on mobile */
+.mobile-only {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-only {
+    display: block;
+  }
+}
+
+/* Touch-friendly spacing */
+.mobile-padding {
+  padding: 16px;
+}
+
+@media (max-width: 768px) {
+  .mobile-padding {
+    padding: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .mobile-padding {
+    padding: 8px;
+  }
+}
+
+/* Responsive grid utilities */
+.mobile-grid-1 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+}
+
+@media (max-width: 768px) {
+  .mobile-grid-1 {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+/* Responsive text sizes */
+.mobile-text {
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+@media (max-width: 768px) {
+  .mobile-text {
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .mobile-text {
+    font-size: 0.85rem;
+  }
+}
+
+/* Touch-friendly table wrapper */
+.mobile-table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+@media (max-width: 768px) {
+  .mobile-table-wrapper::after {
+    content: '← Swipe to see more →';
+    position: absolute;
+    bottom: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.8rem;
+    color: #7f8c8d;
+    text-align: center;
+  }
+  
+  .mobile-table-wrapper {
+    position: relative;
+    padding-bottom: 30px;
+  }
+}
+
+/* Mobile-friendly modals */
+@media (max-width: 768px) {
+  .mobile-modal {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    width: 90vw !important;
+    max-width: 400px !important;
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+  }
+}
+
+/* Safe area padding for devices with notches */
+.safe-area-padding {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* Landscape optimization */
+@media (max-width: 768px) and (orientation: landscape) {
+  .landscape-compress {
+    padding: 8px;
+  }
+  
+  .landscape-compress h1 {
+    font-size: 1.5rem;
+  }
+  
+  .landscape-compress h2 {
+    font-size: 1.3rem;
+  }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  .touch-feedback:active {
+    transform: none;
+  }
+  
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .touch-friendly {
+    border: 2px solid currentColor;
+  }
+}

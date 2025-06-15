@@ -343,6 +343,8 @@
   position: relative;
   overflow: hidden;
   backdrop-filter: blur(15px);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
   /* Enhanced shadow and subtle inner glow */
   box-shadow: 
     0 4px 16px rgba(0, 0, 0, 0.08),
@@ -792,6 +794,7 @@
   }
 }
 
+/* Small phones */
 @media (max-width: 480px) {
   .enhanced-quiz .quiz-header h2 {
     font-size: 1.2rem;
@@ -814,9 +817,86 @@
   .enhanced-quiz .next-button,
   .enhanced-quiz .hint-button {
     width: 100%;
-    max-width: 250px;
-    padding: 0.5rem 1rem;
-    font-size: 0.85rem;
+    max-width: 300px;
+    padding: 0.8rem 1.2rem;
+    font-size: 1rem;
+    min-height: 48px;
+  }
+  
+  /* Ensure content doesn't overflow */
+  .enhanced-quiz {
+    overflow-x: hidden;
+  }
+  
+  /* Question container mobile optimization */
+  .enhanced-quiz .question-container {
+    margin: 0.5rem;
+  }
+  
+  /* Progress bar mobile */
+  .progress-container {
+    padding: 0.5rem;
+  }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+  /* Remove hover effects on touch devices */
+  .enhanced-quiz .option:hover {
+    transform: none;
+    box-shadow: none;
+  }
+  
+  /* Add active states for feedback */
+  .enhanced-quiz .option:active,
+  .enhanced-quiz .submit-button:active,
+  .enhanced-quiz .next-button:active,
+  .enhanced-quiz .hint-button:active {
+    transform: scale(0.98);
+    transition: transform 0.1s;
+  }
+  
+  /* Disable text selection on interactive elements */
+  .enhanced-quiz .option,
+  .enhanced-quiz button {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+  
+  /* Ensure minimum touch target sizes */
+  .enhanced-quiz .option {
+    min-height: 48px;
+  }
+  
+  .enhanced-quiz button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Landscape orientation for mobile */
+@media (max-width: 768px) and (orientation: landscape) {
+  .enhanced-quiz {
+    padding: 0.5rem;
+  }
+  
+  .enhanced-quiz .quiz-header {
+    padding: 0.5rem;
+  }
+  
+  .enhanced-quiz .quiz-header h2 {
+    font-size: 1.2rem;
+  }
+  
+  .question-image img {
+    max-height: 200px;
+  }
+  
+  .enhanced-quiz .quiz-actions {
+    flex-direction: row;
+    padding: 0.5rem;
   }
 }
 

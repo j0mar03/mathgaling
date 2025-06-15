@@ -1117,6 +1117,10 @@
   font-size: 1.2rem;
   transition: all 0.3s ease;
   text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  min-width: 44px;
+  min-height: 44px;
 }
 
 .action-btn.view {
@@ -1541,6 +1545,7 @@
   }
 }
 
+/* Enhanced Mobile Responsive Design */
 @media (max-width: 768px) {
   .classroom-enhanced {
     padding: 15px;
@@ -1612,7 +1617,134 @@
   
   .action-buttons-enhanced {
     flex-direction: column;
-    gap: 5px;
+    gap: 8px;
+  }
+  
+  /* Touch-friendly button improvements */
+  .action-btn {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    min-height: 48px;
+  }
+  
+  /* Mobile table improvements */
+  .enhanced-student-table {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Swipe-friendly cards */
+  .urgent-intervention-card,
+  .insight-card,
+  .analytics-card,
+  .kc-analysis-card {
+    margin-bottom: 16px;
+  }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+  /* Remove hover effects on touch devices */
+  .action-btn:hover {
+    transform: none;
+    background: inherit;
+  }
+  
+  .action-btn.view:hover {
+    background: #3498db;
+  }
+  
+  .action-btn.parent:hover {
+    background: #f39c12;
+  }
+  
+  .action-btn.remove:hover {
+    background: #e74c3c;
+  }
+  
+  /* Add active states for feedback */
+  .action-btn:active {
+    transform: scale(0.95);
+    transition: transform 0.1s;
+  }
+  
+  /* Card hover effects */
+  .urgent-intervention-card:hover,
+  .insight-card:hover,
+  .analytics-card:hover,
+  .kc-analysis-card:hover {
+    transform: none;
+  }
+  
+  /* Disable text selection on interactive elements */
+  .action-btn,
+  .enhanced-student-table th,
+  .enhanced-student-table td {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+}
+
+/* Landscape orientation for tablets */
+@media (max-width: 1024px) and (orientation: landscape) {
+  .kc-analysis-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .urgent-interventions-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .insights-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Small mobile devices - enhanced scrolling and touch */
+@media (max-width: 480px) {
+  /* Horizontal scroll indicator for tables */
+  .enhanced-student-table::after {
+    content: '← Swipe to see more →';
+    position: absolute;
+    bottom: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.8rem;
+    color: #7f8c8d;
+    text-align: center;
+  }
+  
+  .enhanced-student-table {
+    position: relative;
+    padding-bottom: 30px;
+  }
+  
+  /* Make cards more touch-friendly */
+  .urgent-intervention-card,
+  .insight-card,
+  .analytics-card,
+  .kc-analysis-card {
+    padding: 20px;
+    border-radius: 12px;
+  }
+  
+  /* Stack action buttons vertically with more spacing */
+  .action-buttons-enhanced {
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+  }
+  
+  /* Larger touch targets for small screens */
+  .action-btn {
+    width: 50px;
+    height: 50px;
+    min-width: 50px;
+    min-height: 50px;
+    font-size: 1.4rem;
   }
 }
 

@@ -43,6 +43,9 @@
   border-radius: 5px 5px 0 0;
   font-weight: 500;
   transition: all 0.3s ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  min-height: 44px;
 }
 
 .tab-button:hover {
@@ -67,6 +70,9 @@
   transition: all 0.3s ease;
   text-decoration: none; /* Remove link underline */
   display: inline-block; /* Behave like a button */
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  min-height: 44px;
 }
 
 .review-link-button:hover {
@@ -88,6 +94,9 @@
   margin-right: 10px;
   margin-bottom: 15px;
   transition: background-color 0.3s;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  min-height: 40px;
 }
 
 .admin-button:hover {
@@ -402,16 +411,68 @@
   }
   
   .admin-button {
-    padding: 6px 10px;
-    font-size: 11px;
+    padding: 12px 16px;
+    font-size: 14px;
     display: block;
     width: 100%;
-    margin-bottom: 5px;
+    margin-bottom: 8px;
     margin-right: 0;
+    min-height: 48px;
   }
   
   /* Stack action buttons vertically on very small screens */
   .admin-table td:last-child {
     min-width: 120px;
+  }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+  /* Remove hover effects on touch devices */
+  .tab-button:hover,
+  .review-link-button:hover,
+  .admin-button:hover {
+    background: inherit;
+  }
+  
+  .tab-button:hover {
+    background: #f5f7fa;
+  }
+  
+  .review-link-button:hover {
+    background: #f5f7fa;
+  }
+  
+  .admin-button:hover {
+    background-color: #4a90e2;
+  }
+  
+  .admin-button.secondary:hover {
+    background-color: #6c757d;
+  }
+  
+  /* Add active states for feedback */
+  .tab-button:active,
+  .review-link-button:active,
+  .admin-button:active {
+    transform: scale(0.98);
+    transition: transform 0.1s;
+  }
+  
+  /* Disable text selection on interactive elements */
+  .tab-button,
+  .review-link-button,
+  .admin-button,
+  .admin-table th,
+  .admin-table td {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+  
+  /* Better table interaction */
+  .admin-table {
+    -webkit-overflow-scrolling: touch;
   }
 }
