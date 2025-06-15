@@ -218,7 +218,7 @@ function SignupImproved() {
     <div className="signup-improved-container">
       <div className="signup-improved-card">
         <div className="signup-improved-header">
-          <img src="/logo.png" alt="Math Tagumpay Logo" className="signup-logo" />
+          <img src={`/newlogo.png?v=${new Date().getTime()}`} alt="Math Tagumpay Logo" className="signup-logo" />
           <h1>Join Math Tagumpay!</h1>
           <p>Start your math learning journey today</p>
         </div>

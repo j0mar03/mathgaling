@@ -65,15 +65,21 @@
 }
 
 .signup-logo {
-  width: 80px;
-  height: 80px;
+  width: 100px;
+  height: 100px;
   margin: 0 auto 20px auto;
   display: block;
   border-radius: 50%;
   background: white;
-  padding: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
   animation: gentle-bounce 2s ease-in-out infinite;
+  object-fit: contain;
+  transition: transform 0.3s ease;
+}
+
+.signup-logo:hover {
+  transform: translateY(-3px) scale(1.05);
 }
 
 @keyframes gentle-bounce {

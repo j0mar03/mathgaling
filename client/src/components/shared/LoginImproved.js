@@ -112,7 +112,7 @@ const LoginImproved = () => {
     <div className="login-improved-container">
       <div className="login-improved-card">
         <div className="login-improved-header">
-          <img src="/logo.png" alt="Math Tagumpay Logo" className="login-logo" />
+          <img src={`/newlogo.png?v=${new Date().getTime()}`} alt="Math Tagumpay Logo" className="login-logo" />
           <h1>Welcome to Math Tagumpay!</h1>
           <p>Your Intelligent Math Learning System</p>
         </div>
