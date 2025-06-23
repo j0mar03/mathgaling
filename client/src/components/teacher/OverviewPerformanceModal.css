@@ -25,12 +25,12 @@
   background: white;
   border-radius: 16px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  max-width: 1400px;
+  max-width: 95vw; /* Increased to 95% of viewport width */
   max-height: 95vh;
-  width: 98%;
-  overflow: hidden;
+  width: 95%; /* Increased width */
+  overflow: visible; /* Changed from hidden to visible */
   animation: slideUp 0.3s ease-out;
-  min-height: 600px; /* Ensure minimum height for content visibility */
+  min-height: 600px;
   display: flex;
   flex-direction: column;
 }
@@ -97,10 +97,10 @@
 .modal-content {
   padding: 2rem;
   max-height: calc(95vh - 140px);
-  min-height: 500px; /* Ensure minimum content height */
+  min-height: 500px;
   overflow-y: auto;
-  overflow-x: hidden;
-  flex: 1; /* Allow content to fill available space */
+  overflow-x: auto; /* Changed from hidden to auto for horizontal scrolling if needed */
+  flex: 1;
 }
 
 /* Metrics Grid */
@@ -109,6 +109,8 @@
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
+  width: 100%;
+  /* Ensure grid wraps properly instead of overflowing */
 }
 
 .metric-card {
@@ -279,10 +281,12 @@
 /* Insights Grid */
 .insights-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Reduced minmax from 350px to 300px */
   gap: 1.5rem;
   margin-bottom: 2rem;
-  min-height: 200px; /* Ensure minimum height for insights section */
+  min-height: 200px;
+  width: 100%;
+  /* Allow cards to wrap better on smaller screens */
 }
 
 .insight-card {
@@ -437,25 +441,31 @@
 /* Responsive Design */
 @media (max-width: 1200px) {
   .overview-modal {
-    max-width: 1200px;
-    min-height: 500px; /* Maintain minimum height on smaller screens */
+    max-width: 95vw; /* Use viewport width instead of fixed pixels */
+    width: 95%;
+    min-height: 500px;
   }
   
   .modal-content {
-    min-height: 400px; /* Adjust minimum content height for smaller screens */
+    min-height: 400px;
+    padding: 1.5rem; /* Reduce padding on smaller screens */
   }
   
   .insights-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* More flexible grid */
+  }
+  
+  .metrics-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Better wrapping */
   }
 }
 
 @media (max-width: 768px) {
   .overview-modal {
-    width: 98%;
+    width: 95%;
     max-height: 95vh;
     max-width: 95vw;
-    min-height: 400px; /* Ensure adequate height on mobile */
+    min-height: 400px;
   }
 
   .modal-header {
