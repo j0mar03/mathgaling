@@ -10,39 +10,43 @@ const OverviewPerformanceModal = ({
 }) => {
   if (!isOpen) return null;
 
+  // Ensure we have arrays to work with
+  const safePerformance = performance || [];
+  const safeKnowledgeComponents = knowledgeComponents || [];
+
   // Calculate overall statistics
-  const totalStudents = performance.length;
+  const totalStudents = safePerformance.length;
   const avgMastery = totalStudents > 0 
-    ? (performance.reduce((sum, s) => 
+    ? (safePerformance.reduce((sum, s) => 
         sum + (s.performance?.mathMastery || s.performance?.averageMastery || 0), 0) / totalStudents * 100)
     : 0;
   
-  const interventionCount = performance.filter(s => s.intervention && s.intervention.needed).length;
-  const highPerformers = performance.filter(s => 
+  const interventionCount = safePerformance.filter(s => s.intervention && s.intervention.needed).length;
+  const highPerformers = safePerformance.filter(s => 
     (s.performance?.mathMastery || s.performance?.averageMastery || 0) >= 0.8).length;
-  const strugglingStudents = performance.filter(s => 
+  const strugglingStudents = safePerformance.filter(s => 
     (s.performance?.mathMastery || s.performance?.averageMastery || 0) < 0.4).length;
 
   // Calculate mastery distribution
   const masteryDistribution = {
-    excellent: performance.filter(s => (s.performance?.mathMastery || s.performance?.averageMastery || 0) >= 0.9).length,
-    good: performance.filter(s => {
+    excellent: safePerformance.filter(s => (s.performance?.mathMastery || s.performance?.averageMastery || 0) >= 0.9).length,
+    good: safePerformance.filter(s => {
       const mastery = s.performance?.mathMastery || s.performance?.averageMastery || 0;
       return mastery >= 0.7 && mastery < 0.9;
     }).length,
-    average: performance.filter(s => {
+    average: safePerformance.filter(s => {
       const mastery = s.performance?.mathMastery || s.performance?.averageMastery || 0;
       return mastery >= 0.5 && mastery < 0.7;
     }).length,
-    needsHelp: performance.filter(s => {
+    needsHelp: safePerformance.filter(s => {
       const mastery = s.performance?.mathMastery || s.performance?.averageMastery || 0;
       return mastery >= 0.3 && mastery < 0.5;
     }).length,
-    struggling: performance.filter(s => (s.performance?.mathMastery || s.performance?.averageMastery || 0) < 0.3).length
+    struggling: safePerformance.filter(s => (s.performance?.mathMastery || s.performance?.averageMastery || 0) < 0.3).length
   };
 
   // Top and bottom performing KCs
-  const sortedKCs = knowledgeComponents
+  const sortedKCs = safeKnowledgeComponents
     .filter(kc => kc.averageMastery != null)
     .sort((a, b) => (b.averageMastery || 0) - (a.averageMastery || 0));
   
@@ -65,8 +69,17 @@ const OverviewPerformanceModal = ({
         </div>
 
         <div className="modal-content">
-          {/* Key Metrics */}
-          <div className="metrics-grid">
+          {/* Show loading or no data state */}
+          {totalStudents === 0 ? (
+            <div className="no-data-state" style={{ textAlign: 'center', padding: '2rem' }}>
+              <h3>📊 No Student Data Available</h3>
+              <p>There are no students in this classroom yet, or student performance data is still loading.</p>
+              <p>Add students to your classroom to see performance analytics here.</p>
+            </div>
+          ) : (
+            <>
+              {/* Key Metrics */}
+              <div className="metrics-grid">
             <div className="metric-card primary">
               <div className="metric-icon">👥</div>
               <div className="metric-content">
@@ -227,6 +240,8 @@ const OverviewPerformanceModal = ({
               )}
             </div>
           </div>
+            </>
+          )}
         </div>
       </div>
     </div>

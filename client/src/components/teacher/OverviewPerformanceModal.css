@@ -11,8 +11,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 1000;
+  z-index: 1050; /* Higher z-index to ensure it appears above all content */
   animation: fadeIn 0.3s ease-out;
+  padding: 20px; /* Add padding to ensure modal doesn't touch edges */
 }
 
 @keyframes fadeIn {
@@ -29,6 +30,9 @@
   width: 98%;
   overflow: hidden;
   animation: slideUp 0.3s ease-out;
+  min-height: 600px; /* Ensure minimum height for content visibility */
+  display: flex;
+  flex-direction: column;
 }
 
 @keyframes slideUp {
@@ -93,8 +97,10 @@
 .modal-content {
   padding: 2rem;
   max-height: calc(95vh - 140px);
+  min-height: 500px; /* Ensure minimum content height */
   overflow-y: auto;
   overflow-x: hidden;
+  flex: 1; /* Allow content to fill available space */
 }
 
 /* Metrics Grid */
@@ -273,9 +279,10 @@
 /* Insights Grid */
 .insights-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
+  min-height: 200px; /* Ensure minimum height for insights section */
 }
 
 .insight-card {
@@ -405,10 +412,37 @@
   font-size: 1.2rem;
 }
 
+/* No Data State */
+.no-data-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  color: #6c757d;
+}
+
+.no-data-state h3 {
+  color: #495057;
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+}
+
+.no-data-state p {
+  margin: 0.5rem 0;
+  line-height: 1.6;
+  max-width: 600px;
+}
+
 /* Responsive Design */
 @media (max-width: 1200px) {
   .overview-modal {
     max-width: 1200px;
+    min-height: 500px; /* Maintain minimum height on smaller screens */
+  }
+  
+  .modal-content {
+    min-height: 400px; /* Adjust minimum content height for smaller screens */
   }
   
   .insights-grid {
@@ -421,6 +455,7 @@
     width: 98%;
     max-height: 95vh;
     max-width: 95vw;
+    min-height: 400px; /* Ensure adequate height on mobile */
   }
 
   .modal-header {
@@ -433,6 +468,7 @@
 
   .modal-content {
     padding: 1.5rem;
+    min-height: 300px; /* Ensure adequate content height on mobile */
   }
 
   .metrics-grid {
