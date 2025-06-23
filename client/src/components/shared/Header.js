@@ -75,7 +75,7 @@ const Header = ({ user, logout }) => {
         <div className="logo">
           <Link to="/">
             <div className="logo-main">
-              <img src={`/logo.png?v=1750656801423`} alt="Math Tagumpay Logo" className="logo-icon"{`/logo.png?v=1750656566900`} alt="Math Tagumpay Logo" className="logo-icon"{`/newlogo.png?v=${new Date().getTime()}`} alt="Math Tagumpay Logo" className="logo-icon" />
+              <img src={`/logo.png?v=${new Date().getTime()}`} alt="Math Tagumpay Logo" className="logo-icon" />
               <span className="logo-subtitle">Intelligent Tutoring System for Philippine Grade Level</span>
             </div>
           </Link>
