@@ -1003,14 +1003,14 @@ exports.handler = async (event, context) => {
       
       // Create database record
       // Make sure grade_level is a number, not a string
-      const now = new Date().toISOString();
       const dbRecord = {
         auth_id: userData.email,
         name: userData.name,
         password: userData.password || 'temp123', // Add password field
-        created_at: now,
-        updated_at: now,
-        ...(role === 'student' && { grade_level: parseInt(userData.grade_level) || 3 }),
+        ...(role === 'student' && { 
+          grade_level: parseInt(userData.grade_level) || 3,
+          username: userData.username || null  // Add username field for students
+        }),
         ...(role === 'teacher' && { subject: userData.subject_taught || userData.subject || 'Mathematics' })
       };
       
