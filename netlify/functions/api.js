@@ -1641,49 +1641,31 @@ Sample Student 3,3,student3,password123`;
   // POST /api/admin/users/csv-upload - Upload CSV users
   if (path === '/api/admin/users/csv-upload' && httpMethod === 'POST') {
     try {
-      // Parse multipart form data for file upload
-      const contentType = event.headers['content-type'] || event.headers['Content-Type'];
+      console.log('[CSV Upload] Request received');
+      console.log('[CSV Upload] Content-Type:', event.headers['content-type'] || event.headers['Content-Type']);
+      console.log('[CSV Upload] Body type:', typeof event.body);
+      console.log('[CSV Upload] Is base64:', event.isBase64Encoded);
       
-      if (!contentType || !contentType.includes('multipart/form-data')) {
+      let requestData;
+      try {
+        requestData = JSON.parse(event.body);
+      } catch (parseError) {
+        console.error('[CSV Upload] JSON parse error:', parseError);
         return {
           statusCode: 400,
           headers,
-          body: JSON.stringify({ error: 'Content-Type must be multipart/form-data' })
+          body: JSON.stringify({ error: 'Invalid JSON in request body' })
         };
       }
 
-      // Extract boundary from Content-Type
-      const boundary = contentType.split('boundary=')[1];
-      if (!boundary) {
+      const csvContent = requestData.csvContent;
+      console.log('[CSV Upload] CSV content length:', csvContent ? csvContent.length : 0);
+
+      if (!csvContent || typeof csvContent !== 'string') {
         return {
           statusCode: 400,
           headers,
-          body: JSON.stringify({ error: 'Invalid multipart boundary' })
-        };
-      }
-
-      // Parse the multipart data (simplified approach for CSV)
-      const body = event.isBase64Encoded ? 
-        Buffer.from(event.body, 'base64').toString() : 
-        event.body;
-
-      // Extract CSV content from multipart body
-      const parts = body.split('--' + boundary);
-      let csvContent = '';
-      
-      for (const part of parts) {
-        if (part.includes('filename=') && part.includes('.csv')) {
-          const contentStart = part.indexOf('\r\n\r\n') + 4;
-          csvContent = part.substring(contentStart).trim();
-          break;
-        }
-      }
-
-      if (!csvContent) {
-        return {
-          statusCode: 400,
-          headers,
-          body: JSON.stringify({ error: 'No CSV file found in upload' })
+          body: JSON.stringify({ error: 'CSV content is required' })
         };
       }
 

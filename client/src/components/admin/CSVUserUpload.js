@@ -65,13 +65,21 @@ const CSVUserUpload = ({ onUsersAdded }) => {
     setError('');
     setUploadResults(null);
     
-    const formData = new FormData();
-    formData.append('file', file);
-    
     try {
-      const response = await axios.post('/api/admin/users/csv-upload', formData, {
+      // Read the file content as text
+      const fileContent = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.onerror = (e) => reject(e);
+        reader.readAsText(file);
+      });
+      
+      // Send CSV content as JSON
+      const response = await axios.post('/api/admin/users/csv-upload', {
+        csvContent: fileContent
+      }, {
         headers: {
-          'Content-Type': 'multipart/form-data'
+          'Content-Type': 'application/json'
         }
       });
       
