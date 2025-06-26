@@ -519,48 +519,36 @@ exports.getCSVTemplate = async (req, res) => {
         
         const tempFilePath = path.join(tempDir, 'user_import_template.csv');
         
-        // Create the CSV writer
+        // Create the CSV writer with simplified headers
         const csvWriter = createObjectCsvWriter({
             path: tempFilePath,
             header: [
-                { id: 'role', title: 'Role' },
                 { id: 'name', title: 'Name' },
-                { id: 'email', title: 'Email' },
-                { id: 'password', title: 'Password' },
-                { id: 'grade_level', title: 'Grade Level (Students Only)' },
-                { id: 'subject_taught', title: 'Subject Taught (Teachers Only)' },
-                { id: 'phone_number', title: 'Phone Number (Parents Only)' }
+                { id: 'grade_level', title: 'Grade Level' },
+                { id: 'username', title: 'Username' },
+                { id: 'password', title: 'Password' }
             ]
         });
         
-        // Add sample data
+        // Add sample data for students only (simplified format)
         const sampleData = [
             {
-                role: 'student',
-                name: 'Sample Student',
-                email: 'student@example.com',
-                password: 'password123',
+                name: 'Sample Student 1',
                 grade_level: '3',
-                subject_taught: '',
-                phone_number: ''
+                username: 'student1',
+                password: 'password123'
             },
             {
-                role: 'teacher',
-                name: 'Sample Teacher',
-                email: 'teacher@example.com',
-                password: 'password123',
-                grade_level: '',
-                subject_taught: 'Math',
-                phone_number: ''
+                name: 'Sample Student 2',
+                grade_level: '4',
+                username: 'student2',
+                password: 'password123'
             },
             {
-                role: 'parent',
-                name: 'Sample Parent',
-                email: 'parent@example.com',
-                password: 'password123',
-                grade_level: '',
-                subject_taught: '',
-                phone_number: '555-123-4567'
+                name: 'Sample Student 3',
+                grade_level: '3',
+                username: 'student3',
+                password: 'password123'
             }
         ];
         
@@ -586,124 +574,160 @@ exports.getCSVTemplate = async (req, res) => {
 // CSV Users Upload
 exports.uploadCSVUsers = async (req, res) => {
     try {
-        // Check if a file was uploaded
-        if (!req.file) {
-            return res.status(400).json({ error: 'No file uploaded' });
+        let csvContent = null;
+        let filePath = null;
+        
+        // Check if this is a file upload (multer) or JSON content
+        if (req.file) {
+            // File upload via multer
+            filePath = req.file.path;
+        } else if (req.body && req.body.csvContent) {
+            // JSON content (for Netlify/Vercel)
+            csvContent = req.body.csvContent;
+        } else {
+            return res.status(400).json({ error: 'No file uploaded or CSV content provided' });
         }
         
         const results = [];
         const errors = [];
         const successfulUsers = [];
         
-        // Create a readable stream from the uploaded file
-        const parser = fs.createReadStream(req.file.path)
-            .pipe(csv())
-            .on('data', async (data) => {
-                // Push data to results array
-                results.push(data);
-            })
-            .on('end', async () => {
-                // Process all the users
-                for (const user of results) {
-                    try {
-                        // Basic validation
-                        if (!user.role || !user.name || !user.email || !user.password) {
-                            errors.push({
-                                email: user.email || 'Unknown',
-                                error: 'Missing required field (role, name, email, or password)'
-                            });
-                            continue;
-                        }
-                        
-                        // Check if user already exists
-                        const existingUser = await findUserByEmail(user.email);
-                        if (existingUser) {
-                            errors.push({
-                                email: user.email,
-                                error: 'User with this email already exists'
-                            });
-                            continue;
-                        }
-                        
-                        // Hash password
-                        const hashedPassword = await bcrypt.hash(user.password, SALT_ROUNDS);
-                        
-                        // Create user based on role
-                        const userData = {
-                            name: user.name,
-                            auth_id: user.email,
-                            password: hashedPassword
-                        };
-                        
-                        // Add role-specific fields
-                        if (user.role === 'student' && user.grade_level) {
-                            userData.grade_level = user.grade_level;
-                        } 
-                        else if (user.role === 'teacher' && user.subject_taught) {
-                            userData.subject_taught = user.subject_taught;
-                        }
-                        else if (user.role === 'parent' && user.phone_number) {
-                            userData.phone_number = user.phone_number;
-                        }
-                        
-                        let newUser;
-                        
-                        switch (user.role.toLowerCase()) {
-                            case 'student':
-                                newUser = await Student.create(userData);
-                                // Create a learning path for the new student
-                                await db.LearningPath.create({
-                                    student_id: newUser.id,
-                                    is_active: true,
-                                    current_position: 0
-                                });
-                                break;
-                            case 'teacher':
-                                newUser = await Teacher.create(userData);
-                                break;
-                            case 'parent':
-                                newUser = await Parent.create(userData);
-                                break;
-                            case 'admin':
-                                newUser = await Admin.create(userData);
-                                break;
-                            default:
-                                errors.push({
-                                    email: user.email,
-                                    error: 'Invalid role specified'
-                                });
-                                continue;
-                        }
-                        
-                        // Add to successful users
-                        const userInfo = newUser.toJSON();
-                        delete userInfo.password;
-                        successfulUsers.push({
-                            ...userInfo,
-                            role: user.role.toLowerCase()
-                        });
-                        
-                    } catch (err) {
+        // Process CSV content
+        const processCSV = async (content) => {
+            const lines = content.split('\n').filter(line => line.trim());
+            if (lines.length < 2) {
+                throw new Error('CSV file must contain header and at least one data row');
+            }
+            
+            const header = lines[0].split(',').map(h => h.trim().toLowerCase());
+            const dataLines = lines.slice(1);
+            
+            // Validate required headers for the simplified format
+            const requiredHeaders = ['name', 'grade_level', 'username', 'password'];
+            const missingHeaders = requiredHeaders.filter(h => !header.includes(h));
+            
+            if (missingHeaders.length > 0) {
+                throw new Error(`Missing required CSV headers: ${missingHeaders.join(', ')}. Expected: name, grade_level, username, password`);
+            }
+            
+            // Process each data row
+            for (let i = 0; i < dataLines.length; i++) {
+                const values = dataLines[i].split(',').map(v => v.trim());
+                const rowData = {};
+                
+                // Map values to headers
+                header.forEach((h, index) => {
+                    rowData[h] = values[index] || '';
+                });
+                
+                const { name, grade_level, username, password } = rowData;
+                
+                try {
+                    // Basic validation
+                    if (!name || !grade_level || !username || !password) {
                         errors.push({
-                            email: user.email || 'Unknown',
-                            error: `Creation failed: ${err.message}`
+                            row: i + 2, // +2 because we start from index 0 and skip header
+                            email: username,
+                            error: 'Missing required field (name, grade_level, username, or password)'
                         });
+                        continue;
                     }
+                    
+                    // Check if user already exists
+                    const existingUser = await findUserByEmail(username);
+                    if (existingUser) {
+                        errors.push({
+                            row: i + 2,
+                            email: username,
+                            error: 'User with this username already exists'
+                        });
+                        continue;
+                    }
+                    
+                    // Hash password
+                    const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+                    
+                    // Create student (simplified format only supports students)
+                    const userData = {
+                        name: name,
+                        auth_id: username,
+                        password: hashedPassword,
+                        grade_level: grade_level
+                    };
+                    
+                    const newUser = await Student.create(userData);
+                    
+                    // Create a learning path for the new student
+                    await db.LearningPath.create({
+                        student_id: newUser.id,
+                        is_active: true,
+                        current_position: 0
+                    });
+                    
+                    // Add to successful users
+                    const userInfo = newUser.toJSON();
+                    delete userInfo.password;
+                    successfulUsers.push({
+                        ...userInfo,
+                        role: 'student'
+                    });
+                    
+                } catch (err) {
+                    errors.push({
+                        row: i + 2,
+                        email: username || 'Unknown',
+                        error: `Creation failed: ${err.message}`
+                    });
                 }
-                
-                // Clean up the uploaded file
-                fs.unlink(req.file.path, (err) => {
-                    if (err) console.error('Error deleting file:', err);
-                });
-                
-                // Return the results
-                res.status(200).json({
-                    success: true,
-                    message: `${successfulUsers.length} users created successfully. ${errors.length} users failed.`,
-                    created: successfulUsers,
-                    errors: errors
-                });
+            }
+        };
+        
+        if (csvContent) {
+            // Process JSON content directly
+            await processCSV(csvContent);
+        } else if (filePath) {
+            // Process file upload using csv-parser
+            await new Promise((resolve, reject) => {
+                const parser = fs.createReadStream(filePath)
+                    .pipe(csv())
+                    .on('data', async (data) => {
+                        results.push(data);
+                    })
+                    .on('end', async () => {
+                        try {
+                            // Convert parsed data back to CSV format for processing
+                            const header = Object.keys(results[0] || {});
+                            const csvLines = [header.join(',')];
+                            
+                            for (const row of results) {
+                                const values = header.map(h => row[h] || '');
+                                csvLines.push(values.join(','));
+                            }
+                            
+                            await processCSV(csvLines.join('\n'));
+                            resolve();
+                        } catch (err) {
+                            reject(err);
+                        }
+                    })
+                    .on('error', reject);
             });
+        }
+        
+        // Clean up the uploaded file if it exists
+        if (filePath) {
+            fs.unlink(filePath, (err) => {
+                if (err) console.error('Error deleting file:', err);
+            });
+        }
+        
+        // Return the results
+        res.status(200).json({
+            success: true,
+            message: `${successfulUsers.length} users created successfully. ${errors.length} users failed.`,
+            created: successfulUsers,
+            errors: errors
+        });
             
     } catch (error) {
         console.error('Error processing CSV:', error);
@@ -715,7 +739,7 @@ exports.uploadCSVUsers = async (req, res) => {
             });
         }
         
-        res.status(500).json({ error: 'Failed to process CSV file' });
+        res.status(500).json({ error: error.message || 'Failed to process CSV file' });
     }
 };
 

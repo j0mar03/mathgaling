@@ -79,7 +79,18 @@ router.get('/users', adminController.listUsers);
 router.post('/users', adminController.createUser);
 router.put('/users/:role/:id', adminController.updateUser);
 router.delete('/users/:role/:id', adminController.deleteUser); // Route for deleting users
-router.post('/users/csv-upload', csvUpload.single('file'), adminController.uploadCSVUsers); // New route for CSV upload
+router.post('/users/csv-upload', (req, res, next) => {
+  // Check if this is a file upload or JSON content
+  const contentType = req.headers['content-type'] || '';
+  
+  if (contentType.includes('multipart/form-data')) {
+    // File upload - use multer middleware
+    csvUpload.single('file')(req, res, next);
+  } else {
+    // JSON content - skip multer, proceed to controller
+    next();
+  }
+}, adminController.uploadCSVUsers);
 router.get('/users/csv-template', adminController.getCSVTemplate); // New route for downloading CSV template
 
 // Knowledge Component Management Routes

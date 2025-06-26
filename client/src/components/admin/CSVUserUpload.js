@@ -9,6 +9,11 @@ const CSVUserUpload = ({ onUsersAdded }) => {
   const [error, setError] = useState('');
   const fileInputRef = useRef(null);
 
+  // Detect if we're using Netlify functions or Express backend
+  const isNetlifyDeployment = process.env.REACT_APP_NETLIFY_DEV || 
+                             window.location.hostname.includes('netlify') ||
+                             window.location.hostname.includes('vercel');
+
   const handleDragOver = (e) => {
     e.preventDefault();
     setIsDragging(true);
@@ -66,24 +71,37 @@ const CSVUserUpload = ({ onUsersAdded }) => {
     setUploadResults(null);
     
     try {
-      // Read the file content as text
-      const fileContent = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = (e) => resolve(e.target.result);
-        reader.onerror = (e) => reject(e);
-        reader.readAsText(file);
-      });
-      
-      // Send CSV content as JSON
-      const response = await axios.post('/api/admin/users/csv-upload', {
-        csvContent: fileContent
-      }, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      setUploadResults(response.data);
+      if (isNetlifyDeployment) {
+        // For Netlify/Vercel: Send CSV content as JSON
+        const fileContent = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (e) => resolve(e.target.result);
+          reader.onerror = (e) => reject(e);
+          reader.readAsText(file);
+        });
+        
+        const response = await axios.post('/api/admin/users/csv-upload', {
+          csvContent: fileContent
+        }, {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        setUploadResults(response.data);
+      } else {
+        // For Express.js backend: Send as FormData (file upload)
+        const formData = new FormData();
+        formData.append('file', file);
+        
+        const response = await axios.post('/api/admin/users/csv-upload', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+        
+        setUploadResults(response.data);
+      }
       
       // If users were successfully added, notify parent component
       if (response.data.created && response.data.created.length > 0) {
@@ -179,13 +197,13 @@ const CSVUserUpload = ({ onUsersAdded }) => {
         </>
       ) : (
         <div className="csv-results">
-          {uploadResults.created.length > 0 && (
+          {uploadResults.created && uploadResults.created.length > 0 && (
             <div className="csv-success-message">
               Successfully created {uploadResults.created.length} users.
             </div>
           )}
           
-          {uploadResults.errors.length > 0 && (
+          {uploadResults.errors && uploadResults.errors.length > 0 && (
             <>
               <div className="csv-error-message">
                 Failed to create {uploadResults.errors.length} users.
