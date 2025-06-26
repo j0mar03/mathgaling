@@ -1,0 +1,5 @@
+name,grade_level,username,password
+John Doe,3,john.doe,test123
+Jane Smith,4,jane.smith,test456
+Bob Johnson,3,bob.johnson,test789
+EOF < /dev/null

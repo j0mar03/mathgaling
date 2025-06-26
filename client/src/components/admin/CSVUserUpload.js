@@ -89,6 +89,11 @@ const CSVUserUpload = ({ onUsersAdded }) => {
         });
         
         setUploadResults(response.data);
+        
+        // If users were successfully added, notify parent component
+        if (response.data.created && response.data.created.length > 0) {
+          onUsersAdded();
+        }
       } else {
         // For Express.js backend: Send as FormData (file upload)
         const formData = new FormData();
@@ -101,11 +106,11 @@ const CSVUserUpload = ({ onUsersAdded }) => {
         });
         
         setUploadResults(response.data);
-      }
-      
-      // If users were successfully added, notify parent component
-      if (response.data.created && response.data.created.length > 0) {
-        onUsersAdded();
+        
+        // If users were successfully added, notify parent component
+        if (response.data.created && response.data.created.length > 0) {
+          onUsersAdded();
+        }
       }
     } catch (err) {
       console.error('Error uploading CSV:', err);
