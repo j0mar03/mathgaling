@@ -1645,23 +1645,66 @@ Sample Student 3,3,student3,password123`;
       console.log('[CSV Upload] Content-Type:', event.headers['content-type'] || event.headers['Content-Type']);
       console.log('[CSV Upload] Body type:', typeof event.body);
       console.log('[CSV Upload] Is base64:', event.isBase64Encoded);
+      console.log('[CSV Upload] Body preview:', event.body ? event.body.substring(0, 100) : 'null');
       
-      let requestData;
-      try {
-        requestData = JSON.parse(event.body);
-      } catch (parseError) {
-        console.error('[CSV Upload] JSON parse error:', parseError);
-        return {
-          statusCode: 400,
-          headers,
-          body: JSON.stringify({ error: 'Invalid JSON in request body' })
-        };
+      const contentType = event.headers['content-type'] || event.headers['Content-Type'] || '';
+      let csvContent = '';
+      
+      if (contentType.includes('application/json')) {
+        // Handle JSON content (expected from our updated frontend)
+        try {
+          const requestData = JSON.parse(event.body);
+          csvContent = requestData.csvContent;
+          console.log('[CSV Upload] Parsed JSON successfully, CSV content length:', csvContent ? csvContent.length : 0);
+        } catch (parseError) {
+          console.error('[CSV Upload] JSON parse error:', parseError);
+          return {
+            statusCode: 400,
+            headers,
+            body: JSON.stringify({ error: 'Invalid JSON in request body' })
+          };
+        }
+      } else if (contentType.includes('multipart/form-data')) {
+        // Handle multipart form data (fallback for other environments)
+        console.log('[CSV Upload] Handling multipart form data');
+        
+        // Extract boundary from Content-Type
+        const boundary = contentType.split('boundary=')[1];
+        if (!boundary) {
+          return {
+            statusCode: 400,
+            headers,
+            body: JSON.stringify({ error: 'Invalid multipart boundary' })
+          };
+        }
+
+        // Parse the multipart data
+        const body = event.isBase64Encoded ? 
+          Buffer.from(event.body, 'base64').toString() : 
+          event.body;
+
+        // Extract CSV content from multipart body
+        const parts = body.split('--' + boundary);
+        
+        for (const part of parts) {
+          if (part.includes('filename=') && part.includes('.csv')) {
+            const contentStart = part.indexOf('\r\n\r\n') + 4;
+            csvContent = part.substring(contentStart).trim();
+            // Remove any trailing boundary markers
+            csvContent = csvContent.replace(/--.*$/, '').trim();
+            break;
+          }
+        }
+        
+        console.log('[CSV Upload] Extracted CSV from multipart, length:', csvContent.length);
+      } else {
+        // Try to parse as direct CSV content
+        console.log('[CSV Upload] Treating as direct CSV content');
+        csvContent = event.body;
       }
 
-      const csvContent = requestData.csvContent;
-      console.log('[CSV Upload] CSV content length:', csvContent ? csvContent.length : 0);
-
-      if (!csvContent || typeof csvContent !== 'string') {
+      if (!csvContent || typeof csvContent !== 'string' || csvContent.length === 0) {
+        console.error('[CSV Upload] No valid CSV content found');
         return {
           statusCode: 400,
           headers,
