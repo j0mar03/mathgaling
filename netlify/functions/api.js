@@ -934,8 +934,8 @@ exports.handler = async (event, context) => {
   
   // Admin endpoints - /api/admin/*
   
-  // POST /api/admin/users - Create new user
-  if (path.includes('/admin/users') && httpMethod === 'POST') {
+  // POST /api/admin/users - Create new user (but not csv-upload)
+  if (path.includes('/admin/users') && !path.includes('csv-upload') && !path.includes('csv-template') && httpMethod === 'POST') {
     try {
       const userData = JSON.parse(event.body);
       console.log('Admin creating user:', userData.email, userData.role);
