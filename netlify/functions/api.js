@@ -1606,6 +1606,238 @@ exports.handler = async (event, context) => {
       };
     }
   }
+
+  // GET /api/admin/users/csv-template - Download CSV template
+  if (path === '/api/admin/users/csv-template' && httpMethod === 'GET') {
+    try {
+      // Create CSV template with simplified headers as requested
+      const csvTemplate = `name,grade_level,username,password
+Sample Student,3,student1,password123
+Sample Student 2,4,student2,password123
+Sample Student 3,3,student3,password123`;
+
+      return {
+        statusCode: 200,
+        headers: {
+          ...headers,
+          'Content-Type': 'text/csv',
+          'Content-Disposition': 'attachment; filename="user_import_template.csv"'
+        },
+        body: csvTemplate
+      };
+    } catch (error) {
+      console.error('Error generating CSV template:', error);
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Failed to generate template',
+          message: error.message
+        })
+      };
+    }
+  }
+
+  // POST /api/admin/users/csv-upload - Upload CSV users
+  if (path === '/api/admin/users/csv-upload' && httpMethod === 'POST') {
+    try {
+      // Parse multipart form data for file upload
+      const contentType = event.headers['content-type'] || event.headers['Content-Type'];
+      
+      if (!contentType || !contentType.includes('multipart/form-data')) {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({ error: 'Content-Type must be multipart/form-data' })
+        };
+      }
+
+      // Extract boundary from Content-Type
+      const boundary = contentType.split('boundary=')[1];
+      if (!boundary) {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({ error: 'Invalid multipart boundary' })
+        };
+      }
+
+      // Parse the multipart data (simplified approach for CSV)
+      const body = event.isBase64Encoded ? 
+        Buffer.from(event.body, 'base64').toString() : 
+        event.body;
+
+      // Extract CSV content from multipart body
+      const parts = body.split('--' + boundary);
+      let csvContent = '';
+      
+      for (const part of parts) {
+        if (part.includes('filename=') && part.includes('.csv')) {
+          const contentStart = part.indexOf('\r\n\r\n') + 4;
+          csvContent = part.substring(contentStart).trim();
+          break;
+        }
+      }
+
+      if (!csvContent) {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({ error: 'No CSV file found in upload' })
+        };
+      }
+
+      // Parse CSV content
+      const lines = csvContent.split('\n').filter(line => line.trim());
+      if (lines.length < 2) {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({ error: 'CSV file must contain header and at least one data row' })
+        };
+      }
+
+      const header = lines[0].split(',').map(h => h.trim().toLowerCase());
+      const dataLines = lines.slice(1);
+
+      // Validate required headers
+      const requiredHeaders = ['name', 'grade_level', 'username', 'password'];
+      const missingHeaders = requiredHeaders.filter(h => !header.includes(h));
+      
+      if (missingHeaders.length > 0) {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({ 
+            error: `Missing required CSV headers: ${missingHeaders.join(', ')}. Expected: name, grade_level, username, password` 
+          })
+        };
+      }
+
+      // Initialize Supabase
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      const successfulUsers = [];
+      const errors = [];
+
+      // Process each data row
+      for (let i = 0; i < dataLines.length; i++) {
+        const values = dataLines[i].split(',').map(v => v.trim());
+        const rowData = {};
+        
+        // Map values to headers
+        header.forEach((h, index) => {
+          rowData[h] = values[index] || '';
+        });
+
+        const { name, grade_level, username, password } = rowData;
+
+        try {
+          // Basic validation
+          if (!name || !grade_level || !username || !password) {
+            errors.push({
+              row: i + 2, // +2 because we start from index 0 and skip header
+              email: username,
+              error: 'Missing required field (name, grade_level, username, or password)'
+            });
+            continue;
+          }
+
+          // Check if student already exists
+          const { data: existingStudent } = await supabase
+            .from('students')
+            .select('id, auth_id')
+            .eq('auth_id', username)
+            .single();
+
+          if (existingStudent) {
+            errors.push({
+              row: i + 2,
+              email: username,
+              error: 'Student with this username already exists'
+            });
+            continue;
+          }
+
+          // Hash password (simple approach for demonstration)
+          const bcrypt = require('bcryptjs');
+          const hashedPassword = await bcrypt.hash(password, 10);
+
+          // Create student
+          const { data: newStudent, error: createError } = await supabase
+            .from('students')
+            .insert({
+              name: name,
+              auth_id: username,
+              password: hashedPassword,
+              grade_level: grade_level
+            })
+            .select()
+            .single();
+
+          if (createError) {
+            console.error('Error creating student:', createError);
+            errors.push({
+              row: i + 2,
+              email: username,
+              error: `Creation failed: ${createError.message}`
+            });
+            continue;
+          }
+
+          // Create learning path for the new student
+          await supabase
+            .from('learning_paths')
+            .insert({
+              student_id: newStudent.id,
+              is_active: true,
+              current_position: 0
+            });
+
+          successfulUsers.push({
+            id: newStudent.id,
+            name: newStudent.name,
+            auth_id: newStudent.auth_id,
+            grade_level: newStudent.grade_level,
+            role: 'student'
+          });
+
+        } catch (err) {
+          console.error('Error processing student row:', err);
+          errors.push({
+            row: i + 2,
+            email: username || 'Unknown',
+            error: `Processing failed: ${err.message}`
+          });
+        }
+      }
+
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          success: true,
+          message: `${successfulUsers.length} students created successfully. ${errors.length} rows failed.`,
+          created: successfulUsers,
+          errors: errors
+        })
+      };
+
+    } catch (error) {
+      console.error('Error processing CSV upload:', error);
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Failed to process CSV file',
+          message: error.message
+        })
+      };
+    }
+  }
   
   // GET /api/admin/content-items - List content items with filtering
   if (path.includes('/admin/content-items') && httpMethod === 'GET') {

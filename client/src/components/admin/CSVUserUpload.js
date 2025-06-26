@@ -148,11 +148,14 @@ const CSVUserUpload = ({ onUsersAdded }) => {
             </div>
           )}
           
-          <p>
-            <span className="csv-template-link" onClick={handleDownloadTemplate}>
-              Download CSV template
-            </span>
-          </p>
+          <div className="csv-template-info">
+            <p>Required CSV format: <strong>name, grade_level, username, password</strong></p>
+            <p>
+              <span className="csv-template-link" onClick={handleDownloadTemplate}>
+                📥 Download CSV template
+              </span>
+            </p>
+          </div>
           
           {error && <div className="csv-error-message">{error}</div>}
           
@@ -183,7 +186,7 @@ const CSVUserUpload = ({ onUsersAdded }) => {
               <ul className="csv-error-list">
                 {uploadResults.errors.map((err, index) => (
                   <li key={index}>
-                    {err.email}: {err.error}
+                    {err.row ? `Row ${err.row}` : ''} {err.email}: {err.error}
                   </li>
                 ))}
               </ul>
