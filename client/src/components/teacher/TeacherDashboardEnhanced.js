@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, LineElement, PointElement, ArcElement, Filler } from 'chart.js';
@@ -14,6 +14,7 @@ import './TeacherDashboardEnhanced.css';
 ChartJS.register(CategoryScale, LinearScale, BarElement, LineElement, PointElement, ArcElement, Title, Tooltip, Legend, Filler);
 
 const TeacherDashboardEnhanced = () => {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [teacher, setTeacher] = useState(null);
   const [classrooms, setClassrooms] = useState([]);
@@ -378,6 +379,13 @@ const TeacherDashboardEnhanced = () => {
             </div>
             <div className="header-actions">
               <button 
+                className="action-button tertiary"
+                onClick={() => navigate('/teacher/profile')}
+                title="My Profile"
+              >
+                <span>👤</span> Profile
+              </button>
+              <button 
                 className="action-button primary"
                 onClick={() => setShowAddClassroomModal(true)}
               >
@@ -387,7 +395,7 @@ const TeacherDashboardEnhanced = () => {
                 className="action-button secondary"
                 onClick={() => setShowCreateStudentModal(true)}
               >
-                <span>👤</span> Create Student
+                <span>👥</span> Create Student
               </button>
             </div>
           </div>

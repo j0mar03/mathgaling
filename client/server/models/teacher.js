@@ -33,6 +33,10 @@ module.exports = (sequelize) => {
       type: DataTypes.JSONB, // Use JSONB for preferences
       allowNull: true
     },
+    gender: {
+      type: DataTypes.ENUM('Male', 'Female', 'Other', 'Prefer not to say'),
+      allowNull: true
+    },
     password: {
       type: DataTypes.STRING,
       allowNull: false // Password should be required for login

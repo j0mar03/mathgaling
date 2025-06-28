@@ -1,284 +1,448 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import axios from 'axios';
+import { useAuth } from '../../context/AuthContext';
 import './EnhancedUserManagement.css';
 
-const EnhancedUserManagement = () => {
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+const EnhancedUserManagement = ({ 
+  users, 
+  onEditUser, 
+  onDeleteUser, 
+  onLinkChildren, 
+  loading, 
+  error,
+  onRefresh 
+}) => {
   const [selectedUsers, setSelectedUsers] = useState(new Set());
-  const [selectAll, setSelectAll] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [roleFilter, setRoleFilter] = useState('all');
-  const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'asc' });
+  const [filters, setFilters] = useState({
+    search: '',
+    role: '',
+    sortBy: 'name',
+    sortOrder: 'asc'
+  });
   const [isDeleting, setIsDeleting] = useState(false);
+  const { token } = useAuth();
 
-  // Fetch users from the API
-  const fetchUsers = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch('/api/admin/users');
-      if (!response.ok) {
-        throw new Error('Failed to fetch users');
-      }
-      const usersData = await response.json();
-      setUsers(usersData);
-      setError(null);
-    } catch (err) {
-      console.error('Error fetching users:', err);
-      setError('Failed to load users');
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Reset selected users when users list changes
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    setSelectedUsers(new Set());
+  }, [users]);
 
   // Filter and sort users
   const filteredAndSortedUsers = useMemo(() => {
-    let filtered = users.filter(user => {
-      const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           user.auth_id.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesRole = roleFilter === 'all' || user.role === roleFilter;
-      return matchesSearch && matchesRole;
-    });
+    let filtered = [...users];
 
-    // Sort users
+    // Apply search filter
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase();
+      filtered = filtered.filter(user => 
+        user.name.toLowerCase().includes(searchLower) ||
+        user.auth_id.toLowerCase().includes(searchLower) ||
+        user.id.toString().includes(searchLower)
+      );
+    }
+
+    // Apply role filter
+    if (filters.role) {
+      filtered = filtered.filter(user => user.role === filters.role);
+    }
+
+    // Apply sorting
     filtered.sort((a, b) => {
-      let aValue = a[sortConfig.key];
-      let bValue = b[sortConfig.key];
+      let aValue, bValue;
       
-      if (sortConfig.key === 'createdAt' || sortConfig.key === 'updatedAt') {
-        aValue = new Date(aValue);
-        bValue = new Date(bValue);
+      switch (filters.sortBy) {
+        case 'name':
+          aValue = a.name.toLowerCase();
+          bValue = b.name.toLowerCase();
+          break;
+        case 'role':
+          aValue = a.role;
+          bValue = b.role;
+          break;
+        case 'id':
+          aValue = a.id;
+          bValue = b.id;
+          break;
+        case 'auth_id':
+          aValue = a.auth_id.toLowerCase();
+          bValue = b.auth_id.toLowerCase();
+          break;
+        case 'created':
+          aValue = new Date(a.createdAt || 0);
+          bValue = new Date(b.createdAt || 0);
+          break;
+        default:
+          aValue = a.name.toLowerCase();
+          bValue = b.name.toLowerCase();
       }
-      
-      if (aValue < bValue) {
-        return sortConfig.direction === 'asc' ? -1 : 1;
-      }
-      if (aValue > bValue) {
-        return sortConfig.direction === 'asc' ? 1 : -1;
-      }
+
+      if (aValue < bValue) return filters.sortOrder === 'asc' ? -1 : 1;
+      if (aValue > bValue) return filters.sortOrder === 'asc' ? 1 : -1;
       return 0;
     });
 
     return filtered;
-  }, [users, searchTerm, roleFilter, sortConfig]);
-
-  // Handle sorting
-  const handleSort = (key) => {
-    setSortConfig(prevConfig => ({
-      key,
-      direction: prevConfig.key === key && prevConfig.direction === 'asc' ? 'desc' : 'asc',
-    }));
-  };
+  }, [users, filters]);
 
   // Handle individual checkbox selection
-  const handleUserSelect = (userId) => {
+  const handleUserSelection = (userId, userRole) => {
+    const userKey = `${userRole}-${userId}`;
     const newSelected = new Set(selectedUsers);
-    if (newSelected.has(userId)) {
-      newSelected.delete(userId);
+    
+    if (newSelected.has(userKey)) {
+      newSelected.delete(userKey);
     } else {
-      newSelected.add(userId);
+      newSelected.add(userKey);
     }
+    
     setSelectedUsers(newSelected);
-    setSelectAll(newSelected.size === filteredAndSortedUsers.length);
   };
 
   // Handle select all checkbox
   const handleSelectAll = () => {
-    if (selectAll) {
+    if (selectedUsers.size === filteredAndSortedUsers.length) {
+      // Deselect all
       setSelectedUsers(new Set());
-      setSelectAll(false);
     } else {
-      const allUserIds = new Set(filteredAndSortedUsers.map(user => user.id));
-      setSelectedUsers(allUserIds);
-      setSelectAll(true);
+      // Select all visible users
+      const allUserKeys = filteredAndSortedUsers.map(user => `${user.role}-${user.id}`);
+      setSelectedUsers(new Set(allUserKeys));
     }
   };
 
   // Handle bulk delete
   const handleBulkDelete = async () => {
     if (selectedUsers.size === 0) {
-      alert('Please select users to delete');
+      alert('Please select users to delete.');
       return;
     }
 
-    const confirmMessage = `Are you sure you want to delete ${selectedUsers.size} selected user(s)? This action cannot be undone.`;
+    const selectedUsersList = Array.from(selectedUsers).map(userKey => {
+      const [role, id] = userKey.split('-');
+      const user = users.find(u => u.role === role && u.id.toString() === id);
+      return { id: parseInt(id), role, name: user?.name || 'Unknown' };
+    });
+
+    const confirmMessage = `Are you sure you want to delete ${selectedUsers.size} user(s)?\n\nUsers to delete:\n${selectedUsersList.map(u => `- ${u.name} (${u.role})`).join('\n')}\n\nThis action cannot be undone.`;
+    
     if (!window.confirm(confirmMessage)) {
       return;
     }
 
     setIsDeleting(true);
+
     try {
-      // Prepare the users array for bulk delete
-      const usersToDelete = Array.from(selectedUsers).map(userId => {
-        const user = users.find(u => u.id === userId);
-        return { id: userId, role: user.role };
+      // Use bulk delete API endpoint for better performance
+      const response = await axios.post('/api/admin/users/bulk-delete', {
+        users: selectedUsersList
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
       });
 
-      const response = await fetch('/api/admin/users/bulk-delete', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ users: usersToDelete }),
-      });
+      const { results } = response.data;
 
-      if (!response.ok) {
-        throw new Error('Failed to delete users');
-      }
-
-      const result = await response.json();
-      
       // Show results
-      if (result.results.failed.length > 0) {
-        const failedNames = result.results.failed.map(f => `${f.role} ID ${f.id}: ${f.error}`).join('\n');
-        alert(`Some deletions failed:\n${failedNames}`);
+      let message = '';
+      if (results.successful.length > 0) {
+        message += `Successfully deleted ${results.successful.length} user(s).\n`;
+      }
+      if (results.failed.length > 0) {
+        message += `Failed to delete ${results.failed.length} user(s):\n`;
+        message += results.failed.map(u => `- ${u.error}`).join('\n');
       }
       
-      if (result.results.successful.length > 0) {
-        alert(`Successfully deleted ${result.results.successful.length} user(s)`);
-      }
+      alert(message);
 
-      // Refresh the user list
-      await fetchUsers();
+      // Clear selection and refresh
       setSelectedUsers(new Set());
-      setSelectAll(false);
-      
+      onRefresh();
+
     } catch (err) {
-      console.error('Error deleting users:', err);
-      alert('Failed to delete users. Please try again.');
+      console.error('Bulk delete error:', err);
+      const errorMessage = err.response?.data?.error || 'An error occurred during bulk delete operation.';
+      alert(`Bulk delete failed: ${errorMessage}`);
     } finally {
       setIsDeleting(false);
     }
   };
 
-  // Format date
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleString();
+  // Handle filter changes
+  const handleFilterChange = (filterType, value) => {
+    setFilters(prev => ({
+      ...prev,
+      [filterType]: value
+    }));
   };
 
-  // Get sort indicator
-  const getSortIndicator = (key) => {
-    if (sortConfig.key !== key) return '↕️';
-    return sortConfig.direction === 'asc' ? '↑' : '↓';
+  // Handle sort change
+  const handleSort = (sortBy) => {
+    setFilters(prev => ({
+      ...prev,
+      sortBy,
+      sortOrder: prev.sortBy === sortBy && prev.sortOrder === 'asc' ? 'desc' : 'asc'
+    }));
+  };
+
+  // Clear all filters
+  const clearFilters = () => {
+    setFilters({
+      search: '',
+      role: '',
+      sortBy: 'name',
+      sortOrder: 'asc'
+    });
   };
 
   if (loading) {
-    return <div className="enhanced-user-management loading">Loading users...</div>;
+    return <div className="loading">Loading users...</div>;
   }
 
   if (error) {
-    return <div className="enhanced-user-management error">{error}</div>;
+    return <div className="error-message">Error: {error}</div>;
   }
+
+  if (users.length === 0) {
+    return <div className="no-users">No users found.</div>;
+  }
+
+  const isAllSelected = selectedUsers.size === filteredAndSortedUsers.length && filteredAndSortedUsers.length > 0;
+  const isSomeSelected = selectedUsers.size > 0 && selectedUsers.size < filteredAndSortedUsers.length;
 
   return (
     <div className="enhanced-user-management">
-      <div className="management-header">
-        <h2>Enhanced User Management</h2>
-        <div className="management-actions">
-          <button 
-            className="bulk-delete-btn"
-            onClick={handleBulkDelete}
-            disabled={selectedUsers.size === 0 || isDeleting}
-          >
-            {isDeleting ? 'Deleting...' : `Delete Selected (${selectedUsers.size})`}
-          </button>
+      {/* Filters and Controls */}
+      <div className="user-controls">
+        <div className="filter-section">
+          <div className="filter-row">
+            <div className="filter-group">
+              <label htmlFor="search">Search:</label>
+              <input
+                id="search"
+                type="text"
+                placeholder="Search by name, email, or ID..."
+                value={filters.search}
+                onChange={(e) => handleFilterChange('search', e.target.value)}
+                className="filter-input"
+              />
+            </div>
+            
+            <div className="filter-group">
+              <label htmlFor="role-filter">Filter by Role:</label>
+              <select
+                id="role-filter"
+                value={filters.role}
+                onChange={(e) => handleFilterChange('role', e.target.value)}
+                className="filter-select"
+              >
+                <option value="">All Roles</option>
+                <option value="student">Students</option>
+                <option value="teacher">Teachers</option>
+                <option value="parent">Parents</option>
+                <option value="admin">Admins</option>
+              </select>
+            </div>
+            
+            <div className="filter-group">
+              <label htmlFor="sort-by">Sort by:</label>
+              <select
+                id="sort-by"
+                value={filters.sortBy}
+                onChange={(e) => handleFilterChange('sortBy', e.target.value)}
+                className="filter-select"
+              >
+                <option value="name">Name</option>
+                <option value="role">Role</option>
+                <option value="id">ID</option>
+                <option value="auth_id">Email</option>
+                <option value="created">Date Created</option>
+              </select>
+            </div>
+            
+            <div className="filter-group">
+              <label htmlFor="sort-order">Order:</label>
+              <select
+                id="sort-order"
+                value={filters.sortOrder}
+                onChange={(e) => handleFilterChange('sortOrder', e.target.value)}
+                className="filter-select"
+              >
+                <option value="asc">Ascending</option>
+                <option value="desc">Descending</option>
+              </select>
+            </div>
+            
+            <button onClick={clearFilters} className="clear-filters-btn">
+              Clear Filters
+            </button>
+          </div>
+        </div>
+        
+        {/* Bulk Actions */}
+        <div className="bulk-actions">
+          <div className="selection-info">
+            {selectedUsers.size > 0 ? (
+              <span>{selectedUsers.size} user(s) selected</span>
+            ) : (
+              <span>No users selected</span>
+            )}
+          </div>
+          
+          {selectedUsers.size > 0 && (
+            <button
+              onClick={handleBulkDelete}
+              disabled={isDeleting}
+              className="bulk-delete-btn"
+            >
+              {isDeleting ? 'Deleting...' : `Delete Selected (${selectedUsers.size})`}
+            </button>
+          )}
         </div>
       </div>
 
-      <div className="filters-section">
-        <div className="search-filter">
-          <input
-            type="text"
-            placeholder="Search by name or email..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="search-input"
-          />
-        </div>
-        <div className="role-filter">
-          <select 
-            value={roleFilter} 
-            onChange={(e) => setRoleFilter(e.target.value)}
-            className="role-select"
-          >
-            <option value="all">All Roles</option>
-            <option value="student">Students</option>
-            <option value="teacher">Teachers</option>
-            <option value="parent">Parents</option>
-            <option value="admin">Admins</option>
-          </select>
-        </div>
+      {/* Results Info */}
+      <div className="results-info">
+        Showing {filteredAndSortedUsers.length} of {users.length} users
       </div>
 
-      <div className="users-stats">
-        <span>Showing {filteredAndSortedUsers.length} of {users.length} users</span>
-        {selectedUsers.size > 0 && (
-          <span className="selected-count">{selectedUsers.size} selected</span>
-        )}
-      </div>
-
-      <div className="users-table-container">
-        <table className="users-table">
+      {/* User Table */}
+      <div className="table-container">
+        <table className="enhanced-user-table">
           <thead>
             <tr>
               <th className="checkbox-column">
                 <input
                   type="checkbox"
-                  checked={selectAll}
+                  checked={isAllSelected}
+                  ref={input => {
+                    if (input) input.indeterminate = isSomeSelected;
+                  }}
                   onChange={handleSelectAll}
+                  title={isAllSelected ? 'Deselect all' : 'Select all visible users'}
                 />
               </th>
-              <th onClick={() => handleSort('name')} className="sortable">
-                Name {getSortIndicator('name')}
+              <th 
+                className={`sortable ${filters.sortBy === 'id' ? 'sorted-' + filters.sortOrder : ''}`}
+                onClick={() => handleSort('id')}
+              >
+                ID
+                {filters.sortBy === 'id' && (
+                  <span className="sort-indicator">
+                    {filters.sortOrder === 'asc' ? '↑' : '↓'}
+                  </span>
+                )}
               </th>
-              <th onClick={() => handleSort('role')} className="sortable">
-                Role {getSortIndicator('role')}
+              <th 
+                className={`sortable ${filters.sortBy === 'name' ? 'sorted-' + filters.sortOrder : ''}`}
+                onClick={() => handleSort('name')}
+              >
+                Name
+                {filters.sortBy === 'name' && (
+                  <span className="sort-indicator">
+                    {filters.sortOrder === 'asc' ? '↑' : '↓'}
+                  </span>
+                )}
               </th>
-              <th onClick={() => handleSort('auth_id')} className="sortable">
-                Email/Auth ID {getSortIndicator('auth_id')}
+              <th 
+                className={`sortable ${filters.sortBy === 'auth_id' ? 'sorted-' + filters.sortOrder : ''}`}
+                onClick={() => handleSort('auth_id')}
+              >
+                Auth ID / Email
+                {filters.sortBy === 'auth_id' && (
+                  <span className="sort-indicator">
+                    {filters.sortOrder === 'asc' ? '↑' : '↓'}
+                  </span>
+                )}
               </th>
-              <th onClick={() => handleSort('grade_level')} className="sortable">
-                Grade Level {getSortIndicator('grade_level')}
+              <th 
+                className={`sortable ${filters.sortBy === 'role' ? 'sorted-' + filters.sortOrder : ''}`}
+                onClick={() => handleSort('role')}
+              >
+                Role
+                {filters.sortBy === 'role' && (
+                  <span className="sort-indicator">
+                    {filters.sortOrder === 'asc' ? '↑' : '↓'}
+                  </span>
+                )}
               </th>
-              <th onClick={() => handleSort('createdAt')} className="sortable">
-                Created {getSortIndicator('createdAt')}
-              </th>
-              <th onClick={() => handleSort('updatedAt')} className="sortable">
-                Updated {getSortIndicator('updatedAt')}
-              </th>
+              <th>Details</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            {filteredAndSortedUsers.map(user => (
-              <tr key={user.id} className={selectedUsers.has(user.id) ? 'selected' : ''}>
-                <td className="checkbox-column">
-                  <input
-                    type="checkbox"
-                    checked={selectedUsers.has(user.id)}
-                    onChange={() => handleUserSelect(user.id)}
-                  />
-                </td>
-                <td className="name-cell">{user.name}</td>
-                <td className={`role-cell role-${user.role}`}>
-                  <span className="role-badge">{user.role}</span>
-                </td>
-                <td className="auth-id-cell">{user.auth_id}</td>
-                <td className="grade-cell">{user.grade_level || 'N/A'}</td>
-                <td className="date-cell">{formatDate(user.createdAt)}</td>
-                <td className="date-cell">{formatDate(user.updatedAt)}</td>
-              </tr>
-            ))}
+            {filteredAndSortedUsers.map((user) => {
+              const userKey = `${user.role}-${user.id}`;
+              const isSelected = selectedUsers.has(userKey);
+              
+              return (
+                <tr key={userKey} className={isSelected ? 'selected' : ''}>
+                  <td className="checkbox-column">
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => handleUserSelection(user.id, user.role)}
+                    />
+                  </td>
+                  <td>{user.id}</td>
+                  <td className="name-cell">
+                    <span className="user-name">{user.name}</span>
+                  </td>
+                  <td className="email-cell">{user.auth_id}</td>
+                  <td>
+                    <span className={`role-badge role-${user.role}`}>
+                      {user.role}
+                    </span>
+                  </td>
+                  <td className="details-cell">
+                    {user.role === 'student' && (
+                      <span className="detail-badge">Grade: {user.grade_level || 'N/A'}</span>
+                    )}
+                    {user.role === 'teacher' && (
+                      <span className="detail-badge">Teacher</span>
+                    )}
+                    {user.role === 'parent' && (
+                      <span className="detail-badge">Parent</span>
+                    )}
+                    {user.role === 'admin' && (
+                      <span className="detail-badge">Admin User</span>
+                    )}
+                  </td>
+                  <td className="actions-cell">
+                    <div className="action-buttons">
+                      <button 
+                        onClick={() => onEditUser(user)} 
+                        className="action-btn edit-btn"
+                        title="Edit user"
+                      >
+                        ✏️
+                      </button>
+                      {user.role === 'parent' && (
+                        <button 
+                          onClick={() => onLinkChildren(user)} 
+                          className="action-btn link-btn"
+                          title="Link children"
+                        >
+                          🔗
+                        </button>
+                      )}
+                      <button 
+                        onClick={() => onDeleteUser(user.id, user.role)} 
+                        className="action-btn delete-btn"
+                        title="Delete user"
+                      >
+                        🗑️
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
 
       {filteredAndSortedUsers.length === 0 && (
-        <div className="no-users-message">
-          No users found matching your criteria.
+        <div className="no-results">
+          No users match the current filters. <button onClick={clearFilters}>Clear filters</button> to see all users.
         </div>
       )}
     </div>

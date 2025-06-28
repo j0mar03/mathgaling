@@ -11,6 +11,7 @@ import KnowledgeComponentForm from './KnowledgeComponentForm'; // Import KC Form
 import AdminPDFUploader from './AdminPDFUploader'; // Import PDF Uploader component
 import AdminContentItemList from './AdminContentItemList'; // Import Content Item List component
 import LinkParentStudentModal from './LinkParentStudentModal'; // Import Link Parent-Student Modal
+import EnhancedUserManagement from './EnhancedUserManagement'; // Import Enhanced User Management
 
 const AdminDashboard = () => {
     const [users, setUsers] = useState([]);
@@ -283,51 +284,17 @@ const AdminDashboard = () => {
                     <div className="error-message">Error: {error}</div>
                 )}
 
-                {/* User List Table */}
-                {!showAddForm && !editingUser && !showCsvUpload && ( // Only render table if no form is shown
-                    loading ? (
-                        <p className="loading">Loading users...</p>
-                    ) : error ? (
-                        null // Error is displayed above
-                    ) : users.length === 0 ? (
-                        <p>No users found.</p>
-                    ) : (
-                        <table className="admin-table">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Name</th>
-                                    <th>Auth ID / Email</th>
-                                    <th>Role</th>
-                                    <th>Details</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {users.map((u) => (
-                                    <tr key={`${u.role}-${u.id}`}>
-                                        <td>{u.id}</td>
-                                        <td>{u.name}</td>
-                                        <td>{u.auth_id}</td>
-                                        <td>{u.role}</td>
-                                        <td>
-                                            {u.role === 'student' && `Grade: ${u.grade_level || 'N/A'}`}
-                                            {u.role === 'teacher' && `Teacher`}
-                                            {u.role === 'parent' && `Parent`}
-                                            {u.role === 'admin' && `Admin User`}
-                                        </td>
-                                        <td>
-                                            <button onClick={() => handleEditUser(u)} className="admin-button">Edit</button>
-                                            {u.role === 'parent' && (
-                                                <button onClick={() => handleLinkChildren(u)} className="admin-button">Link Children</button>
-                                            )}
-                                            <button onClick={() => handleDeleteUser(u.id, u.role)} className="admin-button danger">Delete</button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    )
+                {/* Enhanced User List with Bulk Operations */}
+                {!showAddForm && !editingUser && !showCsvUpload && (
+                    <EnhancedUserManagement
+                        users={users}
+                        onEditUser={handleEditUser}
+                        onDeleteUser={handleDeleteUser}
+                        onLinkChildren={handleLinkChildren}
+                        loading={loading}
+                        error={error}
+                        onRefresh={fetchUsers}
+                    />
                 )}
             </section>
             )}

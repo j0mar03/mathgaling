@@ -3,14 +3,17 @@
  *
  * Handles administrative operations like user management.
  */
-const bcrypt = require('bcrypt'); // Need bcrypt for hashing password
+'use strict';
+
+const bcrypt = require('bcryptjs'); // Need bcrypt for hashing password
 const db = require('../models');
-const { Student, Teacher, Parent, Admin, KnowledgeComponent } = db; // Import models, including Admin and KnowledgeComponent
+const { Student, Teacher, Parent, Admin, KnowledgeComponent, Classroom, ClassroomStudent } = db; // Import models, including Admin and KnowledgeComponent
 const SALT_ROUNDS = 10; // Consistent salt rounds
 const fs = require('fs');
 const csv = require('csv-parser');
 const { createObjectCsvWriter } = require('csv-writer');
 const path = require('path');
+const { Op } = require('sequelize');
 
 // List all users (Students, Teachers, Parents)
 exports.listUsers = async (req, res) => {
@@ -129,7 +132,14 @@ exports.updateUser = async (req, res) => {
     const userId = parseInt(id, 10);
 
     // Prevent updating sensitive fields directly via this admin endpoint
-    const { password, auth_id, role: bodyRole, id: bodyId, createdAt, updatedAt, ...updateData } = req.body;
+    const { auth_id, role: bodyRole, id: bodyId, createdAt, updatedAt, ...updateData } = req.body;
+    
+    // Handle password update separately if provided
+    if (req.body.password && req.body.password.trim() !== '') {
+        // Hash the new password before updating
+        const hashedPassword = await bcrypt.hash(req.body.password, SALT_ROUNDS);
+        updateData.password = hashedPassword;
+    }
 
     if (isNaN(userId)) {
         return res.status(400).json({ error: 'Invalid User ID provided.' });
@@ -599,7 +609,31 @@ exports.uploadCSVUsers = async (req, res) => {
                 throw new Error('CSV file must contain header and at least one data row');
             }
             
-            const header = lines[0].split(',').map(h => h.trim().toLowerCase());
+            // Function to parse CSV line correctly handling quoted fields
+            const parseCSVLine = (line) => {
+                const values = [];
+                let current = '';
+                let inQuotes = false;
+                
+                for (let i = 0; i < line.length; i++) {
+                    const char = line[i];
+                    
+                    if (char === '"' && (i === 0 || line[i-1] === ',')) {
+                        inQuotes = true;
+                    } else if (char === '"' && inQuotes && (i === line.length - 1 || line[i+1] === ',')) {
+                        inQuotes = false;
+                    } else if (char === ',' && !inQuotes) {
+                        values.push(current.trim());
+                        current = '';
+                    } else {
+                        current += char;
+                    }
+                }
+                values.push(current.trim());
+                return values;
+            };
+            
+            const header = parseCSVLine(lines[0]).map(h => h.trim().toLowerCase());
             const dataLines = lines.slice(1);
             
             // Validate required headers for the simplified format
@@ -612,7 +646,7 @@ exports.uploadCSVUsers = async (req, res) => {
             
             // Process each data row
             for (let i = 0; i < dataLines.length; i++) {
-                const values = dataLines[i].split(',').map(v => v.trim());
+                const values = parseCSVLine(dataLines[i]);
                 const rowData = {};
                 
                 // Map values to headers

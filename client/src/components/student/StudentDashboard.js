@@ -757,26 +757,46 @@ const StudentDashboard = () => {
 
         {/* Welcome Header */}
         <header className={`dashboard-header ${colorTheme}`}>
-          {/* Messages Icon */}
-          <div 
-            className="messages-icon" 
-            onClick={() => navigate('/student/messages')}
-            role="button"
-            tabIndex={0}
-            onKeyPress={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                navigate('/student/messages');
-              }
-            }}
-            title={`Messages${unreadMessages > 0 ? ` (${unreadMessages} new)` : ''}`}
-          >
-            <span className="icon-emoji">📬</span>
-            <span className="icon-label">Messages</span>
-            {unreadMessages > 0 && (
-              <div className="notification-badge">
-                {unreadMessages}
-              </div>
-            )}
+          {/* Navigation Icons */}
+          <div className="header-navigation">
+            {/* Profile Icon */}
+            <div 
+              className="nav-icon profile-icon" 
+              onClick={() => navigate('/student/profile')}
+              role="button"
+              tabIndex={0}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  navigate('/student/profile');
+                }
+              }}
+              title="My Profile"
+            >
+              <span className="icon-emoji">👤</span>
+              <span className="icon-label">Profile</span>
+            </div>
+
+            {/* Messages Icon */}
+            <div 
+              className="nav-icon messages-icon" 
+              onClick={() => navigate('/student/messages')}
+              role="button"
+              tabIndex={0}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  navigate('/student/messages');
+                }
+              }}
+              title={`Messages${unreadMessages > 0 ? ` (${unreadMessages} new)` : ''}`}
+            >
+              <span className="icon-emoji">📬</span>
+              <span className="icon-label">Messages</span>
+              {unreadMessages > 0 && (
+                <div className="notification-badge">
+                  {unreadMessages}
+                </div>
+              )}
+            </div>
           </div>
 
           <h1>

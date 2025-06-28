@@ -1,5 +1,5 @@
 'use strict';
-const bcrypt = require('bcrypt');
+const bcrypt = require('bcryptjs');
 const SALT_ROUNDS = 10; // Same as in authController
 
 /** @type {import('sequelize-cli').Migration} */

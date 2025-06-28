@@ -261,6 +261,17 @@ async (req, res) => {
   
   // ... rest of old inline logic ...
 */
+// --- Profile Routes ---
+
+// Get teacher profile
+router.get('/:id', authMiddleware.verifyToken, teacherController.getTeacherProfile);
+
+// Update teacher profile
+router.put('/:id', authMiddleware.verifyToken, teacherController.updateTeacherProfile);
+
+// Change teacher password
+router.put('/:id/password', authMiddleware.verifyToken, teacherController.changeTeacherPassword);
+
 // Removed classroom-specific routes previously here, now in classroomRoutes.js
 
 module.exports = router;

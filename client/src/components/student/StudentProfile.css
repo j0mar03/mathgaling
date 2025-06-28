@@ -212,6 +212,54 @@
     }
 }
 
+/* Password Section Styles */
+.password-section {
+    background: #fff;
+    border-radius: 20px;
+    margin-top: 30px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+.password-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 30px;
+    background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.password-header h3 {
+    margin: 0;
+    color: #2c3e50;
+    font-size: 1.3em;
+}
+
+.toggle-password-btn {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 20px;
+    font-size: 1em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-family: inherit;
+}
+
+.toggle-password-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+}
+
+.password-form {
+    padding: 30px;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
 @media (max-width: 480px) {
     .avatar-grid {
         grid-template-columns: repeat(2, 1fr);
@@ -223,5 +271,15 @@
 
     .color-options {
         justify-content: center;
+    }
+    
+    .password-header {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+    
+    .toggle-password-btn {
+        width: 100%;
     }
 }
