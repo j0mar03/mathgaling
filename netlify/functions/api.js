@@ -849,7 +849,51 @@ exports.handler = async (event, context) => {
           
           // Verify password if hash exists
           if (storedPasswordHash) {
-            const isPasswordValid = await bcrypt.compare(password, storedPasswordHash);
+            let isPasswordValid = false;
+            
+            // First try bcrypt comparison (for properly hashed passwords)
+            try {
+              isPasswordValid = await bcrypt.compare(password, storedPasswordHash);
+              if (isPasswordValid) {
+                console.log('✅ Password verified using bcrypt hash');
+              }
+            } catch (bcryptError) {
+              console.log('⚠️ bcrypt comparison failed, might be plain text password');
+            }
+            
+            // If bcrypt failed, check if password might be stored as plain text (temporary fallback)
+            if (!isPasswordValid) {
+              // Check if stored password looks like plain text (not a bcrypt hash)
+              const isBcryptHash = storedPasswordHash.length === 60 && 
+                                 (storedPasswordHash.startsWith('$2a$') || 
+                                  storedPasswordHash.startsWith('$2b$') || 
+                                  storedPasswordHash.startsWith('$2y$'));
+              
+              if (!isBcryptHash && password === storedPasswordHash) {
+                console.log('⚠️ Password verified using plain text comparison (SECURITY ISSUE - needs fixing)');
+                isPasswordValid = true;
+                
+                // Auto-fix: Hash the plain text password and update the database
+                try {
+                  const hashedPassword = await bcrypt.hash(password, 10);
+                  const tableName = userRole === 'admin' ? 'Admins' : `${userRole}s`;
+                  
+                  const { error: updateError } = await supabase
+                    .from(tableName)
+                    .update({ password: hashedPassword })
+                    .eq('id', authenticatedUser.id);
+                  
+                  if (updateError) {
+                    console.error('❌ Failed to auto-fix plain text password:', updateError);
+                  } else {
+                    console.log('✅ Auto-fixed plain text password with proper hash');
+                  }
+                } catch (fixError) {
+                  console.error('❌ Error auto-fixing password:', fixError);
+                }
+              }
+            }
+            
             if (!isPasswordValid) {
               console.log('❌ Password verification failed for database user');
               return {
@@ -861,7 +905,6 @@ exports.handler = async (event, context) => {
                 })
               };
             }
-            console.log('✅ Password verified for database user');
           } else {
             console.log('⚠️ No password hash found for user, allowing login');
           }
@@ -1241,7 +1284,14 @@ exports.handler = async (event, context) => {
       const userId = pathParts[pathParts.length - 1];
       const updateData = JSON.parse(event.body);
       
-      console.log('Updating user:', { role, userId, updateData });
+      // Hash password if provided
+      if (updateData.password && updateData.password.trim() !== '') {
+        const bcrypt = require('bcryptjs');
+        const hashedPassword = await bcrypt.hash(updateData.password, 10);
+        updateData.password = hashedPassword;
+      }
+      
+      console.log('Updating user:', { role, userId, updateData: { ...updateData, password: updateData.password ? '[HASHED]' : undefined } });
       
       const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
       const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';

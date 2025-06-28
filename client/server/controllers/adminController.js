@@ -132,7 +132,14 @@ exports.updateUser = async (req, res) => {
     const userId = parseInt(id, 10);
 
     // Prevent updating sensitive fields directly via this admin endpoint
-    const { password, auth_id, role: bodyRole, id: bodyId, createdAt, updatedAt, ...updateData } = req.body;
+    const { auth_id, role: bodyRole, id: bodyId, createdAt, updatedAt, ...updateData } = req.body;
+    
+    // Handle password update separately if provided
+    if (req.body.password && req.body.password.trim() !== '') {
+        // Hash the new password before updating
+        const hashedPassword = await bcrypt.hash(req.body.password, SALT_ROUNDS);
+        updateData.password = hashedPassword;
+    }
 
     if (isNaN(userId)) {
         return res.status(400).json({ error: 'Invalid User ID provided.' });
