@@ -991,8 +991,8 @@ exports.handler = async (event, context) => {
   
   // Admin endpoints - /api/admin/*
   
-  // POST /api/admin/users - Create new user (but not csv-upload)
-  if (path.includes('/admin/users') && !path.includes('csv-upload') && !path.includes('csv-template') && httpMethod === 'POST') {
+  // POST /api/admin/users - Create new user (but not csv-upload or bulk-delete)
+  if (path.includes('/admin/users') && !path.includes('csv-upload') && !path.includes('csv-template') && !path.includes('bulk-delete') && httpMethod === 'POST') {
     try {
       const userData = JSON.parse(event.body);
       console.log('Admin creating user:', userData.email, userData.role);
@@ -2021,7 +2021,7 @@ Sample Student 3,3,student3,password123`;
   }
 
   // POST /api/admin/users/bulk-delete - Bulk delete users
-  if (path === '/api/admin/users/bulk-delete' && httpMethod === 'POST') {
+  if ((path === '/api/admin/users/bulk-delete' || path.includes('/api/admin/users/bulk-delete')) && httpMethod === 'POST') {
     try {
       console.log('[Bulk Delete] Request received');
       
