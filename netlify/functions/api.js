@@ -618,6 +618,7 @@ exports.handler = async (event, context) => {
         if (error) {
           console.warn('Supabase auth failed:', error.message);
           console.warn('Error details:', error);
+          console.log('🔄 Will continue to database authentication fallback');
           // Continue to test accounts
         } else if (data && data.user) {
           console.log('✅ Supabase login successful');
@@ -711,7 +712,9 @@ exports.handler = async (event, context) => {
       
       // If Supabase auth failed, try to authenticate directly against database
       // This handles cases where users might exist in DB but not in Supabase Auth
-      console.log('Attempting direct database authentication');
+      console.log('🔍 Attempting direct database authentication for:', loginEmail);
+      console.log('🔍 Original username:', username);
+      console.log('🔍 Original email:', email);
       
       // Check each user type table for the user
       let authenticatedUser = null;
@@ -739,25 +742,48 @@ exports.handler = async (event, context) => {
           authenticatedUser = teacherData[0];
           userRole = 'teacher';
         } else {
-          // Check student table - try both auth_id and username
-          let { data: studentData } = await supabase
+          // Check student table - try multiple auth_id formats for compatibility
+          console.log('🎓 Searching for student by auth_id:', loginEmail);
+          let { data: studentData, error: studentError } = await supabase
             .from('students')
             .select('id, name, auth_id, grade_level, username')
             .eq('auth_id', loginEmail)
             .limit(1);
           
-          // If not found by auth_id and we have a username, try username directly
+          console.log('🎓 Student search by auth_id result:', { studentData, studentError });
+          
+          // If not found by standard auth_id, try multiple fallback formats
           if ((!studentData || studentData.length === 0) && username) {
-            const { data: studentByUsername } = await supabase
+            console.log('🎓 Searching for student with multiple formats...');
+            
+            // Try finding by auth_id = plain username (for students created during CSV bug period)
+            const { data: studentByPlainUsername, error: plainError } = await supabase
               .from('students')
               .select('id, name, auth_id, grade_level, username')
-              .eq('username', username)
+              .eq('auth_id', username)
               .limit(1);
             
-            if (studentByUsername && studentByUsername.length > 0) {
-              studentData = studentByUsername;
-              // Update loginEmail to match the actual auth_id
-              loginEmail = studentByUsername[0].auth_id;
+            console.log('🎓 Student search by plain username as auth_id:', { studentByPlainUsername, plainError });
+            
+            if (studentByPlainUsername && studentByPlainUsername.length > 0) {
+              studentData = studentByPlainUsername;
+              loginEmail = studentByPlainUsername[0].auth_id;
+              console.log('🎓 Found student by plain username as auth_id, loginEmail:', loginEmail);
+            } else {
+              // Try by username field if it exists
+              const { data: studentByUsername, error: usernameError } = await supabase
+                .from('students')
+                .select('id, name, auth_id, grade_level, username')
+                .eq('username', username)
+                .limit(1);
+              
+              console.log('🎓 Student search by username field:', { studentByUsername, usernameError });
+              
+              if (studentByUsername && studentByUsername.length > 0) {
+                studentData = studentByUsername;
+                loginEmail = studentByUsername[0].auth_id;
+                console.log('🎓 Found student by username field, updated loginEmail to:', loginEmail);
+              }
             }
           }
             
@@ -1880,11 +1906,12 @@ Sample Student 3,3,student3,password123`;
                 };
               }
 
-              // Check if student already exists
+              // Check if student already exists (check both possible auth_id formats)
+              const studentAuthId = `${username.trim()}@student.mathtagumpay.com`;
               const { data: existingStudent } = await supabase
                 .from('students')
                 .select('id, auth_id')
-                .eq('auth_id', username)
+                .or(`auth_id.eq.${username},auth_id.eq.${studentAuthId}`)
                 .single();
 
               if (existingStudent) {
@@ -1899,12 +1926,13 @@ Sample Student 3,3,student3,password123`;
               // Hash password
               const hashedPassword = await bcrypt.hash(password, 10);
 
-              // Create student
+              // Create student with proper auth_id format (matching authentication logic)
+              const studentAuthId = `${username.trim()}@student.mathtagumpay.com`;
               const { data: newStudent, error: createError } = await supabase
                 .from('students')
                 .insert({
                   name: name.trim(),
-                  auth_id: username.trim(),
+                  auth_id: studentAuthId,
                   password: hashedPassword,
                   grade_level: gradeNum
                 })
