@@ -1835,107 +1835,150 @@ Sample Student 3,3,student3,password123`;
       try {
         console.log(`[CSV Upload] Processing ${dataLines.length} rows`);
         
-        // Process each data row
-        for (let i = 0; i < dataLines.length; i++) {
-          try {
-            const values = parseCSVLine(dataLines[i]);
-            const rowData = {};
-            
-            // Map values to headers
-            header.forEach((h, index) => {
-              rowData[h] = values[index] || '';
-            });
-
-            const { name, grade_level, username, password } = rowData;
-
-            // Basic validation
-            if (!name || !grade_level || !username || !password) {
-              errors.push({
-                row: i + 2, // +2 because we start from index 0 and skip header
-                email: username || 'unknown',
-                error: 'Missing required field (name, grade_level, username, or password)'
+        // Process rows in smaller batches to avoid timeouts
+        const BATCH_SIZE = 5; // Process 5 rows at a time
+        const totalRows = dataLines.length;
+        
+        for (let batchStart = 0; batchStart < totalRows; batchStart += BATCH_SIZE) {
+          const batchEnd = Math.min(batchStart + BATCH_SIZE, totalRows);
+          const batch = dataLines.slice(batchStart, batchEnd);
+          
+          console.log(`[CSV Upload] Processing batch ${Math.floor(batchStart/BATCH_SIZE) + 1}/${Math.ceil(totalRows/BATCH_SIZE)} (rows ${batchStart + 1}-${batchEnd})`);
+          
+          // Process batch rows in parallel for better performance
+          const batchPromises = batch.map(async (line, batchIndex) => {
+            const i = batchStart + batchIndex;
+            try {
+              const values = parseCSVLine(line);
+              const rowData = {};
+              
+              // Map values to headers
+              header.forEach((h, index) => {
+                rowData[h] = values[index] || '';
               });
-              continue;
-            }
 
-            // Validate grade_level is numeric
-            const gradeNum = parseInt(grade_level);
-            if (isNaN(gradeNum) || gradeNum < 1 || gradeNum > 12) {
-              errors.push({
+              const { name, grade_level, username, password } = rowData;
+
+              // Basic validation
+              if (!name || !grade_level || !username || !password) {
+                return {
+                  success: false,
+                  row: i + 2,
+                  email: username || 'unknown',
+                  error: 'Missing required field (name, grade_level, username, or password)'
+                };
+              }
+
+              // Validate grade_level is numeric
+              const gradeNum = parseInt(grade_level);
+              if (isNaN(gradeNum) || gradeNum < 1 || gradeNum > 12) {
+                return {
+                  success: false,
+                  row: i + 2,
+                  email: username,
+                  error: `Invalid grade_level: ${grade_level}. Must be a number between 1-12.`
+                };
+              }
+
+              // Check if student already exists
+              const { data: existingStudent } = await supabase
+                .from('students')
+                .select('id, auth_id')
+                .eq('auth_id', username)
+                .single();
+
+              if (existingStudent) {
+                return {
+                  success: false,
+                  row: i + 2,
+                  email: username,
+                  error: 'Student with this username already exists'
+                };
+              }
+
+              // Hash password
+              const hashedPassword = await bcrypt.hash(password, 10);
+
+              // Create student
+              const { data: newStudent, error: createError } = await supabase
+                .from('students')
+                .insert({
+                  name: name.trim(),
+                  auth_id: username.trim(),
+                  password: hashedPassword,
+                  grade_level: gradeNum
+                })
+                .select()
+                .single();
+
+              if (createError) {
+                console.error(`[CSV Upload] Error creating student on row ${i + 2}:`, createError);
+                return {
+                  success: false,
+                  row: i + 2,
+                  email: username,
+                  error: `Creation failed: ${createError.message}`
+                };
+              }
+
+              // Create learning path for the new student
+              try {
+                await supabase
+                  .from('learning_paths')
+                  .insert({
+                    student_id: newStudent.id,
+                    is_active: true,
+                    current_position: 0
+                  });
+              } catch (pathError) {
+                console.warn(`[CSV Upload] Warning: Failed to create learning path for student ${username}:`, pathError);
+                // Don't fail the whole operation for learning path errors
+              }
+
+              console.log(`[CSV Upload] Successfully created student: ${username}`);
+              
+              return {
+                success: true,
+                student: {
+                  id: newStudent.id,
+                  name: newStudent.name,
+                  auth_id: newStudent.auth_id,
+                  grade_level: newStudent.grade_level,
+                  role: 'student'
+                }
+              };
+
+            } catch (err) {
+              console.error(`[CSV Upload] Error processing student row ${i + 2}:`, err);
+              const { username } = rowData || {};
+              return {
+                success: false,
                 row: i + 2,
-                email: username,
-                error: `Invalid grade_level: ${grade_level}. Must be a number between 1-12.`
-              });
-              continue;
+                email: username || 'Unknown',
+                error: `Processing failed: ${err.message}`
+              };
             }
+          });
 
-            // Check if student already exists
-            const { data: existingStudent } = await supabase
-              .from('students')
-              .select('id, auth_id')
-              .eq('auth_id', username)
-              .single();
-
-            if (existingStudent) {
+          // Wait for batch to complete
+          const batchResults = await Promise.all(batchPromises);
+          
+          // Process batch results
+          batchResults.forEach(result => {
+            if (result.success) {
+              successfulUsers.push(result.student);
+            } else {
               errors.push({
-                row: i + 2,
-                email: username,
-                error: 'Student with this username already exists'
+                row: result.row,
+                email: result.email,
+                error: result.error
               });
-              continue;
             }
-
-            // Hash password
-            const hashedPassword = await bcrypt.hash(password, 10);
-
-            // Create student
-            const { data: newStudent, error: createError } = await supabase
-              .from('students')
-              .insert({
-                name: name.trim(),
-                auth_id: username.trim(),
-                password: hashedPassword,
-                grade_level: gradeNum
-              })
-              .select()
-              .single();
-
-            if (createError) {
-              console.error(`[CSV Upload] Error creating student on row ${i + 2}:`, createError);
-              errors.push({
-                row: i + 2,
-                email: username,
-                error: `Creation failed: ${createError.message}`
-              });
-              continue;
-            }
-
-            // Create learning path for the new student
-            await supabase
-              .from('learning_paths')
-              .insert({
-                student_id: newStudent.id,
-                is_active: true,
-                current_position: 0
-              });
-
-            successfulUsers.push({
-              id: newStudent.id,
-              name: newStudent.name,
-              auth_id: newStudent.auth_id,
-              grade_level: newStudent.grade_level,
-              role: 'student'
-            });
-
-            console.log(`[CSV Upload] Successfully created student: ${username}`);
-
-          } catch (err) {
-            console.error(`[CSV Upload] Error processing student row ${i + 2}:`, err);
-            errors.push({
-              row: i + 2,
-              email: username || 'Unknown',
-              error: `Processing failed: ${err.message}`
-            });
+          });
+          
+          // Add small delay between batches to prevent overwhelming the database
+          if (batchEnd < totalRows) {
+            await new Promise(resolve => setTimeout(resolve, 100));
           }
         }
 
