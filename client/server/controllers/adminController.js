@@ -5,7 +5,7 @@
  */
 'use strict';
 
-const bcrypt = require('bcryptjs'); // Need bcrypt for hashing password
+const bcrypt = require('bcrypt'); // Need bcrypt for hashing password
 const db = require('../models');
 const { Student, Teacher, Parent, Admin, KnowledgeComponent, Classroom, ClassroomStudent } = db; // Import models, including Admin and KnowledgeComponent
 const SALT_ROUNDS = 10; // Consistent salt rounds
