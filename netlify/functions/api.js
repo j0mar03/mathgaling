@@ -1722,7 +1722,31 @@ Sample Student 3,3,student3,password123`;
         };
       }
 
-      const header = lines[0].split(',').map(h => h.trim().toLowerCase());
+      // Function to parse CSV line correctly handling quoted fields
+      const parseCSVLine = (line) => {
+        const values = [];
+        let current = '';
+        let inQuotes = false;
+        
+        for (let i = 0; i < line.length; i++) {
+          const char = line[i];
+          
+          if (char === '"' && (i === 0 || line[i-1] === ',')) {
+            inQuotes = true;
+          } else if (char === '"' && inQuotes && (i === line.length - 1 || line[i+1] === ',')) {
+            inQuotes = false;
+          } else if (char === ',' && !inQuotes) {
+            values.push(current.trim());
+            current = '';
+          } else {
+            current += char;
+          }
+        }
+        values.push(current.trim());
+        return values;
+      };
+
+      const header = parseCSVLine(lines[0]).map(h => h.trim().toLowerCase());
       const dataLines = lines.slice(1);
 
       // Validate required headers
@@ -1750,7 +1774,7 @@ Sample Student 3,3,student3,password123`;
 
       // Process each data row
       for (let i = 0; i < dataLines.length; i++) {
-        const values = dataLines[i].split(',').map(v => v.trim());
+        const values = parseCSVLine(dataLines[i]);
         const rowData = {};
         
         // Map values to headers
