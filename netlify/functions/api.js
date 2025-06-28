@@ -742,7 +742,7 @@ exports.handler = async (event, context) => {
           authenticatedUser = teacherData[0];
           userRole = 'teacher';
         } else {
-          // Check student table - try multiple auth_id formats for compatibility
+          // Check student table - use standard auth_id format
           console.log('🎓 Searching for student by auth_id:', loginEmail);
           let { data: studentData, error: studentError } = await supabase
             .from('students')
@@ -750,39 +750,37 @@ exports.handler = async (event, context) => {
             .eq('auth_id', loginEmail)
             .limit(1);
           
-          console.log('🎓 Student search by auth_id result:', { studentData, studentError });
+          console.log('🎓 Student search result:', { studentData, studentError });
           
-          // If not found by standard auth_id, try multiple fallback formats
+          // If not found by standard auth_id but we have a username, try finding and fixing broken records
           if ((!studentData || studentData.length === 0) && username) {
-            console.log('🎓 Searching for student with multiple formats...');
+            console.log('🎓 Student not found with standard format, checking for broken records...');
             
-            // Try finding by auth_id = plain username (for students created during CSV bug period)
-            const { data: studentByPlainUsername, error: plainError } = await supabase
+            // Look for student with plain username as auth_id (broken record)
+            const { data: brokenStudent, error: brokenError } = await supabase
               .from('students')
               .select('id, name, auth_id, grade_level, username')
               .eq('auth_id', username)
               .limit(1);
             
-            console.log('🎓 Student search by plain username as auth_id:', { studentByPlainUsername, plainError });
-            
-            if (studentByPlainUsername && studentByPlainUsername.length > 0) {
-              studentData = studentByPlainUsername;
-              loginEmail = studentByPlainUsername[0].auth_id;
-              console.log('🎓 Found student by plain username as auth_id, loginEmail:', loginEmail);
-            } else {
-              // Try by username field if it exists
-              const { data: studentByUsername, error: usernameError } = await supabase
+            if (brokenStudent && brokenStudent.length > 0) {
+              console.log('🔧 Found broken student record, fixing auth_id format...');
+              
+              // Fix the broken auth_id format in database
+              const { error: updateError } = await supabase
                 .from('students')
-                .select('id, name, auth_id, grade_level, username')
-                .eq('username', username)
-                .limit(1);
+                .update({ auth_id: loginEmail })
+                .eq('id', brokenStudent[0].id);
               
-              console.log('🎓 Student search by username field:', { studentByUsername, usernameError });
-              
-              if (studentByUsername && studentByUsername.length > 0) {
-                studentData = studentByUsername;
-                loginEmail = studentByUsername[0].auth_id;
-                console.log('🎓 Found student by username field, updated loginEmail to:', loginEmail);
+              if (updateError) {
+                console.error('❌ Failed to fix student auth_id:', updateError);
+              } else {
+                console.log('✅ Fixed student auth_id format');
+                // Now use the fixed record
+                studentData = [{
+                  ...brokenStudent[0],
+                  auth_id: loginEmail
+                }];
               }
             }
           }
