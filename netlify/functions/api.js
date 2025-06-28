@@ -789,12 +789,69 @@ exports.handler = async (event, context) => {
         }
       }
       
-      // If user found in database, create a token for them
+      // If user found in database, verify password and create a token
       if (authenticatedUser && userRole) {
         console.log('✅ User found in database:', userRole);
         
-        // For now, accept any password for users in DB (since we can't verify without Supabase Auth)
-        // In production, you should implement proper password verification
+        // Verify password against database for CSV-uploaded users
+        try {
+          const bcrypt = require('bcryptjs');
+          
+          // Get the stored password hash from the database
+          let storedPasswordHash = null;
+          
+          if (userRole === 'student') {
+            const { data: studentWithPassword } = await supabase
+              .from('students')
+              .select('password')
+              .eq('id', authenticatedUser.id)
+              .single();
+            storedPasswordHash = studentWithPassword?.password;
+          } else if (userRole === 'teacher') {
+            const { data: teacherWithPassword } = await supabase
+              .from('teachers')
+              .select('password')
+              .eq('id', authenticatedUser.id)
+              .single();
+            storedPasswordHash = teacherWithPassword?.password;
+          } else if (userRole === 'admin') {
+            const { data: adminWithPassword } = await supabase
+              .from('Admins')
+              .select('password')
+              .eq('id', authenticatedUser.id)
+              .single();
+            storedPasswordHash = adminWithPassword?.password;
+          }
+          
+          // Verify password if hash exists
+          if (storedPasswordHash) {
+            const isPasswordValid = await bcrypt.compare(password, storedPasswordHash);
+            if (!isPasswordValid) {
+              console.log('❌ Password verification failed for database user');
+              return {
+                statusCode: 401,
+                headers,
+                body: JSON.stringify({
+                  error: 'Invalid login credentials',
+                  message: 'Incorrect password'
+                })
+              };
+            }
+            console.log('✅ Password verified for database user');
+          } else {
+            console.log('⚠️ No password hash found for user, allowing login');
+          }
+        } catch (passwordError) {
+          console.error('Error verifying password:', passwordError);
+          return {
+            statusCode: 500,
+            headers,
+            body: JSON.stringify({
+              error: 'Authentication error',
+              message: 'Failed to verify password'
+            })
+          };
+        }
         
         // Create a simple JWT-like token with user data
         const tokenPayload = {
