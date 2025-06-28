@@ -2296,7 +2296,7 @@ Sample Student 3,3,student3,password123`;
   // PUT /api/students/:id/password - Change student password
   if (path.match(/\/api\/students\/\d+\/password$/) && httpMethod === 'PUT') {
     try {
-      const bcrypt = require('bcrypt');
+      const bcrypt = require('bcryptjs');
       const pathParts = path.split('/');
       const studentId = pathParts[pathParts.indexOf('students') + 1];
       const { currentPassword, newPassword } = JSON.parse(body);
@@ -4657,7 +4657,7 @@ Sample Student 3,3,student3,password123`;
   // PUT /api/teachers/:id/password - Change teacher password
   if (path.match(/\/api\/teachers\/\d+\/password$/) && httpMethod === 'PUT') {
     try {
-      const bcrypt = require('bcrypt');
+      const bcrypt = require('bcryptjs');
       const pathParts = path.split('/');
       const teacherId = pathParts[pathParts.indexOf('teachers') + 1];
       const { currentPassword, newPassword } = JSON.parse(body);
