@@ -2019,6 +2019,148 @@ Sample Student 3,3,student3,password123`;
       };
     }
   }
+
+  // POST /api/admin/users/bulk-delete - Bulk delete users
+  if (path === '/api/admin/users/bulk-delete' && httpMethod === 'POST') {
+    try {
+      console.log('[Bulk Delete] Request received');
+      
+      const requestData = JSON.parse(event.body);
+      const { users } = requestData;
+      
+      if (!users || !Array.isArray(users) || users.length === 0) {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({ error: 'Users array is required and must not be empty.' })
+        };
+      }
+
+      console.log(`[Bulk Delete] Processing ${users.length} users for deletion`);
+
+      // Initialize Supabase
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+
+      const results = {
+        successful: [],
+        failed: []
+      };
+
+      // Process deletions one by one to handle individual errors
+      for (const userInfo of users) {
+        const { id, role } = userInfo;
+        const userId = parseInt(id, 10);
+
+        try {
+          if (isNaN(userId)) {
+            results.failed.push({
+              id,
+              role,
+              error: 'Invalid User ID provided.'
+            });
+            continue;
+          }
+
+          const validRoles = ['student', 'teacher', 'parent', 'admin'];
+          if (!validRoles.includes(role)) {
+            results.failed.push({
+              id: userId,
+              role,
+              error: `Invalid role specified. Must be one of: ${validRoles.join(', ')}`
+            });
+            continue;
+          }
+
+          const tableName = role === 'admin' ? 'Admins' : `${role}s`;
+
+          // Check if user exists
+          const { data: user, error: fetchError } = await supabase
+            .from(tableName)
+            .select('id, name')
+            .eq('id', userId)
+            .single();
+
+          if (fetchError || !user) {
+            results.failed.push({
+              id: userId,
+              role,
+              error: `${role.charAt(0).toUpperCase() + role.slice(1)} not found.`
+            });
+            continue;
+          }
+
+          // Handle related data deletion based on role
+          if (role === 'student') {
+            // Delete related records first (Supabase should handle cascading)
+            await supabase.from('knowledge_states').delete().eq('student_id', userId);
+            await supabase.from('responses').delete().eq('student_id', userId);
+            await supabase.from('learning_paths').delete().eq('student_id', userId);
+            await supabase.from('classroom_students').delete().eq('student_id', userId);
+            await supabase.from('parent_students').delete().eq('student_id', userId);
+            await supabase.from('engagement_metrics').delete().eq('student_id', userId);
+          } else if (role === 'parent') {
+            // Delete parent-student associations
+            await supabase.from('parent_students').delete().eq('parent_id', userId);
+          }
+
+          // Delete the user
+          const { error: deleteError } = await supabase
+            .from(tableName)
+            .delete()
+            .eq('id', userId);
+
+          if (deleteError) {
+            console.error(`[Bulk Delete] Error deleting ${role} ${userId}:`, deleteError);
+            results.failed.push({
+              id: userId,
+              role,
+              error: deleteError.message || `Failed to delete ${role}.`
+            });
+          } else {
+            results.successful.push({
+              id: userId,
+              role,
+              name: user.name
+            });
+            console.log(`[Bulk Delete] Successfully deleted ${role} ${userId} (${user.name})`);
+          }
+
+        } catch (error) {
+          console.error(`[Bulk Delete] Error processing ${role} ${userId}:`, error);
+          results.failed.push({
+            id: userId,
+            role,
+            error: error.message || `Failed to delete ${role}.`
+          });
+        }
+      }
+
+      console.log(`[Bulk Delete] Completed. Successful: ${results.successful.length}, Failed: ${results.failed.length}`);
+
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          message: `Bulk delete completed. ${results.successful.length} successful, ${results.failed.length} failed.`,
+          results
+        })
+      };
+
+    } catch (error) {
+      console.error('[Bulk Delete] Error:', error);
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Failed to complete bulk delete operation.',
+          message: error.message
+        })
+      };
+    }
+  }
   
   // GET /api/admin/content-items - List content items with filtering
   if (path.includes('/admin/content-items') && httpMethod === 'GET') {
