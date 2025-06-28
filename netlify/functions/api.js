@@ -3575,6 +3575,289 @@ Sample Student 3,3,student3,password123`;
     }
   }
   
+  // GET /api/students/:id/knowledge-states - Get student knowledge states
+  if (path.includes('/knowledge-states') && httpMethod === 'GET') {
+    try {
+      const pathParts = path.split('/');
+      const studentId = pathParts[pathParts.indexOf('students') + 1];
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // Fetch knowledge states for the student
+      const { data: statesData, error: statesError } = await supabase
+        .from('knowledge_states')
+        .select('id, student_id, knowledge_component_id, p_mastery, p_transit, p_guess, p_slip, created_at, updated_at')
+        .eq('student_id', studentId);
+      
+      if (statesError) {
+        console.error('[Netlify] Failed to fetch knowledge states:', statesError);
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to fetch knowledge states',
+            message: statesError.message
+          })
+        };
+      }
+      
+      // Get unique KC IDs
+      const kcIds = [...new Set(statesData.map(s => s.knowledge_component_id))];
+      
+      // Fetch knowledge component details if we have KC IDs
+      let kcMap = {};
+      if (kcIds.length > 0) {
+        const { data: kcData, error: kcError } = await supabase
+          .from('knowledge_components')
+          .select('id, name, curriculum_code')
+          .in('id', kcIds);
+        
+        if (!kcError && kcData) {
+          kcMap = kcData.reduce((map, kc) => {
+            map[kc.id] = kc;
+            return map;
+          }, {});
+        }
+      }
+      
+      // Combine the data
+      const states = statesData.map(state => ({
+        ...state,
+        KnowledgeComponent: kcMap[state.knowledge_component_id] || null
+      }));
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify(states)
+      };
+      
+    } catch (error) {
+      console.error('Knowledge states error:', error);
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
+  // GET /api/students/me/detailed-performance - Get detailed performance for authenticated student
+  if (path.includes('/students/me/detailed-performance') && httpMethod === 'GET') {
+    try {
+      // Get user info from Authorization header
+      const authHeader = event.headers.authorization || event.headers.Authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return {
+          statusCode: 401,
+          headers,
+          body: JSON.stringify({ error: 'Authorization required' })
+        };
+      }
+      
+      const token = authHeader.substring(7);
+      let studentId = null;
+      
+      // Decode token to get student ID
+      try {
+        if (token.startsWith('netlify.')) {
+          const tokenParts = token.split('.');
+          const payload = JSON.parse(atob(tokenParts[1]));
+          if (payload.role === 'student') {
+            studentId = payload.id;
+          }
+        }
+      } catch (tokenError) {
+        console.error('Token decode error:', tokenError);
+        return {
+          statusCode: 401,
+          headers,
+          body: JSON.stringify({ error: 'Invalid token' })
+        };
+      }
+      
+      if (!studentId) {
+        return {
+          statusCode: 401,
+          headers,
+          body: JSON.stringify({ error: 'Student authentication required' })
+        };
+      }
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // Get student data
+      const { data: student, error: studentError } = await supabase
+        .from('students')
+        .select('*')
+        .eq('id', studentId)
+        .single();
+      
+      if (studentError || !student) {
+        return {
+          statusCode: 404,
+          headers,
+          body: JSON.stringify({ error: 'Student not found' })
+        };
+      }
+      
+      // Get knowledge states
+      const { data: statesData, error: statesError } = await supabase
+        .from('knowledge_states')
+        .select('id, student_id, knowledge_component_id, p_mastery, p_transit, p_guess, p_slip, created_at, updated_at')
+        .eq('student_id', studentId);
+      
+      const knowledgeStatesRaw = statesData || [];
+      
+      // Get KC details
+      const kcIds = [...new Set(knowledgeStatesRaw.map(s => s.knowledge_component_id))];
+      let knowledgeComponentsMap = {};
+      if (kcIds.length > 0) {
+        const { data: kcData } = await supabase
+          .from('knowledge_components')
+          .select('id, name, curriculum_code')
+          .in('id', kcIds);
+        
+        if (kcData) {
+          knowledgeComponentsMap = kcData.reduce((map, kc) => {
+            map[kc.id] = kc;
+            return map;
+          }, {});
+        }
+      }
+      
+      // Get recent responses
+      const { data: responses, error: responsesError } = await supabase
+        .from('responses')
+        .select(`
+          id, student_id, content_item_id, correct, time_spent, created_at,
+          content_items!inner(id, knowledge_component_id, type, difficulty, content)
+        `)
+        .eq('student_id', studentId)
+        .order('created_at', { ascending: false })
+        .limit(20);
+      
+      const responseData = responses || [];
+      
+      // Get learning path
+      const { data: learningPath } = await supabase
+        .from('learning_paths')
+        .select('*')
+        .eq('student_id', studentId)
+        .eq('is_active', true)
+        .single();
+      
+      // Get engagement metrics
+      const { data: engagementMetrics } = await supabase
+        .from('engagement_metrics')
+        .select('*')
+        .eq('student_id', studentId)
+        .order('created_at', { ascending: false });
+      
+      // Calculate performance by KC
+      const performanceByKC = {};
+      responseData.forEach(response => {
+        if (!response || !response.content_items || !response.content_items.knowledge_component_id) {
+          return;
+        }
+        
+        const kcId = response.content_items.knowledge_component_id;
+        
+        if (!performanceByKC[kcId]) {
+          performanceByKC[kcId] = {
+            totalResponses: 0,
+            correctResponses: 0,
+            totalTime: 0,
+            mastery: 0
+          };
+          
+          const state = knowledgeStatesRaw.find(s => s.knowledge_component_id === kcId);
+          if (state) {
+            performanceByKC[kcId].mastery = state.p_mastery;
+          }
+          
+          const kcDetails = knowledgeComponentsMap[kcId];
+          performanceByKC[kcId].name = kcDetails?.name || 'Unknown Topic';
+          performanceByKC[kcId].curriculum_code = kcDetails?.curriculum_code || 'UNKNOWN';
+        }
+        
+        performanceByKC[kcId].totalResponses++;
+        if (response.correct === true) {
+          performanceByKC[kcId].correctResponses++;
+        }
+        performanceByKC[kcId].totalTime += (response.time_spent || 0);
+      });
+      
+      // Calculate averages
+      Object.values(performanceByKC).forEach(kc => {
+        kc.correctRate = kc.totalResponses > 0 ? kc.correctResponses / kc.totalResponses : 0;
+        kc.averageTime = kc.totalResponses > 0 ? kc.totalTime / kc.totalResponses : 0;
+      });
+      
+      // Calculate overall metrics
+      const totalMastery = knowledgeStatesRaw.reduce((sum, state) => sum + state.p_mastery, 0);
+      const averageMastery = knowledgeStatesRaw.length > 0 ? totalMastery / knowledgeStatesRaw.length : 0;
+      const totalRecentResponses = responseData.length;
+      const correctRecentResponses = responseData.filter(r => r.correct === true).length;
+      const overallCorrectRate = totalRecentResponses > 0 ? correctRecentResponses / totalRecentResponses : 0;
+      
+      // Prepare response with performance data nested
+      const detailedPerformance = {
+        performance: {
+          student: student,
+          knowledgeStates: knowledgeStatesRaw.map(state => ({
+            ...state,
+            KnowledgeComponent: knowledgeComponentsMap[state.knowledge_component_id] || null
+          })),
+          performanceByKC,
+          recentActivity: responseData.map(r => ({
+            ...r,
+            ContentItem: r.content_items
+          })),
+          learningPath: learningPath || null,
+          engagementMetrics: engagementMetrics || [],
+          overallMetrics: {
+            averageMastery,
+            engagement: 0.5,
+            totalResponses: totalRecentResponses,
+            correctRate: overallCorrectRate
+          },
+          interventionRecommendations: {
+            needed: false,
+            priority: 'Low',
+            recommendations: ['Continue practicing']
+          }
+        }
+      };
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify(detailedPerformance)
+      };
+      
+    } catch (error) {
+      console.error('Detailed performance error:', error);
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
   // GET /api/messages/inbox - Get messages for authenticated user
   if (path.includes('/messages/inbox') && httpMethod === 'GET') {
     try {
@@ -4854,6 +5137,9 @@ Sample Student 3,3,student3,password123`;
         '/api/auth/login', 
         '/api/admin/users', 
         '/api/students/:id', 
+        '/api/students/:id/knowledge-states',
+        '/api/students/:id/grade-knowledge-components',
+        '/api/students/me/detailed-performance',
         '/api/students/kcs/sequence',
         '/api/students/:id/kcs/:kcId/mastery',
         '/api/kcs/:id',
