@@ -743,6 +743,171 @@ exports.uploadCSVUsers = async (req, res) => {
     }
 };
 
+// Bulk delete users (Admin only)
+exports.bulkDeleteUsers = async (req, res) => {
+    const { users } = req.body; // Array of { id, role } objects
+    
+    if (!users || !Array.isArray(users) || users.length === 0) {
+        return res.status(400).json({ error: 'Users array is required and must not be empty.' });
+    }
+    
+    const results = {
+        successful: [],
+        failed: []
+    };
+    
+    try {
+        // Process deletions in parallel for better performance
+        const deletePromises = users.map(async (userInfo) => {
+            const { id, role } = userInfo;
+            const userId = parseInt(id, 10);
+            
+            if (isNaN(userId)) {
+                return {
+                    success: false,
+                    id,
+                    role,
+                    error: 'Invalid User ID provided.'
+                };
+            }
+            
+            const validRoles = ['student', 'teacher', 'parent', 'admin'];
+            if (!validRoles.includes(role)) {
+                return {
+                    success: false,
+                    id: userId,
+                    role,
+                    error: `Invalid role specified. Must be one of: ${validRoles.join(', ')}`
+                };
+            }
+            
+            try {
+                let model;
+                switch (role) {
+                    case 'student': model = Student; break;
+                    case 'teacher': model = Teacher; break;
+                    case 'parent': model = Parent; break;
+                    case 'admin': model = Admin; break;
+                }
+                
+                // Check if user exists
+                const user = await model.findByPk(userId);
+                if (!user) {
+                    return {
+                        success: false,
+                        id: userId,
+                        role,
+                        error: `${role.charAt(0).toUpperCase() + role.slice(1)} not found.`
+                    };
+                }
+                
+                // Handle related data deletion based on role
+                if (role === 'student') {
+                    const transaction = await db.sequelize.transaction();
+                    
+                    try {
+                        // Delete related records first
+                        await db.KnowledgeState.destroy({
+                            where: { student_id: userId },
+                            transaction
+                        });
+                        
+                        await db.Response.destroy({
+                            where: { student_id: userId },
+                            transaction
+                        });
+                        
+                        await db.LearningPath.destroy({
+                            where: { student_id: userId },
+                            transaction
+                        });
+                        
+                        await db.ClassroomStudent.destroy({
+                            where: { student_id: userId },
+                            transaction
+                        });
+                        
+                        await db.ParentStudent.destroy({
+                            where: { student_id: userId },
+                            transaction
+                        });
+                        
+                        await db.EngagementMetric.destroy({
+                            where: { student_id: userId },
+                            transaction
+                        });
+                        
+                        // Delete the student
+                        await Student.destroy({
+                            where: { id: userId },
+                            transaction
+                        });
+                        
+                        await transaction.commit();
+                        
+                    } catch (error) {
+                        await transaction.rollback();
+                        throw error;
+                    }
+                } else if (role === 'parent') {
+                    // Delete parent-student associations before deleting parent
+                    await db.ParentStudent.destroy({
+                        where: { parent_id: userId }
+                    });
+                    
+                    await Parent.destroy({
+                        where: { id: userId }
+                    });
+                } else {
+                    // Teacher or Admin - direct delete
+                    await model.destroy({
+                        where: { id: userId }
+                    });
+                }
+                
+                return {
+                    success: true,
+                    id: userId,
+                    role,
+                    name: user.name
+                };
+                
+            } catch (error) {
+                console.error(`Error deleting ${role} ID ${userId}:`, error);
+                return {
+                    success: false,
+                    id: userId,
+                    role,
+                    error: error.message || `Failed to delete ${role}.`
+                };
+            }
+        });
+        
+        const deleteResults = await Promise.all(deletePromises);
+        
+        // Categorize results
+        deleteResults.forEach(result => {
+            if (result.success) {
+                results.successful.push(result);
+            } else {
+                results.failed.push(result);
+            }
+        });
+        
+        res.status(200).json({
+            message: `Bulk delete completed. ${results.successful.length} successful, ${results.failed.length} failed.`,
+            results
+        });
+        
+    } catch (error) {
+        console.error('Bulk delete error:', error);
+        res.status(500).json({ 
+            error: 'Failed to complete bulk delete operation.',
+            message: error.message 
+        });
+    }
+};
+
 // Helper function to find user by email across models
 const findUserByEmail = async (email) => {
     let user = await Student.findOne({ where: { auth_id: email } });

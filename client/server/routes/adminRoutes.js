@@ -79,6 +79,7 @@ router.get('/users', adminController.listUsers);
 router.post('/users', adminController.createUser);
 router.put('/users/:role/:id', adminController.updateUser);
 router.delete('/users/:role/:id', adminController.deleteUser); // Route for deleting users
+router.post('/users/bulk-delete', adminController.bulkDeleteUsers); // Route for bulk deleting users
 router.post('/users/csv-upload', (req, res, next) => {
   // Check if this is a file upload or JSON content
   const contentType = req.headers['content-type'] || '';
