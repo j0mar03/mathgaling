@@ -90,9 +90,17 @@ const TeacherProfile = () => {
         setPasswordSuccess('');
         
         try {
+            const authToken = localStorage.getItem('authToken');
+            console.log('[TeacherProfile] Attempting password change with token:', authToken ? authToken.substring(0, 20) + '...' : 'No token');
+            
             await axios.put(`/api/teachers/${teacherId}/password`, {
                 currentPassword: passwordData.currentPassword,
                 newPassword: passwordData.newPassword
+            }, {
+                headers: {
+                    'Authorization': `Bearer ${authToken}`,
+                    'Content-Type': 'application/json'
+                }
             });
             setPasswordSuccess('Password changed successfully!');
             setPasswordData({
