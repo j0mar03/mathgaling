@@ -1,0 +1,200 @@
+.teacher-profile {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    min-height: 100vh;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.profile-header {
+    text-align: center;
+    margin-bottom: 30px;
+    padding: 20px;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.profile-header h1 {
+    color: #2c3e50;
+    margin: 0 0 10px 0;
+    font-size: 2.2em;
+    font-weight: 600;
+}
+
+.profile-header p {
+    color: #6c757d;
+    margin: 0;
+    font-size: 1.1em;
+}
+
+.profile-content {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+.profile-form, .password-form {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 1em;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 1em;
+    transition: all 0.3s ease;
+    box-sizing: border-box;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: #4a90e2;
+    box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.1);
+}
+
+.form-group input:disabled {
+    background-color: #f8f9fa;
+    color: #6c757d;
+    cursor: not-allowed;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: center;
+    margin-top: 25px;
+}
+
+.save-button {
+    background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 25px;
+    font-size: 1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 150px;
+}
+
+.save-button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(74, 144, 226, 0.3);
+}
+
+.save-button:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.password-section {
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+.password-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 30px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.password-header h3 {
+    margin: 0;
+    color: #2c3e50;
+    font-size: 1.3em;
+}
+
+.toggle-password-btn {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    border-radius: 20px;
+    font-size: 0.9em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.toggle-password-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+}
+
+.password-form {
+    margin: 0;
+    box-shadow: none;
+    border-radius: 0;
+}
+
+.error-message {
+    background: #f8d7da;
+    color: #721c24;
+    padding: 12px 15px;
+    border-radius: 8px;
+    border: 1px solid #f5c6cb;
+    margin-bottom: 15px;
+    font-weight: 500;
+}
+
+.success-message {
+    background: #d4edda;
+    color: #155724;
+    padding: 12px 15px;
+    border-radius: 8px;
+    border: 1px solid #c3e6cb;
+    margin-bottom: 15px;
+    font-weight: 500;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .teacher-profile {
+        padding: 15px;
+    }
+    
+    .profile-header h1 {
+        font-size: 1.8em;
+    }
+    
+    .profile-form, .password-form {
+        padding: 20px;
+    }
+    
+    .password-header {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+    
+    .toggle-password-btn {
+        width: 100%;
+    }
+}

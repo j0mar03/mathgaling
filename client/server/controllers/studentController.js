@@ -136,6 +136,58 @@ exports.updateStudentProfile = async (req, res) => {
   }
 };
 
+// Change student password
+exports.changeStudentPassword = async (req, res) => {
+  try {
+    const bcrypt = require('bcrypt');
+    const requestedId = parseInt(req.params.id, 10);
+    const authenticatedUserId = req.user.id; // From authenticateToken middleware
+
+    // Ensure the authenticated user is updating their own password
+    if (requestedId !== authenticatedUserId) {
+      return res.status(403).json({ error: 'Forbidden: You can only change your own password.' });
+    }
+
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Current password and new password are required.' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: 'New password must be at least 6 characters long.' });
+    }
+
+    // Get student with password to verify current password
+    const student = await db.Student.findByPk(requestedId);
+    if (!student) {
+      return res.status(404).json({ error: 'Student not found' });
+    }
+
+    // Verify current password
+    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, student.password);
+    if (!isCurrentPasswordValid) {
+      return res.status(400).json({ error: 'Current password is incorrect.' });
+    }
+
+    // Hash new password
+    const saltRounds = 10;
+    const hashedNewPassword = await bcrypt.hash(newPassword, saltRounds);
+
+    // Update password
+    await db.Student.update(
+      { password: hashedNewPassword },
+      { where: { id: requestedId } }
+    );
+
+    res.json({ message: 'Password changed successfully.' });
+
+  } catch (error) {
+    console.error("Error changing student password:", error);
+    res.status(500).json({ error: 'Failed to change password' });
+  }
+};
+
 // Get student knowledge states
 exports.getKnowledgeStates = async (req, res) => {
   try {

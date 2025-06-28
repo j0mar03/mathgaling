@@ -16,12 +16,22 @@ const StudentProfile = () => {
         avatar: '👤', // Default avatar emoji
         favorite_color: '#4a90e2', // Default favorite color
         achievements: [], // Array to store achievements
+        gender: '',
+    });
+    const [passwordData, setPasswordData] = useState({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
     });
     const [initialData, setInitialData] = useState({});
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [changingPassword, setChangingPassword] = useState(false);
+    const [showPasswordSection, setShowPasswordSection] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [passwordError, setPasswordError] = useState('');
+    const [passwordSuccess, setPasswordSuccess] = useState('');
 
     // Available avatars for selection
     const availableAvatars = ['👤', '🧑‍🎓', '👨‍🎓', '👩‍🎓', '🦸', '🦸‍♂️', '🦸‍♀️', '🧙', '🧙‍♂️', '🧙‍♀️'];
@@ -47,6 +57,7 @@ const StudentProfile = () => {
                     avatar: data.avatar || '👤',
                     favorite_color: data.favorite_color || '#4a90e2',
                     achievements: data.achievements || [],
+                    gender: data.gender || '',
                 });
                 setInitialData({
                     name: data.name || '',
@@ -55,6 +66,7 @@ const StudentProfile = () => {
                     age: data.age || '',
                     avatar: data.avatar || '👤',
                     favorite_color: data.favorite_color || '#4a90e2',
+                    gender: data.gender || '',
                 });
             } catch (err) {
                 console.error("Error fetching profile:", err);
@@ -82,6 +94,50 @@ const StudentProfile = () => {
         setSuccess('');
     };
 
+    const handlePasswordChange = (event) => {
+        const { name, value } = event.target;
+        setPasswordData(prev => ({ ...prev, [name]: value }));
+        setPasswordError('');
+        setPasswordSuccess('');
+    };
+
+    const handlePasswordSubmit = async (event) => {
+        event.preventDefault();
+        
+        if (passwordData.newPassword !== passwordData.confirmPassword) {
+            setPasswordError('New passwords do not match.');
+            return;
+        }
+        
+        if (passwordData.newPassword.length < 6) {
+            setPasswordError('New password must be at least 6 characters long.');
+            return;
+        }
+        
+        setChangingPassword(true);
+        setPasswordError('');
+        setPasswordSuccess('');
+        
+        try {
+            await axios.put(`/api/students/${studentId}/password`, {
+                currentPassword: passwordData.currentPassword,
+                newPassword: passwordData.newPassword
+            });
+            setPasswordSuccess('Password changed successfully!');
+            setPasswordData({
+                currentPassword: '',
+                newPassword: '',
+                confirmPassword: ''
+            });
+            setShowPasswordSection(false);
+        } catch (err) {
+            console.error('Error changing password:', err);
+            setPasswordError(err.response?.data?.error || 'Failed to change password.');
+        } finally {
+            setChangingPassword(false);
+        }
+    };
+
     const handleSubmit = async (event) => {
         event.preventDefault();
         setSaving(true);
@@ -96,6 +152,7 @@ const StudentProfile = () => {
                 age: profileData.age,
                 avatar: profileData.avatar,
                 favorite_color: profileData.favorite_color,
+                gender: profileData.gender,
             });
             setSuccess('Profile updated successfully!');
             setInitialData({
@@ -105,6 +162,7 @@ const StudentProfile = () => {
                 age: profileData.age,
                 avatar: profileData.avatar,
                 favorite_color: profileData.favorite_color,
+                gender: profileData.gender,
             });
         } catch (err) {
             console.error("Error updating profile:", err);
@@ -204,6 +262,22 @@ const StudentProfile = () => {
                     </div>
 
                     <div className="form-group">
+                        <label htmlFor="gender">Gender (Kasarian)</label>
+                        <select
+                            id="gender"
+                            name="gender"
+                            value={profileData.gender}
+                            onChange={handleInputChange}
+                        >
+                            <option value="">Select Gender</option>
+                            <option value="Male">Male (Lalaki)</option>
+                            <option value="Female">Female (Babae)</option>
+                            <option value="Other">Other (Iba)</option>
+                            <option value="Prefer not to say">Prefer not to say (Ayokong sabihin)</option>
+                        </select>
+                    </div>
+
+                    <div className="form-group">
                         <label>Favorite Color (Paboritong Kulay)</label>
                         <div className="color-options">
                             {['#4a90e2', '#e74c3c', '#2ecc71', '#f1c40f', '#9b59b6', '#1abc9c'].map((color) => (
@@ -227,6 +301,70 @@ const StudentProfile = () => {
                         </button>
                     </div>
                 </form>
+
+                <div className="password-section">
+                    <div className="password-header">
+                        <h3>🔒 Change Password</h3>
+                        <button 
+                            type="button" 
+                            className="toggle-password-btn"
+                            onClick={() => setShowPasswordSection(!showPasswordSection)}
+                        >
+                            {showPasswordSection ? 'Cancel' : 'Change Password'}
+                        </button>
+                    </div>
+
+                    {showPasswordSection && (
+                        <form onSubmit={handlePasswordSubmit} className="password-form">
+                            <div className="form-group">
+                                <label htmlFor="currentPassword">Current Password</label>
+                                <input
+                                    type="password"
+                                    id="currentPassword"
+                                    name="currentPassword"
+                                    value={passwordData.currentPassword}
+                                    onChange={handlePasswordChange}
+                                    required
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label htmlFor="newPassword">New Password</label>
+                                <input
+                                    type="password"
+                                    id="newPassword"
+                                    name="newPassword"
+                                    value={passwordData.newPassword}
+                                    onChange={handlePasswordChange}
+                                    minLength="6"
+                                    required
+                                />
+                            </div>
+
+                            <div className="form-group">
+                                <label htmlFor="confirmPassword">Confirm New Password</label>
+                                <input
+                                    type="password"
+                                    id="confirmPassword"
+                                    name="confirmPassword"
+                                    value={passwordData.confirmPassword}
+                                    onChange={handlePasswordChange}
+                                    minLength="6"
+                                    required
+                                />
+                            </div>
+
+                            {passwordError && <div className="error-message">{passwordError}</div>}
+                            {passwordSuccess && <div className="success-message">{passwordSuccess}</div>}
+
+                            <div className="form-actions">
+                                <button type="submit" className="save-button" disabled={changingPassword}>
+                                    {changingPassword ? 'Changing...' : 'Change Password'}
+                                </button>
+                            </div>
+                        </form>
+                    )}
+                </div>
             </div>
         </div>
     );

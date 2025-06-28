@@ -2242,6 +2242,159 @@ Sample Student 3,3,student3,password123`;
       };
     }
   }
+
+  // PUT /api/students/:id - Update student profile
+  if (path.match(/\/api\/students\/\d+$/) && httpMethod === 'PUT') {
+    try {
+      const studentId = path.split('/').pop();
+      const updateData = JSON.parse(body);
+      
+      // Remove sensitive fields that shouldn't be updated
+      const { id, auth_id, password, createdAt, updatedAt, ...allowedData } = updateData;
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      const { data, error } = await supabase
+        .from('students')
+        .update(allowedData)
+        .eq('id', studentId)
+        .select()
+        .single();
+      
+      if (error) {
+        return {
+          statusCode: 404,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to update student',
+            message: error.message
+          })
+        };
+      }
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify(data)
+      };
+      
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+
+  // PUT /api/students/:id/password - Change student password
+  if (path.match(/\/api\/students\/\d+\/password$/) && httpMethod === 'PUT') {
+    try {
+      const bcrypt = require('bcrypt');
+      const pathParts = path.split('/');
+      const studentId = pathParts[pathParts.indexOf('students') + 1];
+      const { currentPassword, newPassword } = JSON.parse(body);
+      
+      if (!currentPassword || !newPassword) {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({
+            error: 'Current password and new password are required.'
+          })
+        };
+      }
+      
+      if (newPassword.length < 6) {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({
+            error: 'New password must be at least 6 characters long.'
+          })
+        };
+      }
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // Get student with current password
+      const { data: student, error: getError } = await supabase
+        .from('students')
+        .select('password')
+        .eq('id', studentId)
+        .single();
+      
+      if (getError || !student) {
+        return {
+          statusCode: 404,
+          headers,
+          body: JSON.stringify({
+            error: 'Student not found'
+          })
+        };
+      }
+      
+      // Verify current password
+      const isCurrentPasswordValid = await bcrypt.compare(currentPassword, student.password);
+      if (!isCurrentPasswordValid) {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({
+            error: 'Current password is incorrect.'
+          })
+        };
+      }
+      
+      // Hash new password
+      const saltRounds = 10;
+      const hashedNewPassword = await bcrypt.hash(newPassword, saltRounds);
+      
+      // Update password
+      const { error: updateError } = await supabase
+        .from('students')
+        .update({ password: hashedNewPassword })
+        .eq('id', studentId);
+      
+      if (updateError) {
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to update password',
+            message: updateError.message
+          })
+        };
+      }
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          message: 'Password changed successfully.'
+        })
+      };
+      
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
   
   // GET /api/students/:id/dashboard - Get student dashboard data
   if (path.includes('/dashboard') && httpMethod === 'GET') {
@@ -4437,6 +4590,159 @@ Sample Student 3,3,student3,password123`;
         statusCode: 200,
         headers,
         body: JSON.stringify(data)
+      };
+      
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+
+  // PUT /api/teachers/:id - Update teacher profile
+  if (path.match(/\/api\/teachers\/\d+$/) && httpMethod === 'PUT') {
+    try {
+      const teacherId = path.split('/').pop();
+      const updateData = JSON.parse(body);
+      
+      // Remove sensitive fields that shouldn't be updated
+      const { id, auth_id, password, createdAt, updatedAt, ...allowedData } = updateData;
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      const { data, error } = await supabase
+        .from('teachers')
+        .update(allowedData)
+        .eq('id', teacherId)
+        .select()
+        .single();
+      
+      if (error) {
+        return {
+          statusCode: 404,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to update teacher',
+            message: error.message
+          })
+        };
+      }
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify(data)
+      };
+      
+    } catch (error) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+
+  // PUT /api/teachers/:id/password - Change teacher password
+  if (path.match(/\/api\/teachers\/\d+\/password$/) && httpMethod === 'PUT') {
+    try {
+      const bcrypt = require('bcrypt');
+      const pathParts = path.split('/');
+      const teacherId = pathParts[pathParts.indexOf('teachers') + 1];
+      const { currentPassword, newPassword } = JSON.parse(body);
+      
+      if (!currentPassword || !newPassword) {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({
+            error: 'Current password and new password are required.'
+          })
+        };
+      }
+      
+      if (newPassword.length < 6) {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({
+            error: 'New password must be at least 6 characters long.'
+          })
+        };
+      }
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // Get teacher with current password
+      const { data: teacher, error: getError } = await supabase
+        .from('teachers')
+        .select('password')
+        .eq('id', teacherId)
+        .single();
+      
+      if (getError || !teacher) {
+        return {
+          statusCode: 404,
+          headers,
+          body: JSON.stringify({
+            error: 'Teacher not found'
+          })
+        };
+      }
+      
+      // Verify current password
+      const isCurrentPasswordValid = await bcrypt.compare(currentPassword, teacher.password);
+      if (!isCurrentPasswordValid) {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({
+            error: 'Current password is incorrect.'
+          })
+        };
+      }
+      
+      // Hash new password
+      const saltRounds = 10;
+      const hashedNewPassword = await bcrypt.hash(newPassword, saltRounds);
+      
+      // Update password
+      const { error: updateError } = await supabase
+        .from('teachers')
+        .update({ password: hashedNewPassword })
+        .eq('id', teacherId);
+      
+      if (updateError) {
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to update password',
+            message: updateError.message
+          })
+        };
+      }
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          message: 'Password changed successfully.'
+        })
       };
       
     } catch (error) {

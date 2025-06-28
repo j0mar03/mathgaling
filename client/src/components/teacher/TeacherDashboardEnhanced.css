@@ -82,6 +82,17 @@
   transform: translateY(-2px);
 }
 
+.action-button.tertiary {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+}
+
+.action-button.tertiary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+}
+
 .performance-badge {
   background: rgba(255,255,255,0.15);
   border-radius: 20px;

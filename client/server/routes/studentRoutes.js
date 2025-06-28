@@ -62,6 +62,9 @@ router.get('/:id', optionalAuth, async (req, res) => {
 // Update student profile
 router.put('/:id', authMiddleware.verifyToken, studentController.updateStudentProfile);
 
+// Change student password
+router.put('/:id/password', authMiddleware.verifyToken, studentController.changeStudentPassword);
+
 // Get student's knowledge states - Use the controller function
 router.get('/:id/knowledge-states', optionalAuth, studentController.getKnowledgeStates);
 
