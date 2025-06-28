@@ -1925,7 +1925,6 @@ Sample Student 3,3,student3,password123`;
               const hashedPassword = await bcrypt.hash(password, 10);
 
               // Create student with proper auth_id format (matching authentication logic)
-              const studentAuthId = `${username.trim()}@student.mathtagumpay.com`;
               const { data: newStudent, error: createError } = await supabase
                 .from('students')
                 .insert({
