@@ -1771,97 +1771,129 @@ Sample Student 3,3,student3,password123`;
       
       const successfulUsers = [];
       const errors = [];
+      
+      // Load bcrypt once outside the loop
+      const bcrypt = require('bcryptjs');
 
-      // Process each data row
-      for (let i = 0; i < dataLines.length; i++) {
-        const values = parseCSVLine(dataLines[i]);
-        const rowData = {};
+      try {
+        console.log(`[CSV Upload] Processing ${dataLines.length} rows`);
         
-        // Map values to headers
-        header.forEach((h, index) => {
-          rowData[h] = values[index] || '';
-        });
-
-        const { name, grade_level, username, password } = rowData;
-
-        try {
-          // Basic validation
-          if (!name || !grade_level || !username || !password) {
-            errors.push({
-              row: i + 2, // +2 because we start from index 0 and skip header
-              email: username,
-              error: 'Missing required field (name, grade_level, username, or password)'
+        // Process each data row
+        for (let i = 0; i < dataLines.length; i++) {
+          try {
+            const values = parseCSVLine(dataLines[i]);
+            const rowData = {};
+            
+            // Map values to headers
+            header.forEach((h, index) => {
+              rowData[h] = values[index] || '';
             });
-            continue;
-          }
 
-          // Check if student already exists
-          const { data: existingStudent } = await supabase
-            .from('students')
-            .select('id, auth_id')
-            .eq('auth_id', username)
-            .single();
+            const { name, grade_level, username, password } = rowData;
 
-          if (existingStudent) {
+            // Basic validation
+            if (!name || !grade_level || !username || !password) {
+              errors.push({
+                row: i + 2, // +2 because we start from index 0 and skip header
+                email: username || 'unknown',
+                error: 'Missing required field (name, grade_level, username, or password)'
+              });
+              continue;
+            }
+
+            // Validate grade_level is numeric
+            const gradeNum = parseInt(grade_level);
+            if (isNaN(gradeNum) || gradeNum < 1 || gradeNum > 12) {
+              errors.push({
+                row: i + 2,
+                email: username,
+                error: `Invalid grade_level: ${grade_level}. Must be a number between 1-12.`
+              });
+              continue;
+            }
+
+            // Check if student already exists
+            const { data: existingStudent } = await supabase
+              .from('students')
+              .select('id, auth_id')
+              .eq('auth_id', username)
+              .single();
+
+            if (existingStudent) {
+              errors.push({
+                row: i + 2,
+                email: username,
+                error: 'Student with this username already exists'
+              });
+              continue;
+            }
+
+            // Hash password
+            const hashedPassword = await bcrypt.hash(password, 10);
+
+            // Create student
+            const { data: newStudent, error: createError } = await supabase
+              .from('students')
+              .insert({
+                name: name.trim(),
+                auth_id: username.trim(),
+                password: hashedPassword,
+                grade_level: gradeNum
+              })
+              .select()
+              .single();
+
+            if (createError) {
+              console.error(`[CSV Upload] Error creating student on row ${i + 2}:`, createError);
+              errors.push({
+                row: i + 2,
+                email: username,
+                error: `Creation failed: ${createError.message}`
+              });
+              continue;
+            }
+
+            // Create learning path for the new student
+            await supabase
+              .from('learning_paths')
+              .insert({
+                student_id: newStudent.id,
+                is_active: true,
+                current_position: 0
+              });
+
+            successfulUsers.push({
+              id: newStudent.id,
+              name: newStudent.name,
+              auth_id: newStudent.auth_id,
+              grade_level: newStudent.grade_level,
+              role: 'student'
+            });
+
+            console.log(`[CSV Upload] Successfully created student: ${username}`);
+
+          } catch (err) {
+            console.error(`[CSV Upload] Error processing student row ${i + 2}:`, err);
             errors.push({
               row: i + 2,
-              email: username,
-              error: 'Student with this username already exists'
+              email: username || 'Unknown',
+              error: `Processing failed: ${err.message}`
             });
-            continue;
           }
-
-          // Hash password (simple approach for demonstration)
-          const bcrypt = require('bcryptjs');
-          const hashedPassword = await bcrypt.hash(password, 10);
-
-          // Create student
-          const { data: newStudent, error: createError } = await supabase
-            .from('students')
-            .insert({
-              name: name,
-              auth_id: username,
-              password: hashedPassword,
-              grade_level: grade_level
-            })
-            .select()
-            .single();
-
-          if (createError) {
-            console.error('Error creating student:', createError);
-            errors.push({
-              row: i + 2,
-              email: username,
-              error: `Creation failed: ${createError.message}`
-            });
-            continue;
-          }
-
-          // Create learning path for the new student
-          await supabase
-            .from('learning_paths')
-            .insert({
-              student_id: newStudent.id,
-              is_active: true,
-              current_position: 0
-            });
-
-          successfulUsers.push({
-            id: newStudent.id,
-            name: newStudent.name,
-            auth_id: newStudent.auth_id,
-            grade_level: newStudent.grade_level,
-            role: 'student'
-          });
-
-        } catch (err) {
-          console.error('Error processing student row:', err);
-          errors.push({
-            row: i + 2,
-            email: username || 'Unknown',
-            error: `Processing failed: ${err.message}`
-          });
         }
+
+        console.log(`[CSV Upload] Completed processing. Created: ${successfulUsers.length}, Errors: ${errors.length}`);
+
+      } catch (mainError) {
+        console.error('[CSV Upload] Main processing error:', mainError);
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'CSV processing failed',
+            message: mainError.message
+          })
+        };
       }
 
       return {
