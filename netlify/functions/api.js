@@ -2703,9 +2703,12 @@ Sample Student 3,3,student3,password123`;
         };
       }
       
-      const { currentPassword, newPassword } = JSON.parse(body);
+      console.log(`[Netlify] Request body: ${event.body}`);
+      const { currentPassword, newPassword } = JSON.parse(event.body || '{}');
+      console.log(`[Netlify] Parsed data - currentPassword: ${currentPassword ? 'present' : 'missing'}, newPassword: ${newPassword ? 'present' : 'missing'}`);
       
       if (!currentPassword || !newPassword) {
+        console.log(`[Netlify] Missing required fields - currentPassword: ${!!currentPassword}, newPassword: ${!!newPassword}`);
         return {
           statusCode: 400,
           headers,
