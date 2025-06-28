@@ -4591,7 +4591,11 @@ Sample Student 3,3,student3,password123`;
       const currentPassword = requestBody.currentPassword;
       const newPassword = requestBody.newPassword;
       
-      if (currentPassword !== student.password) {
+      const bcrypt = require('bcryptjs');
+      
+      // Use bcrypt to compare the current password with the stored hash
+      const isCurrentPasswordValid = await bcrypt.compare(currentPassword, student.password);
+      if (!isCurrentPasswordValid) {
         console.error('[Netlify] Invalid current password');
         return {
           statusCode: 400,
@@ -4602,10 +4606,13 @@ Sample Student 3,3,student3,password123`;
         };
       }
       
+      // Hash the new password before storing
+      const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+      
       // Update password
       const { error: updateError } = await supabase
         .from('students')
-        .update({ password: newPassword })
+        .update({ password: hashedNewPassword })
         .eq('id', studentId);
         
       if (updateError) {
@@ -4727,7 +4734,11 @@ Sample Student 3,3,student3,password123`;
       const currentPassword = requestBody.currentPassword;
       const newPassword = requestBody.newPassword;
       
-      if (currentPassword !== teacher.password) {
+      const bcrypt = require('bcryptjs');
+      
+      // Use bcrypt to compare the current password with the stored hash
+      const isCurrentPasswordValid = await bcrypt.compare(currentPassword, teacher.password);
+      if (!isCurrentPasswordValid) {
         console.error('[Netlify] Invalid current password');
         return {
           statusCode: 400,
@@ -4738,10 +4749,13 @@ Sample Student 3,3,student3,password123`;
         };
       }
       
+      // Hash the new password before storing
+      const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+      
       // Update password
       const { error: updateError } = await supabase
         .from('teachers')
-        .update({ password: newPassword })
+        .update({ password: hashedNewPassword })
         .eq('id', teacherId);
         
       if (updateError) {
