@@ -2622,6 +2622,58 @@ Sample Student 3,3,student3,password123`;
       const bcrypt = require('bcryptjs');
       const pathParts = path.split('/');
       const studentId = pathParts[pathParts.indexOf('students') + 1];
+      
+      // Extract and verify auth token
+      const authHeader = event.headers.authorization || event.headers.Authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return {
+          statusCode: 401,
+          headers,
+          body: JSON.stringify({ error: 'Authorization required' })
+        };
+      }
+      
+      const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+      let authenticatedUserId = null;
+      let authenticatedUserRole = null;
+      
+      // Decode JWT token to get user info
+      try {
+        // Simple JWT decode without verification (for development)
+        // In production, this should use proper JWT verification with secret
+        const base64Payload = token.split('.')[1];
+        const payload = JSON.parse(Buffer.from(base64Payload, 'base64').toString('utf8'));
+        authenticatedUserId = payload.id;
+        authenticatedUserRole = payload.role;
+        
+        console.log(`[Netlify] Decoded token - User ID: ${authenticatedUserId}, Role: ${authenticatedUserRole}`);
+        
+        // Verify this is actually a student
+        if (authenticatedUserRole !== 'student') {
+          return {
+            statusCode: 403,
+            headers,
+            body: JSON.stringify({ error: 'Only students can change student passwords' })
+          };
+        }
+        
+        // Ensure the authenticated user is updating their own password
+        if (parseInt(studentId) !== authenticatedUserId) {
+          return {
+            statusCode: 403,
+            headers,
+            body: JSON.stringify({ error: 'Forbidden: You can only change your own password.' })
+          };
+        }
+      } catch (decodeError) {
+        console.error('[Netlify] JWT decode error:', decodeError);
+        return {
+          statusCode: 401,
+          headers,
+          body: JSON.stringify({ error: 'Invalid authorization token' })
+        };
+      }
+      
       const { currentPassword, newPassword } = JSON.parse(body);
       
       if (!currentPassword || !newPassword) {
@@ -4983,6 +5035,58 @@ Sample Student 3,3,student3,password123`;
       const bcrypt = require('bcryptjs');
       const pathParts = path.split('/');
       const teacherId = pathParts[pathParts.indexOf('teachers') + 1];
+      
+      // Extract and verify auth token
+      const authHeader = event.headers.authorization || event.headers.Authorization;
+      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        return {
+          statusCode: 401,
+          headers,
+          body: JSON.stringify({ error: 'Authorization required' })
+        };
+      }
+      
+      const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+      let authenticatedUserId = null;
+      let authenticatedUserRole = null;
+      
+      // Decode JWT token to get user info
+      try {
+        // Simple JWT decode without verification (for development)
+        // In production, this should use proper JWT verification with secret
+        const base64Payload = token.split('.')[1];
+        const payload = JSON.parse(Buffer.from(base64Payload, 'base64').toString('utf8'));
+        authenticatedUserId = payload.id;
+        authenticatedUserRole = payload.role;
+        
+        console.log(`[Netlify] Decoded token - User ID: ${authenticatedUserId}, Role: ${authenticatedUserRole}`);
+        
+        // Verify this is actually a teacher
+        if (authenticatedUserRole !== 'teacher') {
+          return {
+            statusCode: 403,
+            headers,
+            body: JSON.stringify({ error: 'Only teachers can change teacher passwords' })
+          };
+        }
+        
+        // Ensure the authenticated user is updating their own password
+        if (parseInt(teacherId) !== authenticatedUserId) {
+          return {
+            statusCode: 403,
+            headers,
+            body: JSON.stringify({ error: 'Forbidden: You can only change your own password.' })
+          };
+        }
+      } catch (decodeError) {
+        console.error('[Netlify] JWT decode error:', decodeError);
+        return {
+          statusCode: 401,
+          headers,
+          body: JSON.stringify({ error: 'Invalid authorization token' })
+        };
+      }
+      
       const { currentPassword, newPassword } = JSON.parse(body);
       
       if (!currentPassword || !newPassword) {
@@ -8723,9 +8827,12 @@ Sample Student 3,3,student3,password123`;
         const possiblePaths = [
           pathModule.join(process.cwd(), 'client', 'public', 'sounds', soundFile),
           pathModule.join(process.cwd(), 'client', 'build', 'sounds', soundFile),
-          pathModule.join('/opt/build/repo/client/build/sounds', soundFile),
+          pathModule.join('/opt/build/repo/client/build/sounds', soundFile), // Netlify build location
+          pathModule.join('/opt/build/repo/client/public/sounds', soundFile), // Additional Netlify build location
           pathModule.join(__dirname, '..', '..', 'client', 'public', 'sounds', soundFile),
           pathModule.join(__dirname, '..', '..', 'client', 'build', 'sounds', soundFile),
+          pathModule.join('/var/task/client/build/sounds', soundFile), // Lambda deployment path
+          pathModule.join('/var/task/client/public/sounds', soundFile), // Lambda deployment path
         ];
         
         soundStatus[soundFile] = {

@@ -108,7 +108,7 @@ exports.updateTeacherProfile = async (req, res) => {
 // Change teacher password
 exports.changeTeacherPassword = async (req, res) => {
   try {
-    const bcrypt = require('bcrypt');
+    const bcrypt = require('bcryptjs');
     const requestedId = parseInt(req.params.id, 10);
     const authenticatedUserId = req.user.id; // From authenticateToken middleware
 
