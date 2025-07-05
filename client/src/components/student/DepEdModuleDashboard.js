@@ -112,19 +112,8 @@ const DepEdModuleDashboard = React.memo(() => {
   }, [quarterData, selectedQuarter]);
 
   const handleStartModule = useCallback((moduleId, moduleNumber) => {
-    // For now, redirect to the existing quiz system with KC mapping
-    // In the future, this would go to a module-specific learning experience
-    
-    // Map module numbers to existing KC IDs (temporary solution)
-    const moduleToKcMapping = {
-      1: 1, // Module 1 -> KC1 (Representing Numbers)
-      2: 4, // Module 2 -> KC4 (Comparison)
-      3: 5, // Module 3 -> KC5 (Addition)
-      4: 6  // Module 4 -> KC6 (Subtraction)
-    };
-    
-    const kcId = moduleToKcMapping[moduleNumber] || moduleNumber;
-    navigate(`/student/quiz/${kcId}?mode=sequential&qnum=1&correct=0&module_id=${moduleId}`);
+    // Navigate to the dedicated module learning view
+    navigate(`/student/module/${moduleId || moduleNumber}`);
   }, [navigate]);
 
   if (loading) {
@@ -261,7 +250,7 @@ const DepEdModuleDashboard = React.memo(() => {
                   <div className="module-actions">
                     <button
                       className={`start-module-button ${!isAccessible ? 'disabled' : ''}`}
-                      onClick={() => handleStartModule(module.module_number, module.module_number)}
+                      onClick={() => handleStartModule(module.module_id || module.module_number, module.module_number)}
                       disabled={!isAccessible}
                     >
                       {!isAccessible ? (

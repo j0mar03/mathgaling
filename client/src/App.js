@@ -10,6 +10,7 @@ import QuizView from './components/student/QuizView';
 import StudentProgress from './components/student/StudentProgress';
 import StudentProfile from './components/student/StudentProfile'; // Import StudentProfile
 import DepEdModuleDashboard from './components/student/DepEdModuleDashboard';
+import ModuleLearningView from './components/student/ModuleLearningView';
 import PracticeQuizView from './components/student/PracticeQuizView';
 import MasteryLevelDashboard from './components/student/MasteryLevelDashboard';
 import StudentInbox from './components/student/StudentInbox'; // Import StudentInbox
@@ -141,6 +142,11 @@ function App() {
             <Route path="/student/deped-modules" element={
               <ProtectedRoute allowedRoles={['student']}>
                 <DepEdModuleDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/student/module/:moduleId" element={
+              <ProtectedRoute allowedRoles={['student']}>
+                <ModuleLearningView />
               </ProtectedRoute>
             } />
             <Route path="/student/practice-quiz" element={<PracticeQuizView />} />
