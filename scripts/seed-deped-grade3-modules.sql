@@ -41,6 +41,15 @@ INSERT INTO deped_modules (quarter_id, module_number, title, description, estima
 ),
 (
     (SELECT id FROM deped_quarters WHERE quarter_number = 1 AND grade_level = 3 AND school_year = '2024-2025'),
+    2,
+    'Module 2: Paghahambing at Pagkakaayos ng mga Numero',
+    'Learn to compare, order, and round numbers from 1001 to 10,000',
+    4,
+    2,
+    true
+),
+(
+    (SELECT id FROM deped_quarters WHERE quarter_number = 1 AND grade_level = 3 AND school_year = '2024-2025'),
     4,
     'Module 4: Pagbabawas ng mga Numero',
     'Subtraction of numbers with and without regrouping',
@@ -96,6 +105,51 @@ INSERT INTO learning_competencies (module_id, melc_code, competency_text, learni
         'Use contextual examples like birth years and real-world scenarios'
     ],
     3
+);
+
+-- Insert Learning Competencies for Module 2
+INSERT INTO learning_competencies (module_id, melc_code, competency_text, learning_objectives, difficulty_level) VALUES
+(
+    (SELECT id FROM deped_modules WHERE module_number = 2 AND quarter_id = (SELECT id FROM deped_quarters WHERE quarter_number = 1 AND grade_level = 3)),
+    'M3NS-Ib-5.1-2',
+    'KC4: Comparing Numbers up to 10,000 using symbols (>, <, =)',
+    ARRAY[
+        'Compare numbers up to 10,000 using the symbols >, <, and =',
+        'Compare the number of digits first - more digits means larger number',
+        'If digits are equal, compare from left to right starting with thousands',
+        'Use real-world contexts like tree planting and school data',
+        'Identify place value to determine which digit has largest value',
+        'Apply comparison skills in practical problem-solving scenarios'
+    ],
+    2
+),
+(
+    (SELECT id FROM deped_modules WHERE module_number = 2 AND quarter_id = (SELECT id FROM deped_quarters WHERE quarter_number = 1 AND grade_level = 3)),
+    'M3NS-Ic-6.1-2',
+    'KC5: Ordering Numbers with 4 to 5 Digits in ascending or descending order',
+    ARRAY[
+        'Order numbers with 4-5 digits from smallest to largest (ascending) or largest to smallest (descending)',
+        'Compare numbers from left to right to determine their order',
+        'Arrange numbers in pataas (ascending) order from smallest to largest',
+        'Arrange numbers in pababa (descending) order from largest to smallest',
+        'Apply ordering skills to real-world data like market weights',
+        'Solve problems involving sequencing and ranking of numerical data'
+    ],
+    2
+),
+(
+    (SELECT id FROM deped_modules WHERE module_number = 2 AND quarter_id = (SELECT id FROM deped_quarters WHERE quarter_number = 1 AND grade_level = 3)),
+    'M3NS-Ib-4.1-3',
+    'KC6: Rounding Numbers to the Nearest Tens, Hundreds, and Thousands',
+    ARRAY[
+        'Round numbers to the nearest tens, hundreds, and thousands',
+        'Apply rounding rules: 0-4 rounds down (pababa), 5-9 rounds up (pataas)',
+        'Round to nearest tens by looking at ones place digit',
+        'Round to nearest hundreds by looking at tens place digit', 
+        'Round to nearest thousands by looking at hundreds place digit',
+        'Use rounding for estimation in practical situations like shopping and measurements'
+    ],
+    1
 );
 
 -- Map existing Knowledge Components to Module 1
