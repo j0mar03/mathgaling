@@ -687,8 +687,8 @@ const StudentDashboard = () => {
     }
   };
   
-  const handleStartBookQuiz = () => {
-    navigate('/student/book-quiz-dashboard');
+  const handleStartDepEdModules = () => {
+    navigate('/student/deped-modules');
   };
 
   const handleStartChallenge = () => {
@@ -1005,13 +1005,13 @@ const StudentDashboard = () => {
             
             <button
               className="action-button stories-button"
-              onClick={handleStartBookQuiz}
+              onClick={handleStartDepEdModules}
             >
-              <span className="button-emoji">📚</span>
+              <span className="button-emoji">🏫</span>
               <span className="button-text">
-                {isCompactView ? 'Stories' : 'Math Stories'}
+                {isCompactView ? 'Modules' : 'DepEd Modules'}
               </span>
-              <span className="button-subtitle">{!isCompactView && 'Learn with fun!'}</span>
+              <span className="button-subtitle">{!isCompactView && 'Official curriculum!'}</span>
             </button>
             
           </div>
