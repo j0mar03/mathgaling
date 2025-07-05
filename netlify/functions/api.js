@@ -2965,6 +2965,245 @@ Sample Student 3,3,student3,password123`;
     }
   }
   
+  // GET /api/students/:id/deped-modules - Get DepEd modules for student's grade
+  if (path.includes('/deped-modules') && httpMethod === 'GET') {
+    try {
+      const pathParts = path.split('/');
+      const studentId = pathParts[pathParts.indexOf('students') + 1];
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // Get student grade level
+      const { data: studentData } = await supabase
+        .from('students')
+        .select('grade_level')
+        .eq('id', studentId)
+        .single();
+      
+      const gradeLevel = studentData?.grade_level || 3;
+      
+      // Get quarters and modules for grade
+      const { data: modules, error } = await supabase
+        .from('deped_module_overview')
+        .select('*')
+        .eq('grade_level', gradeLevel)
+        .order('quarter_number, order_index');
+      
+      if (error) {
+        console.error('DepEd modules fetch error:', error);
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to fetch DepEd modules',
+            message: error.message
+          })
+        };
+      }
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify(modules || [])
+      };
+      
+    } catch (error) {
+      console.error('DepEd modules endpoint error:', error);
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
+  // GET /api/students/:id/module-progress - Get student's progress on DepEd modules
+  if (path.includes('/module-progress') && httpMethod === 'GET') {
+    try {
+      const pathParts = path.split('/');
+      const studentId = pathParts[pathParts.indexOf('students') + 1];
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // Use the stored function to get comprehensive progress
+      const { data: progress, error } = await supabase
+        .rpc('get_student_module_progress', { 
+          student_id_param: parseInt(studentId) 
+        });
+      
+      if (error) {
+        console.error('Module progress fetch error:', error);
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to fetch module progress',
+            message: error.message
+          })
+        };
+      }
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify(progress || [])
+      };
+      
+    } catch (error) {
+      console.error('Module progress endpoint error:', error);
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
+  // POST /api/students/:id/module-progress - Update student's module progress
+  if (path.includes('/module-progress') && httpMethod === 'POST') {
+    try {
+      const pathParts = path.split('/');
+      const studentId = pathParts[pathParts.indexOf('students') + 1];
+      const requestBody = JSON.parse(body || '{}');
+      const { module_id, completion_percentage, questions_answered, questions_correct } = requestBody;
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // Update or insert module progress
+      const updateData = {
+        student_id: parseInt(studentId),
+        module_id: parseInt(module_id),
+        completion_percentage: parseFloat(completion_percentage) || 0,
+        questions_answered: parseInt(questions_answered) || 0,
+        questions_correct: parseInt(questions_correct) || 0,
+        last_activity_at: new Date().toISOString()
+      };
+      
+      // Mark as completed if 100%
+      if (updateData.completion_percentage >= 100) {
+        updateData.completed_at = new Date().toISOString();
+      }
+      
+      const { data: progress, error } = await supabase
+        .from('student_module_progress')
+        .upsert(updateData, { 
+          onConflict: 'student_id,module_id',
+          returning: 'minimal'
+        });
+      
+      if (error) {
+        console.error('Module progress update error:', error);
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to update module progress',
+            message: error.message
+          })
+        };
+      }
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          success: true,
+          message: 'Module progress updated successfully'
+        })
+      };
+      
+    } catch (error) {
+      console.error('Module progress update endpoint error:', error);
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
+  // GET /api/deped-modules/:id/content - Get content items for a specific module
+  if (path.includes('/deped-modules/') && path.includes('/content') && httpMethod === 'GET') {
+    try {
+      const pathParts = path.split('/');
+      const moduleIndex = pathParts.indexOf('deped-modules');
+      const moduleId = pathParts[moduleIndex + 1];
+      
+      const supabaseUrl = process.env.DATABASE_URL || process.env.SUPABASE_URL || 'https://aiablmdmxtssbcvtpudw.supabase.co';
+      const supabaseKey = process.env.SUPABASE_SERVICE_API_KEY || process.env.SUPABASE_ANON_KEY || process.env.SUPABASE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFpYWJsbWRteHRzc2JjdnRwdWR3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc2MzYwMTIsImV4cCI6MjA2MzIxMjAxMn0.S8XpKejrnsmlGAvq8pAIgfHjxSqq5SVCBNEZhdQSXyw';
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      // Get content items mapped to this module
+      const { data: content, error } = await supabase
+        .from('module_content_mapping')
+        .select(`
+          content_item_id,
+          content_items (
+            id,
+            knowledge_component_id,
+            type,
+            difficulty,
+            content,
+            correct_answer,
+            image_path,
+            created_at
+          )
+        `)
+        .eq('module_id', moduleId);
+      
+      if (error) {
+        console.error('Module content fetch error:', error);
+        return {
+          statusCode: 500,
+          headers,
+          body: JSON.stringify({
+            error: 'Failed to fetch module content',
+            message: error.message
+          })
+        };
+      }
+      
+      // Extract the content items from the joined data
+      const contentItems = content?.map(item => item.content_items).filter(Boolean) || [];
+      
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify(contentItems)
+      };
+      
+    } catch (error) {
+      console.error('Module content endpoint error:', error);
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          error: 'Server error',
+          message: error.message
+        })
+      };
+    }
+  }
+  
   // GET /api/messages/inbox - Get messages for authenticated user
   if (path.includes('/messages/inbox') && httpMethod === 'GET') {
     try {
