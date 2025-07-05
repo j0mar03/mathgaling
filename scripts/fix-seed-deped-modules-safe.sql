@@ -26,6 +26,34 @@ BEGIN
     END IF;
 END $$;
 
+-- Check if Module 3 already exists, if not insert it
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM deped_modules 
+        WHERE module_number = 3 
+        AND quarter_id = (SELECT id FROM deped_quarters WHERE quarter_number = 2 AND grade_level = 3 AND school_year = '2024-2025')
+    ) THEN
+        -- First ensure Quarter 2 exists
+        IF NOT EXISTS (SELECT 1 FROM deped_quarters WHERE quarter_number = 2 AND grade_level = 3 AND school_year = '2024-2025') THEN
+            INSERT INTO deped_quarters (quarter_number, title, grade_level, school_year, start_date, end_date, is_active) VALUES
+            (2, 'Ikalawang Markahan', 3, '2024-2025', '2024-11-01', '2025-01-31', true);
+        END IF;
+        
+        -- Then insert Module 3
+        INSERT INTO deped_modules (quarter_id, module_number, title, description, estimated_weeks, order_index, is_active) VALUES
+        (
+            (SELECT id FROM deped_quarters WHERE quarter_number = 2 AND grade_level = 3 AND school_year = '2024-2025'),
+            3,
+            'Module 3: Ordinal Numbers at Pera',
+            'Learn ordinal numbers from 1st to 100th and identify, read, and write Philippine money',
+            3,
+            1,
+            true
+        );
+    END IF;
+END $$;
+
 -- Get the Module 2 ID for competencies
 DO $$
 DECLARE
@@ -92,6 +120,58 @@ BEGIN
 
 END $$;
 
+-- Get the Module 3 ID for competencies
+DO $$
+DECLARE
+    module3_id INTEGER;
+BEGIN
+    SELECT id INTO module3_id 
+    FROM deped_modules 
+    WHERE module_number = 3 
+    AND quarter_id = (SELECT id FROM deped_quarters WHERE quarter_number = 2 AND grade_level = 3);
+
+    -- Only proceed if Module 3 exists
+    IF module3_id IS NOT NULL THEN
+        -- Delete existing competencies for Module 3 to avoid duplicates
+        DELETE FROM learning_competencies WHERE module_id = module3_id;
+
+        -- Insert KC7 competency
+        INSERT INTO learning_competencies (module_id, melc_code, competency_text, learning_objectives, difficulty_level) VALUES
+        (
+            module3_id,
+            'M3NS-Ic-7',
+            'KC7: Understanding Ordinal Numbers from 1st to 100th',
+            ARRAY[
+                'Identify ordinal numbers from 1st to 100th, emphasizing positions from 21st to 100th',
+                'Use point of reference as starting point for counting positions',
+                'Write ordinal numbers in symbols using proper superscript rules (st, nd, rd, th)',
+                'Write ordinal numbers in Filipino words using "ika-" prefix',
+                'Apply ordinal number knowledge to real-world contexts like birthdays and sequences',
+                'Practice with Filipino alphabet and repeated sequences for position counting'
+            ],
+            2
+        );
+
+        -- Insert KC8 competency
+        INSERT INTO learning_competencies (module_id, melc_code, competency_text, learning_objectives, difficulty_level) VALUES
+        (
+            module3_id,
+            'M3NS-Id-8-9',
+            'KC8: Identifying, Reading, and Writing Money',
+            ARRAY[
+                'Identify Philippine coins and bills by their features, colors, and heroes',
+                'Read money amounts in symbols using PhP notation with proper decimal placement',
+                'Write money amounts in Filipino words following pesos-first, centavos-second pattern',
+                'Convert between symbolic and word forms of money amounts',
+                'Recognize coin and bill denominations from 1 sentimo to Php 1000',
+                'Apply money knowledge to real-world scenarios like piggy banks and shopping'
+            ],
+            2
+        );
+    END IF;
+
+END $$;
+
 -- Recreate the view with proper structure
 CREATE VIEW deped_module_overview AS
 SELECT 
@@ -114,25 +194,30 @@ GROUP BY q.id, q.quarter_number, q.title, q.grade_level, m.id, m.module_number, 
 ORDER BY q.quarter_number, m.order_index;
 
 -- Verify the results
-SELECT 'Module 2 setup completed successfully!' as message;
+SELECT 'Modules 2 and 3 setup completed successfully!' as message;
 
 -- Show all modules
 SELECT 
+    quarter_number,
     module_number,
     module_title,
     competency_count,
     estimated_weeks
 FROM deped_module_overview 
 WHERE grade_level = 3 
-ORDER BY module_number;
+ORDER BY quarter_number, module_number;
 
--- Show the new Module 2 competencies specifically
+-- Show the new Module 2 and 3 competencies
 SELECT 
-    'Module 2 Competencies:' as info,
+    q.quarter_number,
+    m.module_number,
+    CONCAT('Module ', m.module_number, ' Competencies:') as info,
     lc.melc_code,
     lc.competency_text
 FROM deped_modules m
+JOIN deped_quarters q ON m.quarter_id = q.id
 JOIN learning_competencies lc ON m.id = lc.module_id
-WHERE m.module_number = 2
-AND m.quarter_id = (SELECT id FROM deped_quarters WHERE quarter_number = 1 AND grade_level = 3)
-ORDER BY lc.melc_code;
+WHERE m.module_number IN (2, 3)
+AND q.quarter_number IN (1, 2) 
+AND q.grade_level = 3
+ORDER BY q.quarter_number, m.module_number, lc.melc_code;

@@ -42,6 +42,11 @@ const DepEdModuleDashboard = React.memo(() => {
 
       setModules(modulesResponse.data);
       setProgress(progressResponse.data);
+      
+      // Debug: Log modules for development
+      console.log('Fetched DepEd modules:', modulesResponse.data);
+      console.log('Module count:', modulesResponse.data.length);
+      
       setLoading(false);
     } catch (err) {
       console.error('Error fetching DepEd modules:', err);
@@ -189,7 +194,8 @@ const DepEdModuleDashboard = React.memo(() => {
             {currentQuarterModules.map((module, index) => {
               // Determine if module is accessible (sequential unlocking)
               const previousModule = index > 0 ? currentQuarterModules[index - 1] : null;
-              const isAccessible = index === 0 || previousModule?.is_completed || module.completion_percentage > 0;
+              // For development: Allow access to Module 1, 2, and 3 for testing
+              const isAccessible = module.module_number <= 3 || index === 0 || previousModule?.is_completed || module.completion_percentage > 0;
               
               return (
                 <div 

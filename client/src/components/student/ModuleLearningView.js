@@ -367,6 +367,134 @@ Example: 3,548 = "tatlong libo, limang daan, at apatnapu't-walo"`,
         ]
       }
     ]
+  },
+  3: {
+    title: "Module 3: Ordinal Numbers at Pera",
+    description: "Learn ordinal numbers from 1st to 100th and identify, read, and write Philippine money",
+    lessons: [
+      {
+        id: 7,
+        title: "KC7: Understanding Ordinal Numbers from 1st to 100th",
+        melc_code: "M3NS-Ic-7",
+        steps: [
+          {
+            type: "introduction",
+            title: "Welcome to Ordinal Numbers!",
+            content: "Today we'll learn about ordinal numbers that show position or order in a sequence, like 1st, 2nd, 3rd, and beyond!",
+            visual: "🔢"
+          },
+          {
+            type: "explanation",
+            title: "What are Ordinal Numbers?",
+            content: `Ordinal numbers tell us the POSITION of things in order:
+
+**Writing Ordinal Numbers in Symbols:**
+• **1st, 2nd, 3rd** - Special endings
+• **4th, 5th, 6th, 7th, 8th, 9th, 10th** - Use "th"
+• **11th, 12th, 13th** - Special cases (always "th")
+• **21st, 22nd, 23rd** - Back to special endings
+• **20th, 30th, 40th** - Tens use "th"
+
+**Filipino Ordinal Words:**
+• Use "ika-" before the number word
+• 1st = Una (special case)
+• 2nd = Ikalawa
+• 6th = Ikaanim
+• 11th = Ika-labing isa`,
+            visual: "📍",
+            example: {
+              number: "Writing 21st to 25th",
+              breakdown: [
+                { position: "21st", filipino: "Ika-dalawampu't isa", rule: "ends in 1 → st" },
+                { position: "22nd", filipino: "Ika-dalawampu't dalawa", rule: "ends in 2 → nd" },
+                { position: "23rd", filipino: "Ika-dalawampu't tatlo", rule: "ends in 3 → rd" },
+                { position: "24th", filipino: "Ika-dalawampu't apat", rule: "ends in 4 → th" },
+                { position: "25th", filipino: "Ika-dalawampu't lima", rule: "ends in 5 → th" }
+              ]
+            }
+          },
+          {
+            type: "interactive",
+            title: "Birthday Challenge",
+            question: "Ruth's birthday is on the 18th of May. How do we write this ordinal number correctly?",
+            hint: "Numbers ending in 8 use 'th'. So 18 becomes 18th.",
+            correctAnswer: "18th",
+            options: ["18st", "18nd", "18rd", "18th"],
+            explanation: "18th is correct because numbers ending in 8 always use 'th' as the superscript."
+          },
+          {
+            type: "practice",
+            title: "Filipino Alphabet Challenge",
+            content: "The Filipino alphabet has 28 letters: A, B, C, D, E, F, G, H, I, J, K, L, M, N, NG, O, P, Q, R, S, T, U, V, W, X, Y, Z, Ñ",
+            question: "What is the 10th letter in the Filipino alphabet?",
+            hint: "Count from A (1st), B (2nd), C (3rd)... until you reach the 10th position.",
+            correctAnswer: "J",
+            options: ["I", "J", "K", "L"],
+            explanation: "J is the 10th letter: A(1st), B(2nd), C(3rd), D(4th), E(5th), F(6th), G(7th), H(8th), I(9th), J(10th)."
+          }
+        ]
+      },
+      {
+        id: 8,
+        title: "KC8: Identifying, Reading, and Writing Money",
+        melc_code: "M3NS-Id-8-9",
+        steps: [
+          {
+            type: "introduction",
+            title: "Learning About Philippine Money",
+            content: "Let's learn about our Philippine peso and sentimo! We'll practice reading and writing money amounts in both symbols and words.",
+            visual: "💰"
+          },
+          {
+            type: "explanation",
+            title: "Philippine Currency System",
+            content: `**Philippine Coins:**
+• 1 sentimo (silver) - Mangkono tree
+• 5 sentimo (silver/bronze) - Kapal-Kapal Baging 
+• 10 sentimo (bronze/silver) - BSP logo
+• 25 sentimo (gold/silver) - Katmon flower
+• Php 1 (silver) - Dr. Jose Rizal
+• Php 5 (silver) - Andres Bonifacio
+• Php 10 (silver) - Apolinario Mabini
+• Php 20 (bi-metallic) - Manuel L. Quezon
+
+**Philippine Bills:**
+• Php 20 (orange) - Manuel L. Quezon
+• Php 50 (red) - Sergio Osmeña  
+• Php 100 (violet) - Manuel A. Roxas
+• Php 500 (yellow) - Corazon & Benigno Aquino
+• Php 1000 (blue) - Josefa Escoda & Vicente Lim`,
+            visual: "🏦",
+            example: {
+              number: "Writing PhP 36.75",
+              breakdown: [
+                { format: "Symbol form", result: "PhP 36.75", explanation: "Use PhP, then amount with period" },
+                { format: "Word form", result: "Tatlumpu't anim na piso at pitumpu't limang sentimo", explanation: "Pesos first, then 'at', then centavos" },
+                { format: "Parts", result: "36 pesos + 75 centavos", explanation: "Period separates pesos from centavos" }
+              ]
+            }
+          },
+          {
+            type: "interactive",
+            title: "Coin Identification Challenge",
+            question: "Which coin features Dr. Jose Rizal, our national hero?",
+            hint: "Dr. Jose Rizal appears on the silver-colored 1 peso coin along with Apolinario Mabini.",
+            correctAnswer: "Php 1",
+            options: ["25 sentimo", "Php 1", "Php 5", "Php 10"],
+            explanation: "The Php 1 coin (silver) features Dr. Jose Rizal and Apolinario Mabini, our national heroes."
+          },
+          {
+            type: "practice",
+            title: "Money Reading Practice",
+            content: "Practice reading money amounts in Filipino words.",
+            question: "How do you read PhP 125.50 in Filipino words?",
+            hint: "Say the pesos first (125), then 'at', then the centavos (50). Remember: 125 = isang daan dalawampu't lima",
+            correctAnswer: "Isang daan dalawampu't limang piso at limampung sentimo",
+            explanation: "PhP 125.50 = Isang daan dalawampu't limang piso at limampung sentimo. Always say pesos first, then centavos."
+          }
+        ]
+      }
+    ]
   }
 };
 
@@ -386,8 +514,8 @@ Example: 3,548 = "tatlong libo, limang daan, at apatnapu't-walo"`,
             module_id: parseInt(moduleId),
             module_title: currentModuleContent.title,
             module_description: currentModuleContent.description,
-            quarter_number: moduleId === "1" ? 1 : 2,
-            estimated_weeks: moduleId === "1" ? 3 : 4,
+            quarter_number: moduleId === "1" ? 1 : moduleId === "2" ? 1 : 2,
+            estimated_weeks: moduleId === "1" ? 3 : moduleId === "2" ? 4 : 3,
             completion_percentage: 0
           });
         } else {
@@ -537,7 +665,7 @@ Example: 3,548 = "tatlong libo, limang daan, at apatnapu't-walo"`,
                       <div key={index} className="breakdown-item">
                         {item.visual && <span className="item-visual">{item.visual}</span>}
                         <span className="item-text">
-                          {item.tool || item.digit || item.part || item.step}: {item.value || item.check || item.result}
+                          {item.tool || item.digit || item.part || item.step || item.position || item.format}: {item.value || item.check || item.result || item.filipino || item.explanation}
                           {item.meaning && ` (${item.meaning})`}
                           {item.rule && ` - ${item.rule}`}
                           {item.type && ` ${item.type}`}
