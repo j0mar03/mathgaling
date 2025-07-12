@@ -1042,70 +1042,70 @@ const QuizView = () => {
             </div>
           )}
 
-          {/* ALWAYS VISIBLE TEST SECTION - Remove after testing */}
-          <div style={{ background: '#e8f5e8', border: '2px solid #4caf50', padding: '1rem', margin: '1rem 0', borderRadius: '8px' }}>
-            <h4 style={{ color: '#2e7d32', margin: '0 0 1rem 0' }}>🧪 TEST: Practice Modules (Always Visible)</h4>
-            <p style={{ margin: '0 0 1rem 0', fontSize: '0.9rem', color: '#424242' }}>
-              This section should always be visible when quiz is completed. Score: {score}/{questions.length} ({((score/questions.length) * 100).toFixed(1)}%)
+          {/* Practice Modules Section */}
+          <div className="struggling-kcs-section">
+            <h4>📚 Practice with Interactive Modules</h4>
+            <p style={{ margin: '0 0 1rem 0', fontSize: '0.9rem', color: '#6c757d', textAlign: 'center' }}>
+              Continue learning with our interactive modules. Score: {score}/{questions.length} ({((score/questions.length) * 100).toFixed(1)}%)
             </p>
+            <div className="module-practice-section">
+              <h5>🎯 Choose a Module to Practice:</h5>
             <div className="module-buttons-container">
               <div className="module-practice-card">
                 <div className="module-info">
                   <h6>Module 1: Numbers & Meaning</h6>
                   <div className="module-kcs">
-                    <small>Test practice button for Module 1</small>
+                    <small>Learn to represent, identify, and write numbers from 1001 to 10,000</small>
                   </div>
                 </div>
                 <button 
                   onClick={() => {
-                    console.log('Test button clicked - navigating to Module 1');
+                    console.log('Practice button clicked - navigating to Module 1');
                     navigate('/student/module/1');
                   }}
                   className="module-practice-button"
-                  style={{ background: '#4caf50' }}
                 >
-                  <span className="btn-icon">🧪</span>
-                  <span>TEST Module 1</span>
+                  <span className="btn-icon">📖</span>
+                  <span>Practice Module 1</span>
                 </button>
               </div>
               <div className="module-practice-card">
                 <div className="module-info">
                   <h6>Module 2: Comparing & Ordering</h6>
                   <div className="module-kcs">
-                    <small>Test practice button for Module 2</small>
+                    <small>Learn to compare, order, and round numbers</small>
                   </div>
                 </div>
                 <button 
                   onClick={() => {
-                    console.log('Test button clicked - navigating to Module 2');
+                    console.log('Practice button clicked - navigating to Module 2');
                     navigate('/student/module/2');
                   }}
                   className="module-practice-button"
-                  style={{ background: '#2196f3' }}
                 >
-                  <span className="btn-icon">🧪</span>
-                  <span>TEST Module 2</span>
+                  <span className="btn-icon">📖</span>
+                  <span>Practice Module 2</span>
                 </button>
               </div>
               <div className="module-practice-card">
                 <div className="module-info">
                   <h6>Module 3: Ordinals & Money</h6>
                   <div className="module-kcs">
-                    <small>Test practice button for Module 3</small>
+                    <small>Learn ordinal numbers and Philippine money</small>
                   </div>
                 </div>
                 <button 
                   onClick={() => {
-                    console.log('Test button clicked - navigating to Module 3');
+                    console.log('Practice button clicked - navigating to Module 3');
                     navigate('/student/module/3');
                   }}
                   className="module-practice-button"
-                  style={{ background: '#ff9800' }}
                 >
-                  <span className="btn-icon">🧪</span>
-                  <span>TEST Module 3</span>
+                  <span className="btn-icon">📖</span>
+                  <span>Practice Module 3</span>
                 </button>
               </div>
+            </div>
             </div>
           </div>
 
