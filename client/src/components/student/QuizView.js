@@ -1042,6 +1042,73 @@ const QuizView = () => {
             </div>
           )}
 
+          {/* ALWAYS VISIBLE TEST SECTION - Remove after testing */}
+          <div style={{ background: '#e8f5e8', border: '2px solid #4caf50', padding: '1rem', margin: '1rem 0', borderRadius: '8px' }}>
+            <h4 style={{ color: '#2e7d32', margin: '0 0 1rem 0' }}>🧪 TEST: Practice Modules (Always Visible)</h4>
+            <p style={{ margin: '0 0 1rem 0', fontSize: '0.9rem', color: '#424242' }}>
+              This section should always be visible when quiz is completed. Score: {score}/{questions.length} ({((score/questions.length) * 100).toFixed(1)}%)
+            </p>
+            <div className="module-buttons-container">
+              <div className="module-practice-card">
+                <div className="module-info">
+                  <h6>Module 1: Numbers & Meaning</h6>
+                  <div className="module-kcs">
+                    <small>Test practice button for Module 1</small>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => {
+                    console.log('Test button clicked - navigating to Module 1');
+                    navigate('/student/module/1');
+                  }}
+                  className="module-practice-button"
+                  style={{ background: '#4caf50' }}
+                >
+                  <span className="btn-icon">🧪</span>
+                  <span>TEST Module 1</span>
+                </button>
+              </div>
+              <div className="module-practice-card">
+                <div className="module-info">
+                  <h6>Module 2: Comparing & Ordering</h6>
+                  <div className="module-kcs">
+                    <small>Test practice button for Module 2</small>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => {
+                    console.log('Test button clicked - navigating to Module 2');
+                    navigate('/student/module/2');
+                  }}
+                  className="module-practice-button"
+                  style={{ background: '#2196f3' }}
+                >
+                  <span className="btn-icon">🧪</span>
+                  <span>TEST Module 2</span>
+                </button>
+              </div>
+              <div className="module-practice-card">
+                <div className="module-info">
+                  <h6>Module 3: Ordinals & Money</h6>
+                  <div className="module-kcs">
+                    <small>Test practice button for Module 3</small>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => {
+                    console.log('Test button clicked - navigating to Module 3');
+                    navigate('/student/module/3');
+                  }}
+                  className="module-practice-button"
+                  style={{ background: '#ff9800' }}
+                >
+                  <span className="btn-icon">🧪</span>
+                  <span>TEST Module 3</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
           {/* Show struggling KCs and recommended modules */}
           {strugglingKCs.length > 0 && (
             <div className="struggling-kcs-section">
