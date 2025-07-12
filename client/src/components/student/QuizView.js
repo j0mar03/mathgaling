@@ -67,7 +67,12 @@ const QuizView = () => {
     const recommendedModules = new Map();
     
     strugglingKCs.forEach(kc => {
-      const moduleInfo = kcToModuleMapping[kc.id];
+      // Handle both API format (nested knowledge_components) and fallback format (direct properties)
+      const kcId = kc.id || kc.knowledge_components?.id;
+      const kcName = kc.name || kc.knowledge_components?.name || `Topic ${kcId}`;
+      const kcMastery = kc.current_mastery || kc.p_mastery || 0;
+      
+      const moduleInfo = kcToModuleMapping[kcId];
       if (moduleInfo) {
         if (!recommendedModules.has(moduleInfo.module)) {
           recommendedModules.set(moduleInfo.module, {
@@ -77,9 +82,9 @@ const QuizView = () => {
           });
         }
         recommendedModules.get(moduleInfo.module).kcs.push({
-          id: kc.id,
-          name: kc.name,
-          mastery: kc.current_mastery
+          id: kcId,
+          name: kcName,
+          mastery: kcMastery
         });
       }
     });
@@ -336,10 +341,55 @@ const QuizView = () => {
               const response = await axios.get(`/api/students/${user.id}/struggling-kcs`, {
                 headers: { Authorization: `Bearer ${token}` }
               });
-              setStrugglingKCs(response.data || []);
+              
+              let strugglingKCsData = response.data || [];
+              
+              // Fallback: If API returns empty or if current quiz performance is poor,
+              // create struggling KC data from current quiz context
+              if (strugglingKCsData.length === 0 || finalScoreCalculated < 0.8) {
+                console.log("[Completion Effect] Creating fallback struggling KCs from current quiz context");
+                
+                // Create struggling KC entry for current topic if performance is poor
+                if (kcDetails && (finalScoreCalculated < 0.8 || actualKcMastery < 0.8)) {
+                  const fallbackKC = {
+                    id: kcDetails.id,
+                    name: kcDetails.name || `Topic ${kcDetails.id}`,
+                    current_mastery: Math.min(actualKcMastery || finalScoreCalculated, 0.75), // Cap at 75% to show as struggling
+                    p_mastery: Math.min(actualKcMastery || finalScoreCalculated, 0.75),
+                    knowledge_components: {
+                      id: kcDetails.id,
+                      name: kcDetails.name || `Topic ${kcDetails.id}`,
+                      description: kcDetails.description || `Practice this topic to improve your understanding`
+                    }
+                  };
+                  strugglingKCsData = [fallbackKC];
+                  console.log("[Completion Effect] Created fallback struggling KC:", fallbackKC);
+                }
+              }
+              
+              setStrugglingKCs(strugglingKCsData);
+              console.log("[Completion Effect] Final struggling KCs set:", strugglingKCsData);
             } catch (error) {
               console.error("[Completion Effect] Error fetching struggling KCs:", error);
-              setStrugglingKCs([]);
+              
+              // Fallback on error: Create struggling KC from current quiz if performance is poor
+              if (kcDetails && (finalScoreCalculated < 0.8 || actualKcMastery < 0.8)) {
+                const fallbackKC = {
+                  id: kcDetails.id,
+                  name: kcDetails.name || `Topic ${kcDetails.id}`,
+                  current_mastery: Math.min(actualKcMastery || finalScoreCalculated, 0.75),
+                  p_mastery: Math.min(actualKcMastery || finalScoreCalculated, 0.75),
+                  knowledge_components: {
+                    id: kcDetails.id,
+                    name: kcDetails.name || `Topic ${kcDetails.id}`,
+                    description: kcDetails.description || `Practice this topic to improve your understanding`
+                  }
+                };
+                setStrugglingKCs([fallbackKC]);
+                console.log("[Completion Effect] Error fallback - created struggling KC:", fallbackKC);
+              } else {
+                setStrugglingKCs([]);
+              }
             }
           } else {
             setStrugglingKCs([]);
@@ -978,17 +1028,32 @@ const QuizView = () => {
             </div>
           </div>
 
+          {/* Debug info - remove in production */}
+          {process.env.NODE_ENV === 'development' && (
+            <div style={{ background: '#f0f0f0', padding: '1rem', margin: '1rem 0', borderRadius: '8px', fontSize: '0.9rem' }}>
+              <strong>Debug Info:</strong><br/>
+              Score: {score}/{questions.length} ({((score/questions.length) * 100).toFixed(1)}%)<br/>
+              Struggling KCs count: {strugglingKCs.length}<br/>
+              Struggling KCs data: {JSON.stringify(strugglingKCs, null, 2)}<br/>
+              Recommended modules: {getRecommendedModules().length}
+            </div>
+          )}
+
           {/* Show struggling KCs and recommended modules */}
           {strugglingKCs.length > 0 && (
             <div className="struggling-kcs-section">
               <h4>📚 Recommended Practice Topics:</h4>
               <div className="recommendations-list">
-                {strugglingKCs.slice(0, 3).map((kc, index) => (
-                  <div key={index} className="recommendation-item">
-                    <span className="rec-name">{kc.name}</span>
-                    <span className="rec-mastery">Mastery: {(kc.current_mastery * 100).toFixed(0)}%</span>
-                  </div>
-                ))}
+                {strugglingKCs.slice(0, 3).map((kc, index) => {
+                  const kcName = kc.name || kc.knowledge_components?.name || `Topic ${kc.id}`;
+                  const kcMastery = kc.current_mastery || kc.p_mastery || 0;
+                  return (
+                    <div key={index} className="recommendation-item">
+                      <span className="rec-name">{kcName}</span>
+                      <span className="rec-mastery">Mastery: {(kcMastery * 100).toFixed(0)}%</span>
+                    </div>
+                  );
+                })}
               </div>
               
               {/* Module Practice Buttons */}
