@@ -1033,23 +1033,31 @@ const QuizView = () => {
             <div style={{ background: '#f0f0f0', padding: '1rem', margin: '1rem 0', borderRadius: '8px', fontSize: '0.9rem' }}>
               <strong>Debug Info:</strong><br/>
               Score: {score}/{questions.length} ({((score/questions.length) * 100).toFixed(1)}%)<br/>
-              Score below 80%: {score/questions.length < 0.8 ? 'YES' : 'NO'}<br/>
+              Actual KC Mastery: {(actualKcMastery * 100).toFixed(1)}%<br/>
+              Effective Mastery: {((actualKcMastery > 0 ? actualKcMastery : score/questions.length) * 100).toFixed(1)}%<br/>
+              Qualifies for Next Topic: {(actualKcMastery > 0 ? actualKcMastery : score/questions.length) >= 0.75 || score/questions.length >= 0.75 ? 'YES' : 'NO'}<br/>
+              Should Show Practice Buttons: {!((actualKcMastery > 0 ? actualKcMastery : score/questions.length) >= 0.75 || score/questions.length >= 0.75) ? 'YES' : 'NO'}<br/>
               Struggling KCs count: {strugglingKCs.length}<br/>
-              Should show backup section: {strugglingKCs.length === 0 && score / questions.length < 0.8 ? 'YES' : 'NO'}<br/>
-              KC Details: {kcDetails ? `${kcDetails.id} - ${kcDetails.name}` : 'None'}<br/>
-              Current KC in mapping: {kcDetails?.id && kcToModuleMapping[kcDetails.id] ? `Module ${kcToModuleMapping[kcDetails.id].module}` : 'Not found'}<br/>
-              Recommended modules: {getRecommendedModules().length}
+              KC Details: {kcDetails ? `${kcDetails.id} - ${kcDetails.name}` : 'None'}
             </div>
           )}
 
-          {/* Practice Modules Section */}
-          <div className="struggling-kcs-section">
-            <h4>📚 Practice with Interactive Modules</h4>
-            <p style={{ margin: '0 0 1rem 0', fontSize: '0.9rem', color: '#6c757d', textAlign: 'center' }}>
-              Continue learning with our interactive modules. Score: {score}/{questions.length} ({((score/questions.length) * 100).toFixed(1)}%)
-            </p>
-            <div className="module-practice-section">
-              <h5>🎯 Choose a Module to Practice:</h5>
+          {/* Practice Modules Section - Only show if student doesn't qualify for next topic */}
+          {(() => {
+            const scorePercentage = score / questions.length;
+            const effectiveMastery = actualKcMastery > 0 ? actualKcMastery : scorePercentage;
+            const qualifiesForNext = effectiveMastery >= 0.75 || scorePercentage >= 0.75;
+            
+            // Only show practice modules if student doesn't qualify for next topic
+            if (!qualifiesForNext) {
+              return (
+                <div className="struggling-kcs-section">
+                  <h4>📚 Need More Practice?</h4>
+                  <p style={{ margin: '0 0 1rem 0', fontSize: '0.9rem', color: '#6c757d', textAlign: 'center' }}>
+                    Score: {score}/{questions.length} ({(scorePercentage * 100).toFixed(1)}%) - Practice with our interactive modules to improve your understanding!
+                  </p>
+                  <div className="module-practice-section">
+                    <h5>🎯 Choose a Module to Practice:</h5>
             <div className="module-buttons-container">
               <div className="module-practice-card">
                 <div className="module-info">
@@ -1106,8 +1114,14 @@ const QuizView = () => {
                 </button>
               </div>
             </div>
-            </div>
-          </div>
+                  </div>
+                </div>
+              );
+            } else {
+              // Student qualifies for next topic - don't show practice modules
+              return null;
+            }
+          })()}
 
           {/* Show struggling KCs and recommended modules */}
           {strugglingKCs.length > 0 && (
