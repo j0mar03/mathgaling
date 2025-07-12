@@ -1033,8 +1033,11 @@ const QuizView = () => {
             <div style={{ background: '#f0f0f0', padding: '1rem', margin: '1rem 0', borderRadius: '8px', fontSize: '0.9rem' }}>
               <strong>Debug Info:</strong><br/>
               Score: {score}/{questions.length} ({((score/questions.length) * 100).toFixed(1)}%)<br/>
+              Score below 80%: {score/questions.length < 0.8 ? 'YES' : 'NO'}<br/>
               Struggling KCs count: {strugglingKCs.length}<br/>
-              Struggling KCs data: {JSON.stringify(strugglingKCs, null, 2)}<br/>
+              Should show backup section: {strugglingKCs.length === 0 && score / questions.length < 0.8 ? 'YES' : 'NO'}<br/>
+              KC Details: {kcDetails ? `${kcDetails.id} - ${kcDetails.name}` : 'None'}<br/>
+              Current KC in mapping: {kcDetails?.id && kcToModuleMapping[kcDetails.id] ? `Module ${kcToModuleMapping[kcDetails.id].module}` : 'Not found'}<br/>
               Recommended modules: {getRecommendedModules().length}
             </div>
           )}
@@ -1088,6 +1091,109 @@ const QuizView = () => {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+
+          {/* Backup: Always show practice modules for low scores, regardless of strugglingKCs state */}
+          {strugglingKCs.length === 0 && score / questions.length < 0.8 && (
+            <div className="struggling-kcs-section">
+              <h4>📚 Need More Practice?</h4>
+              <div className="recommendations-list">
+                <div className="recommendation-item">
+                  <span className="rec-name">Current Topic: {kcDetails?.name || 'Mathematics'}</span>
+                  <span className="rec-mastery">Score: {((score / questions.length) * 100).toFixed(0)}%</span>
+                </div>
+              </div>
+              
+              {/* Direct Module Practice Buttons */}
+              <div className="module-practice-section">
+                <h5>🎯 Practice with Interactive Modules:</h5>
+                <div className="module-buttons-container">
+                  {(() => {
+                    // Determine which module to recommend based on current KC
+                    const currentKcId = kcDetails?.id || questions[0]?.knowledge_component?.id;
+                    const moduleInfo = kcToModuleMapping[currentKcId];
+                    
+                    if (moduleInfo) {
+                      return (
+                        <div className="module-practice-card">
+                          <div className="module-info">
+                            <h6>{moduleInfo.title}</h6>
+                            <div className="module-kcs">
+                              <small>
+                                Practice this topic to improve your understanding and mastery
+                              </small>
+                            </div>
+                            <div className="avg-mastery">
+                              <small>
+                                Current performance: {((score / questions.length) * 100).toFixed(0)}%
+                              </small>
+                            </div>
+                          </div>
+                          <button 
+                            onClick={() => navigate(`/student/module/${moduleInfo.module}`)}
+                            className="module-practice-button"
+                          >
+                            <span className="btn-icon">📖</span>
+                            <span>Practice Module {moduleInfo.module}</span>
+                          </button>
+                        </div>
+                      );
+                    } else {
+                      // Fallback: Show all available modules
+                      return (
+                        <>
+                          <div className="module-practice-card">
+                            <div className="module-info">
+                              <h6>Module 1: Numbers & Meaning</h6>
+                              <div className="module-kcs">
+                                <small>Learn to represent, identify, and write numbers from 1001 to 10,000</small>
+                              </div>
+                            </div>
+                            <button 
+                              onClick={() => navigate('/student/module/1')}
+                              className="module-practice-button"
+                            >
+                              <span className="btn-icon">📖</span>
+                              <span>Practice Module 1</span>
+                            </button>
+                          </div>
+                          <div className="module-practice-card">
+                            <div className="module-info">
+                              <h6>Module 2: Comparing & Ordering</h6>
+                              <div className="module-kcs">
+                                <small>Learn to compare, order, and round numbers</small>
+                              </div>
+                            </div>
+                            <button 
+                              onClick={() => navigate('/student/module/2')}
+                              className="module-practice-button"
+                            >
+                              <span className="btn-icon">📖</span>
+                              <span>Practice Module 2</span>
+                            </button>
+                          </div>
+                          <div className="module-practice-card">
+                            <div className="module-info">
+                              <h6>Module 3: Ordinals & Money</h6>
+                              <div className="module-kcs">
+                                <small>Learn ordinal numbers and Philippine money</small>
+                              </div>
+                            </div>
+                            <button 
+                              onClick={() => navigate('/student/module/3')}
+                              className="module-practice-button"
+                            >
+                              <span className="btn-icon">📖</span>
+                              <span>Practice Module 3</span>
+                            </button>
+                          </div>
+                        </>
+                      );
+                    }
+                  })()}
+                </div>
+              </div>
             </div>
           )}
 
