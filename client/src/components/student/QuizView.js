@@ -19,6 +19,22 @@ const QuizView = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { token, user } = useAuth();
+
+  // KC to Module mapping for practice recommendations
+  const kcToModuleMapping = {
+    // Module 1: Numbers & Meaning (KC1-KC3)
+    1: { module: 1, title: "Module 1: Numbers & Meaning" },
+    2: { module: 1, title: "Module 1: Numbers & Meaning" },
+    3: { module: 1, title: "Module 1: Numbers & Meaning" },
+    // Module 2: Comparing & Ordering (KC4-KC6)
+    4: { module: 2, title: "Module 2: Comparing & Ordering" },
+    5: { module: 2, title: "Module 2: Comparing & Ordering" },
+    6: { module: 2, title: "Module 2: Comparing & Ordering" },
+    // Module 3: Ordinals & Money (KC7-KC8)
+    7: { module: 3, title: "Module 3: Ordinals & Money" },
+    8: { module: 3, title: "Module 3: Ordinals & Money" },
+    // Add more mappings as modules expand
+  };
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [questions, setQuestions] = useState([]);
@@ -45,6 +61,31 @@ const QuizView = () => {
   const [showTopicInfo, setShowTopicInfo] = useState(false); // Toggle for topic information visibility - default hide
   const [soundsEnabled, setSoundsEnabled] = useState(isSoundEnabled()); // Sound toggle state
   const [colorTheme, setColorTheme] = useState('orange-theme'); // Color theme state - matches student dashboard
+
+  // Helper function to get recommended modules from struggling KCs
+  const getRecommendedModules = useCallback(() => {
+    const recommendedModules = new Map();
+    
+    strugglingKCs.forEach(kc => {
+      const moduleInfo = kcToModuleMapping[kc.id];
+      if (moduleInfo) {
+        if (!recommendedModules.has(moduleInfo.module)) {
+          recommendedModules.set(moduleInfo.module, {
+            moduleNumber: moduleInfo.module,
+            title: moduleInfo.title,
+            kcs: []
+          });
+        }
+        recommendedModules.get(moduleInfo.module).kcs.push({
+          id: kc.id,
+          name: kc.name,
+          mastery: kc.current_mastery
+        });
+      }
+    });
+    
+    return Array.from(recommendedModules.values());
+  }, [strugglingKCs, kcToModuleMapping]);
 
   // Load saved color theme on component mount
   useEffect(() => {
@@ -937,7 +978,7 @@ const QuizView = () => {
             </div>
           </div>
 
-          {/* Show struggling KCs if any */}
+          {/* Show struggling KCs and recommended modules */}
           {strugglingKCs.length > 0 && (
             <div className="struggling-kcs-section">
               <h4>📚 Recommended Practice Topics:</h4>
@@ -949,6 +990,39 @@ const QuizView = () => {
                   </div>
                 ))}
               </div>
+              
+              {/* Module Practice Buttons */}
+              {getRecommendedModules().length > 0 && (
+                <div className="module-practice-section">
+                  <h5>🎯 Practice with Interactive Modules:</h5>
+                  <div className="module-buttons-container">
+                    {getRecommendedModules().map((moduleInfo, index) => (
+                      <div key={index} className="module-practice-card">
+                        <div className="module-info">
+                          <h6>{moduleInfo.title}</h6>
+                          <div className="module-kcs">
+                            <small>
+                              Topics needing practice: {moduleInfo.kcs.map(kc => kc.name).join(', ')}
+                            </small>
+                          </div>
+                          <div className="avg-mastery">
+                            <small>
+                              Average mastery: {(moduleInfo.kcs.reduce((sum, kc) => sum + kc.mastery, 0) / moduleInfo.kcs.length * 100).toFixed(0)}%
+                            </small>
+                          </div>
+                        </div>
+                        <button 
+                          onClick={() => navigate(`/student/module/${moduleInfo.moduleNumber}`)}
+                          className="module-practice-button"
+                        >
+                          <span className="btn-icon">📖</span>
+                          <span>Practice Module {moduleInfo.moduleNumber}</span>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
