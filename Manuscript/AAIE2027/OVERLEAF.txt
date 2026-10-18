@@ -1,0 +1,66 @@
+OVERLEAF SOURCE PACKAGE -- COMPLETED COMPARISON DRAFT -- 2026-10-18
+
+Author supporting drafts are available separately in build/author-support-source.zip.
+See SUBMISSION_FILES.txt and AUTHOR_COMPLETION_FORM.txt. These include an author
+sheet, declarations, optional cover letter and synopsis; they are not required
+initial attachments on the public AAIE page and do not replace the review paper.
+
+Upload build/overleaf-source.zip as a new Overleaf project, or upload:
+  main.tex
+  references.bib
+  comparison_numbers.tex
+  results_numbers.tex
+  IEEEtran.cls
+  figures/diagrams.md
+
+Set main.tex as the main document. Use pdfLaTeX and the normal BibTeX workflow.
+The source uses bibliography style IEEEtran and bibliography database references.
+Overleaf's standard TeX distribution supplies IEEEtran.bst.
+Both numbers files are required. comparison_numbers.tex contains input counts;
+results_numbers.tex contains computed model metrics and bootstrap interval values.
+The bibliography now contains 21 cited sources, including the prior IAFOR paper.
+Related work covers alternative models, individualized BKT, fuzzy-set foundations
+and the distinction between the earlier teacher evaluation and this prediction study.
+
+FIGURES
+Render each Mermaid block in figures/diagrams.md separately and export as a
+vector PDF. Upload with these exact paths:
+  figures/prediction-order.pdf
+  figures/comparison-workflow.pdf
+Until each graphic exists, main.tex uses a visible placeholder with its caption.
+Markdown/Mermaid itself is not typeset by LaTeX. No PDF was compiled in this turn.
+
+STUDY STATUS
+The user approved the comparison protocol on 2026-10-18. The approved offline
+comparison has been executed, with isolated source-replay and metric tests.
+The actual findings are now in the abstract, results, discussion and conclusion.
+The primary result is no clear predictive benefit from the implemented adjustment
+under the approved fixed configuration. No model or threshold was tuned to change
+this result. The saved JSON, source fingerprints and scripts support reproduction.
+
+AUTHOR REVIEW BEFORE SUBMISSION
+The working draft remains anonymous and keeps author-review notes visible.
+Complete the actual ethics committee/reference/date, consent/assent arrangements,
+collection setting, eligibility/test-account status as far as documented, and
+publication-overlap statement. Review the entire analysis, citations and assistance
+disclosure. Use workingdraftfalse only after resolving the notes; it only hides
+notes and does not establish the missing evidence.
+
+AAIE requires 5--12 pages including references and uses double-blind review:
+  https://icaaie.org/submission.html
+Check final pagination and figure legibility in Overleaf. No current page count
+is verified. The earlier local PDF predates this comparative manuscript.
+
+The source ZIP contains no raw CSVs, personal identifiers, analysis data, older
+PDFs, review notes or application code. Original data remain unchanged.
+The earlier audit manuscript and protocol-stage draft are preserved in archive/.
+
+REPRODUCIBILITY (LOCAL REPOSITORY ONLY; not required for Overleaf)
+python3 Manuscript/AAIE2027/analysis/prepare_comparison_inputs.py
+python3 Manuscript/AAIE2027/analysis/run_comparison.py
+Requires Python 3, Node.js, the pinned Git objects and authorized local CSVs.
+No live DB, network, application initialization, or raw-file writes are required.
+Only aggregate results are saved. No prediction-level dataset or account mapping
+is written. See COMPARISON_PROTOCOL.txt and REVIEW_NOTES.txt for details.
+
+Peer-review acceptance and publication cannot be guaranteed by these artifacts.

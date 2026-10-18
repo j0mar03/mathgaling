@@ -1,0 +1,259 @@
+% Author-reviewed research direction; approved comparison executed 2026-10-18.
+% Complete remaining ethics/cohort/publication-overlap details before submission.
+\documentclass[conference]{IEEEtran}
+\usepackage{cite}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage{xcolor}
+\input{comparison_numbers}
+\input{results_numbers}
+\newif\ifworkingdraft
+\workingdrafttrue
+\newcommand{\draftnote}[1]{\ifworkingdraft\par\noindent\textcolor{red}{\textbf{Author review:} #1}\par\fi}
+\newcommand{\externaldiagram}[1]{\IfFileExists{#1}{\includegraphics[width=\columnwidth]{#1}}{\fbox{\parbox{0.9\columnwidth}{\centering\small Export the matching Mermaid diagram in \texttt{figures/diagrams.md} as \texttt{\detokenize{#1}}.}}}}
+\begin{document}
+\title{Do Fuzzy Adjustments Improve Bayesian Knowledge Tracing in an Elementary Mathematics Intelligent Tutoring System?}
+\author{\IEEEauthorblockN{Anonymous submission}}
+\maketitle
+\draftnote{The approved offline comparison is complete and numerical results below are measured outputs. Before submission, complete the actual ethics reference, cohort/setting description and publication-overlap details; review the analysis and export the Mermaid figures.}
+
+\begin{abstract}
+Contextual adjustments to Bayesian knowledge tracing (BKT) require evaluation against the same model without those adjustments. This study examines whether the fuzzy adjustments implemented in an elementary mathematics tutor improve prediction of subsequent application-graded answers. An offline replay retained \CandidateResponseCount{} sequential nonpractice responses from \CandidateAccountCount{} Grade 3--4 account identifiers during July 2--4, 2025, yielding \ScoredTargets{} subsequent-answer targets. Both models used identical fixed BKT parameters, initialization and targets. The comparison extracted the implemented adjustment and update wrapper from a pinned source revision, retained recorded time inputs, and predicted each target before using its outcome or context to update mastery. Standard BKT achieved a Brier score of \BktBrier{}, compared with \HybridBrier{} for the hybrid. The hybrid-minus-BKT difference was \BrierDelta{}, with a paired account-cluster bootstrap 95\% interval of [\BrierCILower{}, \BrierCIUpper{}]. Log loss was slightly higher for the hybrid, while pooled AUROC was slightly higher; both AUROC estimates were near 0.5. Equal-account probability-loss summaries also favored BKT. The interval includes zero, providing no clear evidence of predictive benefit from the implemented adjustments in this replay. Validator-derived outcomes, cumulative timing, unknown account eligibility and unverified historical deployment restrict interpretation. The result concerns a fixed implementation on recorded trajectories and does not establish learning gains or the value of alternative fuzzy designs.
+\end{abstract}
+\begin{IEEEkeywords}
+Bayesian knowledge tracing, fuzzy adjustments, intelligent tutoring systems, student modeling, elementary mathematics, predictive evaluation
+\end{IEEEkeywords}
+
+\section{Introduction}
+Knowledge tracing models changing skill knowledge as learners interact with educational tasks. Bayesian knowledge tracing (BKT) maintains a probabilistic estimate of mastery and updates it through observed outcomes and a learning transition \cite{corbett1994}. A contextual adjustment may refine that estimate, but the addition of contextual rules alone does not establish better predictions. Its contribution requires a comparison in which targets, parameters and information availability are held common.
+
+This study concerns an elementary mathematics tutor developed for Grades 3 and 4. The earlier Math Tagumpay publication describes system development and teacher evaluation \cite{ruiz2026}. The present contribution is a retrospective predictive comparison using student-linked records. Teacher evaluation provides context for the system; its survey findings are not reused as new observations or treated as evidence of predictive improvement.
+
+The research question is: \emph{Do the implemented fuzzy adjustments improve prediction of subsequent application-graded student answers compared with standard BKT?} The experiment compares the existing Bayesian update with that update followed by the implemented adjustment. Both methods use shared fixed parameters and the same ordered records. Each response is predicted before its answer or interaction information can affect the state used for that prediction.
+
+The contribution is a source-pinned evaluation of the adjustment as configured, with paired probability-loss estimates and account-cluster uncertainty. The implemented rule is evaluated without changing its thresholds or replacing its recorded inputs after seeing the results. This distinguishes evidence about an existing implementation from a claim that hybrid modeling is necessarily superior.
+
+The experiment is an offline replay of observed learning trajectories. It does not estimate how an alternative recommendation policy would have changed the tasks students received. The repository also contains different Express and Netlify mastery paths; the evaluated Express utility is therefore identified explicitly rather than assumed to be the historical online implementation.
+
+\section{Related Work}
+\subsection{Learner Models and Comparative Evaluation}
+Knowledge-tracing approaches include Bayesian, logistic and deep-learning model families, with different assumptions about how interaction history represents learning \cite{shen2024survey}. Performance Factors Analysis models response performance through skill-related successes and failures \cite{pavlik2009pfa}, whereas Deep Knowledge Tracing uses recurrent neural networks to represent interaction sequences \cite{piech2015dkt}. These alternatives establish the broader prediction setting. They are related approaches rather than evaluated baselines in the present experiment, whose purpose is to isolate the incremental effect of one implemented adjustment.
+
+Pel{\'{a}}nek situates Bayesian and logistic learner models within their intended uses and evaluation contexts \cite{pelanek2017}. Gervet et al. compare learner-performance approaches across multiple datasets and investigate conditions affecting performance and calibration \cite{gervet2020}. These studies motivate evaluating a configured model against the available task and data instead of assuming that greater complexity will improve it.
+
+Sarsa et al. examine the influence of metrics, preprocessing, hyperparameters and replication conditions on knowledge-tracing comparisons \cite{sarsa2022}. The pyKT framework standardizes preprocessing and evaluation and identifies settings that can leak target labels \cite{liu2022pykt}. Liu et al. subsequently introduce simpleKT as a reproducible baseline using question-specific variation and attention \cite{liu2023simplekt}. Together, these works motivate explicit targets and prediction order. The present study isolates the local adjustment against BKT and does not claim to compare it with the broader set of models in those studies.
+
+\subsection{Contextual Student Modeling}
+Baker et al. estimate slip and guess probabilities using interaction context within BKT \cite{baker2008context}. Their method provides a precedent for context-sensitive modeling, but differs from the post-update mastery adjustments evaluated here. Evidence for context-dependent slip and guess does not validate the local rules or their thresholds. The present experiment evaluates the contribution of those existing rules with their recorded inputs.
+
+Pardos and Heffernan investigate individualized BKT parameters, including learner-specific initial knowledge informed by performance across skills \cite{pardos2010individualization}. The pyBKT library supports fitting, prediction and cross-validation for BKT variants \cite{badrinath2021pybkt}. These works distinguish estimating model parameters from adding a contextual update. Here, both models retain the same configured parameters; consequently, the comparison does not test whether the adjustment improves on an individually fitted or optimized BKT baseline.
+
+\subsection{Fuzzy Modeling and the Earlier System Study}
+Zadeh's fuzzy-set formulation represents graded membership through membership functions \cite{zadeh1965}. This supplies a conceptual basis for representing imprecise categories, but a bounded mastery value or conditional adjustment alone does not establish a particular fuzzy-inference architecture. The present paper therefore describes the actual rules and evaluates them under their implementation name, without assuming that results generalize to other fuzzy models.
+
+Ruiz's earlier Math Tagumpay paper presents a Bayesian--fuzzy elementary mathematics tutoring system and reports teacher evaluation and technology acceptance \cite{ruiz2026}. It provides system-development context for the present study. Teacher-rated system accuracy is an evaluation construct distinct from the probability losses computed from subsequent-answer predictions here. The research gap addressed in this follow-up is whether the implemented adjustment adds predictive value when compared directly with the same Bayesian update without that adjustment. Earlier teacher ratings are neither pooled with the student-linked records nor treated as validation of the replayed rules.
+
+\subsection{Operational Data and Probability Evaluation}
+Gebru et al. advocate documenting dataset composition, collection and intended uses \cite{gebru2021}. Breck et al. demonstrate the importance of validation in production machine-learning data pipelines \cite{breck2019validation}. Missing-data theory further makes the process producing missing values relevant to inference \cite{rubin1976}. These considerations motivate the explicit outcome reconstruction and input interpretation used here; logging quality is a supporting condition rather than the paper's primary research question.
+
+Proper scoring rules evaluate the probabilities assigned to realized outcomes \cite{gneiting2007}. Accordingly, the primary comparison uses Brier score, with logarithmic loss as a secondary probability-loss measure. Ranking performance is reported separately through AUROC. Repeated responses within an account are not treated as independent units for bootstrap resampling; cluster-bootstrap methodology addresses the distinction between individual observations and their grouped structure \cite{field2007}. The account-cluster assumption remains a limitation of this dataset.
+
+\section{Data and Study Scope}
+\subsection{Records and Selection}
+Four supplied Supabase exports contain students, responses, content items and knowledge components. There are \AccountCount{} student accounts, of which \ActiveAccountCount{} have exported responses and \InactiveAccountCount{} have none. All responding identifiers join to the supplied account table. Names and authentication identifiers are excluded from aggregate outputs and manuscript materials.
+
+The investigator confirms July 2--4, 2025 as actual student data-collection dates. Using UTC+08:00 calendar dates, this window contains \CollectionResponseCount{} records from \CollectionAccountCount{} accounts: 34 marked Grade 3 and 58 marked Grade 4. UTC calendar dates produce the same membership for these exports. Grade information is taken from the exported account records rather than independently verified historical enrollment.
+
+The approved primary input retains sequential responses in that window, excludes explicitly marked practice responses, and requires account grade 3 or 4. It contains \CandidateResponseCount{} records from \CandidateAccountCount{} accounts, covering 153 items and 14 knowledge components (KCs). Five excluded practice records remain available to the source wrapper's context calculation, as described below, but do not update either model's mastery. No account is removed based on guessed test/demo status or observed performance.
+
+There are 394 student--KC sequences. The first primary response in each sequence supplies the initial update; scoring begins with its subsequent response. This produces \ScoredTargets{} common targets. Table~\ref{tab:data} separates retained responses from scored targets. Account identifiers have not been reconciled with a participant roster, so the counts are reported as accounts rather than independently verified participants.
+
+\begin{table}[t]
+\caption{Input Selection and Scored Targets}
+\label{tab:data}
+\centering
+\begin{tabular}{lr}
+\hline
+Measure & Count \\
+\hline
+All exported student accounts & \AccountCount{} \\
+Accounts with any exported response & \ActiveAccountCount{} \\
+Collection-window responses & \CollectionResponseCount{} \\
+Retained sequential nonpractice responses & \CandidateResponseCount{} \\
+Retained account IDs (Grade 3 / Grade 4) & 92 (34 / 58) \\
+Student--KC sequences & 394 \\
+Scored subsequent-answer targets & \ScoredTargets{} \\
+Scored positive / negative outcomes & \ScoredPositive{} / \ScoredNegative{} \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Application-Graded Outcomes}
+The retained input contains 3,068 stored true correctness values and 260 blanks. The approved analysis derives a separate binary outcome by applying the historical client validator to the saved answer and exported answer key. The validator is extracted from revision \texttt{0c407d0}; diagnostics at \texttt{339f043} produce the same classification for these records. All 3,068 stored true responses are accepted and all 260 blanks are rejected. Original database and CSV values remain unchanged.
+
+The inspected API combines alternative correctness-field names through logical OR. When an explicit false input is followed by an absent alternative, this operator can produce an undefined value \cite{mdnOR}. This is compatible with the storage pattern, but does not establish the historical write path. The reconstructed target is application-graded correctness, not independent mathematical adjudication. The validator contains permissive matching rules, and historical answer-key immutability has not been established.
+
+\subsection{Ethics and Provenance}
+The investigator reports ethics approval covering the follow-up analysis. The approving body, approval reference/date, applicable consent and assent arrangements, final collection setting and verified cohort description are not yet documented in this draft. No identifying values or answer-level data are included in the Overleaf source package.
+\draftnote{Insert the actual ethics and collection details, and verify account eligibility against authorized records where available. Confirm the relationship between these student records and the earlier teacher evaluation and any other publications.}
+
+Inputs are identified with SHA-256 fingerprints, checked before and after analysis. The pinned source revision is \texttt{0c407d0}. The BKT/fuzzy utility is byte-identical at the two inspected revisions, while their Netlify response handlers use a separate simpler mastery update. Git history identifies the evaluated code, not which revision was historically deployed.
+
+\section{Models and Source-Faithful Replay}
+\subsection{Shared BKT Equations}
+Let $L_t$ denote mastery immediately before target $t$, with slip $S$, guess $G$ and transition $T$. Both models map mastery to a response probability through
+\begin{equation}
+\widehat p_t=L_t(1-S)+(1-L_t)G.
+\label{eq:predict}
+\end{equation}
+After observing binary outcome $y_t$, the posterior is
+\begin{equation}
+q_t=\begin{cases}
+\dfrac{L_t(1-S)}{L_t(1-S)+(1-L_t)G},& y_t=1,\\[6pt]
+\dfrac{L_tS}{L_tS+(1-L_t)(1-G)},& y_t=0.
+\end{cases}
+\end{equation}
+Standard BKT then uses $B_t=q_t+(1-q_t)T$ as the next mastery estimate. Both models retain exported KC parameters: $L_0=0.30$, $T=0.09$, $S=0.10$ and $G=0.20$. No parameter is fitted or tuned against the evaluation targets.
+
+Each student--KC pair is initialized from the same prior at its first retained observation. This defines the offline experiment; it does not reconstruct the learner's original online state. A separate state trajectory is maintained for each model, because the hybrid's earlier adjustments can influence its later predictions.
+
+\subsection{Implemented Fuzzy Adjustment}
+The hybrid applies the existing \texttt{applyFuzzyAdjustments} to $B_t$ after the same Bayesian update. It uses the recorded time-to-expected-time ratio $r_t=\tau_t/(10d_t)$, where $d_t$ is item difficulty. Table~\ref{tab:rules} gives the time-based component. Hints and attempts add penalties of $-\min(0.01h,0.03)$ and $-\min(0.01(a-1),0.03)$ on correct responses. When recent correctness rate $c<0.6$, the rule adds $-0.05(1-c)$.
+
+\begin{table}[t]
+\caption{Implemented Time-Based Adjustment Component}
+\label{tab:rules}
+\centering
+\begin{tabular}{llr}
+\hline
+Outcome & Ratio condition & Adjustment \\
+\hline
+Correct & $r_t<0.5$ & $+0.050$ \\
+Correct & $0.5\leq r_t<0.8$ & $+0.025$ \\
+Correct & $r_t>2$ & $-0.010$ \\
+Correct & Otherwise & $0$ \\
+Incorrect & $r_t<0.5$ & $-0.050$ \\
+Incorrect & $r_t>2$ & $-0.015$ \\
+Incorrect & Otherwise & $-0.030$ \\
+\hline
+\end{tabular}
+\end{table}
+
+The adjusted value is bounded to $[0,1]$. A value at least 0.8 is reduced to 0.79 unless the unadjusted $B_t$ already reaches 0.8 or a source-defined recent-performance condition permits high mastery: correctness rate at least 0.7, at least three consecutive correct responses, or at least two good sessions. This describes a conditional heuristic implemented under the fuzzy-adjustment name; it is not claimed to be an independently calibrated Mamdani or Sugeno inference system.
+
+Recorded time is passed unchanged. The inspected client timer accumulates across questions, so this experiment evaluates the rule with that recorded input and does not interpret it as validated item-solving latency. Recorded attempts are constant where present. Neither timing thresholds nor attempt behavior are repaired to improve the result.
+
+\subsection{Wrapper and Historical Context}
+The replay extracts the actual pure update functions and update wrapper from the pinned Git blobs. It does not import the application or initialize a database. Inert in-memory collections supply the item, KC and response interfaces accessed by the wrapper. The replay clock equals each response's event timestamp at millisecond precision.
+
+The wrapper's ten-minute context uses up to ten latest responses across that account's KCs; its past-day context is KC-specific. The current response is available to the wrapper after it has been observed and recorded, but not to the prediction preceding it. Context uses original stored correctness truthiness, including context-only practice records, matching the source query's behavior. This is distinct from reconstructing the primary outcome field for scoring and updating.
+
+The source defines a good session as at least three responses with correctness rate at least 0.7. It traverses past-day records in descending order while calculating session gaps by subtracting the preceding timestamp from the current timestamp. The replay preserves that behavior instead of correcting it. The maximum good-session count generated in this experiment was one, so the source condition requiring two good sessions was not activated. Other bounds, gates and fallback behavior are also preserved; no zero-mastery fallback occurred in the evaluated trajectories.
+
+\subsection{Prediction Order and Verification}
+Before observing a retained target, each model produces Equation~\ref{eq:predict} from its available state. The saved probability is scored against the reconstructed outcome. Only afterwards do the outcome, time and hints update mastery for later targets. Figure~\ref{fig:ordering} shows this separation. The first response per student--KC pair is used for updating but omitted from scoring in both models.
+
+\begin{figure}[t]
+\centering
+\externaldiagram{figures/prediction-order.pdf}
+\caption{Executed prediction order. The target response and its interaction fields are used only after its probability has been produced. Their effect can enter a later prediction.}
+\label{fig:ordering}
+\end{figure}
+
+Synthetic-fixture checks covered closed-form Bayesian updates, time branches, hint/attempt/recent-performance penalties, bounds, the mastery gate, context-window boundaries and limits, current-response inclusion, cross-KC context, and the preserved session behavior. Prefix-invariance checks verified that appending future responses does not alter earlier predictions; changing a target's own answer, time and hints does not alter its preceding prediction. These checks verify the offline implementation, not a live deployment or database.
+
+\section{Evaluation Protocol}
+The author approved the input selection, outcome reconstruction, unchanged time input, fixed-parameter comparison and scoring protocol before predictive evaluation. Responses were ordered chronologically with response ID as a stable tie-breaker. All scored targets are common to both models. Since neither model learns global parameters or selects rules from these records, the evaluation is a fixed-parameter chronological replay rather than a train/test optimization experiment. It does not estimate the performance of separately fitted BKT parameters.
+
+Figure~\ref{fig:comparison} summarizes the executed comparison. No additional model variant, threshold tuning or post-result model selection was performed.
+\begin{figure}[t]
+\centering
+\externaldiagram{figures/comparison-workflow.pdf}
+\caption{Executed offline comparison using common inputs, parameters and targets. Only aggregate results are exported. The design evaluates the pinned algorithm on observed trajectories and does not establish historical online use of that algorithm.}
+\label{fig:comparison}
+\end{figure}
+
+The primary metric is response-weighted Brier score,
+\begin{equation}
+\operatorname{BS}=\frac{1}{N}\sum_{t=1}^{N}(\widehat p_t-y_t)^2,
+\end{equation}
+with paired difference $\Delta=\operatorname{BS}_{\mathrm{hybrid}}-\operatorname{BS}_{\mathrm{BKT}}$. Negative values favor the hybrid. Log loss uses natural logarithms,
+\begin{equation}
+\operatorname{LL}=-\frac{1}{N}\sum_{t=1}^{N}\left[y_t\log\widehat p_t+(1-y_t)\log(1-\widehat p_t)\right].
+\end{equation}
+These measures assess probability quality \cite{gneiting2007}. All evaluated probabilities lie strictly between zero and one; clipping was unnecessary. Pooled AUROC is calculated using average ranks for ties and reported as a separate descriptive ranking measure.
+
+Equal-account Brier and log-loss summaries first average within each account and then give the 92 accounts equal weight. For uncertainty on the primary response-weighted difference, 2,000 paired account-cluster bootstrap replicates sample 92 account clusters with replacement. Each selected cluster retains both models' paired predictions and all its target records. Each replicate recomputes the response-weighted loss difference. The 2.5th and 97.5th percentiles use linear interpolation. Seed 20261018 fixes Python's random generator.
+
+Clustering acknowledges repeated responses within accounts \cite{field2007}; it does not verify that each account represents a distinct eligible participant. The interval is conditional on that clustering assumption. Secondary metric differences and account-wise win counts are descriptive; no claim of equivalence or general superiority is based on them.
+
+\section{Results}
+\subsection{Common Targets and Probability Loss}
+The evaluation scored \ScoredTargets{} subsequent-answer targets: \ScoredPositive{} positive and \ScoredNegative{} negative outcomes. Thus 92.19\% of targets are application-graded correct. Both models produced a finite probability for every target, with no model-specific target exclusions.
+
+Table~\ref{tab:metrics} reports the measured metrics. BKT has lower response-weighted Brier score and log loss. The hybrid has a slightly higher pooled AUROC, while both ranking estimates are near 0.5. Equal-account probability-loss summaries also favor BKT.
+
+\begin{table}[t]
+\caption{Measured Predictive Performance on Common Targets}
+\label{tab:metrics}
+\centering
+\begin{tabular}{lrr}
+\hline
+Metric & BKT & BKT + adjustment \\
+\hline
+Brier score ($\downarrow$) & \BktBrier{} & \HybridBrier{} \\
+Log loss ($\downarrow$) & \BktLogLoss{} & \HybridLogLoss{} \\
+Pooled AUROC ($\uparrow$) & \BktAUC{} & \HybridAUC{} \\
+Equal-account Brier ($\downarrow$) & \BktEqualBrier{} & \HybridEqualBrier{} \\
+Equal-account log loss ($\downarrow$) & \BktEqualLogLoss{} & \HybridEqualLogLoss{} \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Paired Difference and Uncertainty}
+The primary hybrid-minus-BKT Brier difference is \BrierDelta{}. Its paired account-bootstrap 95\% interval is [\BrierCILower{}, \BrierCIUpper{}]. The point estimate indicates slightly higher loss for the hybrid, but the interval includes zero and differences in either direction. Accordingly, this evaluation provides no clear evidence of a predictive benefit from the implemented adjustment under the approved configuration. It also does not establish equivalence between the models.
+
+The equal-account Brier difference is \EqualBrierDelta{}, again indicating higher average loss for the hybrid. Descriptively, \LowerHybridAccounts{} accounts have lower hybrid Brier loss and \HigherHybridAccounts{} have higher loss, with \TiedAccounts{} ties. A majority of account-wise improvements therefore does not translate into a lower overall loss: the sizes of the account-wise changes matter. No account-level significance test is inferred from this count.
+
+\subsection{Implementation and Integrity Checks}
+The source-replay fixtures and metric known-answer checks passed. AUROC checks included perfect, reversed and tied rankings; probability-loss checks used manually known examples; a paired zero-difference fixture yielded a zero-width interval at zero. Selection and paired-target assertions matched the approved counts. The four raw CSV fingerprints were unchanged after evaluation. Prediction-level records and account mappings remained in process memory; only aggregates and reproducibility metadata were saved.
+
+\section{Discussion}
+\subsection{Answer to the Research Question}
+For this fixed implementation and dataset, the fuzzy adjustments did not show a clear predictive advantage over BKT. The primary point estimate is unfavorable to the hybrid, its interval spans zero, and log loss follows the same unfavorable direction. The small positive AUROC difference does not outweigh this evidence on the prespecified probability-loss criterion. These findings illustrate why an implemented hybrid should be evaluated against its component baseline rather than assumed to improve it.
+
+The result is narrower than a rejection of fuzzy student modeling. The experiment uses configured parameters, conditional rules and recorded context from one tutor. It does not evaluate independently calibrated membership functions, other fuzzy-inference architectures, tuned BKT models, or revised timing features. Its contribution is a reproducible test of the existing adjustment rather than a search for the best possible hybrid.
+
+\subsection{Context and Configuration Limits}
+A potential benefit of context-sensitive updating depends on what the features measure. Here, cumulative timing is supplied unchanged to a rule expressed in terms of expected question time. Later questions can therefore carry larger recorded values without correspondingly longer item-solving effort. Attempts also provide no observed retry variation. The existing session calculation does not activate the two-good-session condition in this replay. These facts qualify the evaluated implementation; they do not establish which mechanism caused the observed loss difference because no component ablations were run.
+
+The target distribution is strongly positive, the sequences are short, and both models retain the same fixed slip and guess settings. The shared probability mapping has an upper limit of 0.9 under these parameters, below the observed positive target proportion of approximately 0.922. This does not by itself diagnose every aspect of calibration, but highlights why a fixed configuration and class composition matter when interpreting probability losses. The experiment does not establish that either model is competitive with a tuned or additional baseline.
+
+Van de Sande's analysis of BKT properties shows why parameter conditions matter to the behavior of inferred knowledge \cite{vandesande2013}. In conjunction with work on individualized BKT \cite{pardos2010individualization}, this motivates separating the present fixed-configuration finding from any future parameter-fitting study. Such a study would require a separate protocol with fitting and evaluation data kept appropriately distinct.
+
+\subsection{Relationship to the Prior Publication}
+The earlier publication concerns the tutoring system and teacher evaluation \cite{ruiz2026}. The present findings concern predictions generated by an explicitly defined offline replay. They do not revise or reproduce the earlier survey responses. Positive teacher perceptions and the absence of clear predictive improvement in this comparison can coexist because they measure different properties. Any assertion that students historically experienced the replayed hybrid requires separate deployment evidence.
+
+\section{Limitations and Reproducibility}
+The available accounts have not been independently reconciled with a study roster, and test/demo status is unknown. Account sharing, repeated users or ineligible accounts could affect both composition and the account-cluster uncertainty calculation. The 92 account IDs must not be generalized as a representative population sample. Grade labels and historical answer keys come from the supplied exports; their values at the original collection time have not been independently verified.
+
+Outcome reconstruction follows the historical application validator. This enables the approved application-graded prediction task but is not an independent assessment of mathematical correctness. Original missingness, permissive matching rules and uncertain historical key versions limit interpretation. The paper reports these assumptions instead of treating a reconstructed outcome as an original recorded observation.
+
+The replay initializes mastery at the first retained event, uses event time as a surrogate for the wrapper's wall clock, and emulates source-accessed collection interfaces in memory. Historical server latency, concurrent requests and online stored mastery are not reconstructed. Source functions and wrapper behavior are preserved, but the tests do not validate a deployed system. The inspected Netlify handlers use a different update from the evaluated Express utility.
+
+No learning assessment, randomized comparison, retention measure, fitted-parameter benchmark or adaptive-policy experiment is available. Results therefore concern one-step predictive scoring on the supplied trajectories. A later change to outcome reconstruction, timing, session handling or model thresholds would require a separately specified evaluation rather than being presented as the current result.
+
+The computational record includes the approved protocol, input and source fingerprints, isolated-fixture checks, aggregate results and scripts. The analysis uses Python 3.11.8 and Node.js 22.17.0. Full input fingerprints and the source commit \texttt{0c407d010d9dd5f1cb2a0eba42b5c0452c22e581} identify this run. Scripts regenerate measured LaTeX values from aggregate results, and raw files are checked before and after execution. The code and data have not been publicly archived; reproducibility is conditional on authorized access to the protected inputs and pinned Git objects.
+
+\section{Conclusion}
+A source-pinned offline comparison evaluated the implemented fuzzy adjustment against standard BKT on \ScoredTargets{} subsequent-answer targets from 92 account identifiers. With common fixed parameters and prediction-before-update ordering, BKT achieved lower Brier score and log loss. The hybrid-minus-BKT Brier difference was \BrierDelta{}, with an account-bootstrap interval spanning zero. The implemented adjustment therefore showed no clear predictive benefit in this evaluation.
+
+The finding supports evaluating contextual additions empirically and documenting the measurement and execution assumptions under which they are tested. It does not establish that all fuzzy approaches are ineffective, that the two models are equivalent, or that either improves learning. Further work should independently verify the cohort and outcomes and evaluate any revised features or calibration under a new protocol.
+
+\section*{Acknowledgment}
+OpenAI Codex assisted with input preparation, offline replay and evaluation scripts, drafting and revising Sections I--IX, tables, and the Mermaid diagram sources. Assistance included generated code and text, rather than proofreading alone. The numerical results were computed from the supplied records under the approved protocol; no synthetic research outcomes were substituted. The author must independently review the analysis, references and final manuscript.
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+\end{document}

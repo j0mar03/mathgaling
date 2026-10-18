@@ -1,0 +1,259 @@
+MATHGALING GIT SAFETY REVIEW -- 2026-10-18 (Asia/Shanghai)
+
+Scope: all current modified/deleted/untracked nonignored paths, including this
+report; additional ignored research artifacts and unchanged tracked risks below.
+Paths use the actual case: Manuscript/ and fromSUpabase/.
+Every status path has exactly one primary classification. Recommendations are
+not staging instructions or a declaration that the manuscript is submission-ready.
+No research data, application files or .gitignore rules were changed by closeout.
+Only the four requested memory files and this report were written.
+
+SUMMARY OF CURRENT STATUS CLASSIFICATIONS
+SHOULD COMMIT: 39 paths
+SHOULD IGNORE: 2 paths
+SENSITIVE / REVIEW REQUIRED: 14 paths
+Total status paths, including this report: 55
+Staged paths: none.
+
+SHOULD COMMIT
+=============
+[ M] .gitignore
+  Preserves useful rules and adds Windows metadata exclusion; raw-export protection remains a recommendation only.
+[??] AGENTS.md
+  Project instructions/memory with evidence, decisions, limitations and next tasks; no credentials or individual student values.
+[??] DECISIONS.md
+  Project instructions/memory with evidence, decisions, limitations and next tasks; no credentials or individual student values.
+[??] GIT_SAFETY_REVIEW_2026-10-18.txt
+  Dated file-by-file safety review; contains filenames and findings without secret/student values.
+[??] Manuscript/AAIE2027/AUTHOR_COMPLETION_FORM.txt
+  Research manuscript/bibliography/figure source or submission documentation; author-support fields are pending, not confirmed declarations. Check future filled author details before public sharing.
+[??] Manuscript/AAIE2027/COMPARISON_PROTOCOL.txt
+  Research manuscript/bibliography/figure source or submission documentation; author-support fields are pending, not confirmed declarations. Check future filled author details before public sharing.
+[??] Manuscript/AAIE2027/IEEEtran.cls
+  Official template dependency, with its original license retained.
+[??] Manuscript/AAIE2027/OVERLEAF.txt
+  Research manuscript/bibliography/figure source or submission documentation; author-support fields are pending, not confirmed declarations. Check future filled author details before public sharing.
+[??] Manuscript/AAIE2027/REFERENCE_ADAPTATION.txt
+  Research manuscript/bibliography/figure source or submission documentation; author-support fields are pending, not confirmed declarations. Check future filled author details before public sharing.
+[??] Manuscript/AAIE2027/REVIEW_NOTES.txt
+  Research manuscript/bibliography/figure source or submission documentation; author-support fields are pending, not confirmed declarations. Check future filled author details before public sharing.
+[??] Manuscript/AAIE2027/SUBMISSION_FILES.txt
+  Research manuscript/bibliography/figure source or submission documentation; author-support fields are pending, not confirmed declarations. Check future filled author details before public sharing.
+[??] Manuscript/AAIE2027/SUBMISSION_READINESS.txt
+  Research manuscript/bibliography/figure source or submission documentation; author-support fields are pending, not confirmed declarations. Check future filled author details before public sharing.
+[??] Manuscript/AAIE2027/analysis/audit_csv.py
+  Read-only preparation/replay/evaluation code and fixture/metric checks; no raw data embedded or application/database initialization.
+[??] Manuscript/AAIE2027/analysis/build_evidence.py
+  Read-only preparation/replay/evaluation code and fixture/metric checks; no raw data embedded or application/database initialization.
+[??] Manuscript/AAIE2027/analysis/comparison_input_summary.json
+  Reproducible aggregate counts/metrics/provenance; no per-account records, names, auth IDs or credential tokens found. Input-summary status is historical preparation wording.
+[??] Manuscript/AAIE2027/analysis/comparison_results.json
+  Reproducible aggregate counts/metrics/provenance; no per-account records, names, auth IDs or credential tokens found. Input-summary status is historical preparation wording.
+[??] Manuscript/AAIE2027/analysis/prepare_comparison_inputs.py
+  Read-only preparation/replay/evaluation code and fixture/metric checks; no raw data embedded or application/database initialization.
+[??] Manuscript/AAIE2027/analysis/replay_models.cjs
+  Read-only preparation/replay/evaluation code and fixture/metric checks; no raw data embedded or application/database initialization.
+[??] Manuscript/AAIE2027/analysis/run_comparison.py
+  Read-only preparation/replay/evaluation code and fixture/metric checks; no raw data embedded or application/database initialization.
+[??] Manuscript/AAIE2027/archive/audit-diagrams.md
+  Preserved research/protocol history; earlier wording/results status is superseded by the current main manuscript.
+[??] Manuscript/AAIE2027/archive/comparison-protocol-approved-proposal.txt
+  Preserved research/protocol history; earlier wording/results status is superseded by the current main manuscript.
+[??] Manuscript/AAIE2027/archive/main-audit-draft.tex
+  Preserved research/protocol history; earlier wording/results status is superseded by the current main manuscript.
+[??] Manuscript/AAIE2027/archive/main-comparison-protocol-draft.tex
+  Preserved research/protocol history; earlier wording/results status is superseded by the current main manuscript.
+[??] Manuscript/AAIE2027/comparison_numbers.tex
+  Generated aggregate research artifact needed for manuscript reproducibility; evidence_numbers.tex is historical audit output, not current comparative results.
+[??] Manuscript/AAIE2027/coverletter.tex
+  Research manuscript/bibliography/figure source or submission documentation; author-support fields are pending, not confirmed declarations. Check future filled author details before public sharing.
+[??] Manuscript/AAIE2027/declarations.tex
+  Research manuscript/bibliography/figure source or submission documentation; author-support fields are pending, not confirmed declarations. Check future filled author details before public sharing.
+[??] Manuscript/AAIE2027/evidence_numbers.tex
+  Generated aggregate research artifact needed for manuscript reproducibility; evidence_numbers.tex is historical audit output, not current comparative results.
+[??] Manuscript/AAIE2027/figures/diagrams.md
+  Research manuscript/bibliography/figure source or submission documentation; author-support fields are pending, not confirmed declarations. Check future filled author details before public sharing.
+[??] Manuscript/AAIE2027/main.tex
+  Research manuscript/bibliography/figure source or submission documentation; author-support fields are pending, not confirmed declarations. Check future filled author details before public sharing.
+[??] Manuscript/AAIE2027/references.bib
+  Research manuscript/bibliography/figure source or submission documentation; author-support fields are pending, not confirmed declarations. Check future filled author details before public sharing.
+[??] Manuscript/AAIE2027/results_numbers.tex
+  Generated aggregate research artifact needed for manuscript reproducibility; evidence_numbers.tex is historical audit output, not current comparative results.
+[??] Manuscript/AAIE2027/submission_details.tex
+  Research manuscript/bibliography/figure source or submission documentation; author-support fields are pending, not confirmed declarations. Check future filled author details before public sharing.
+[??] Manuscript/AAIE2027/submission_metadata.txt
+  Research manuscript/bibliography/figure source or submission documentation; author-support fields are pending, not confirmed declarations. Check future filled author details before public sharing.
+[??] Manuscript/AAIE2027/synopsis.tex
+  Research manuscript/bibliography/figure source or submission documentation; author-support fields are pending, not confirmed declarations. Check future filled author details before public sharing.
+[??] Manuscript/AAIE2027/titlepage.tex
+  Research manuscript/bibliography/figure source or submission documentation; author-support fields are pending, not confirmed declarations. Check future filled author details before public sharing.
+[??] Manuscript/references(1).bib
+  Preserved original scholarly bibliography; do not imply that all old entries are verified or currently cited.
+[??] PROJECT_CONTEXT.md
+  Project instructions/memory with evidence, decisions, limitations and next tasks; no credentials or individual student values.
+[??] RESEARCH_STATUS.md
+  Project instructions/memory with evidence, decisions, limitations and next tasks; no credentials or individual student values.
+[??] TODO.md
+  Project instructions/memory with evidence, decisions, limitations and next tasks; no credentials or individual student values.
+
+SHOULD IGNORE
+=============
+[ D] client/public/494829494_2195526057525970_99610077561369956_n-removebg-preview.png:Zone.Identifier
+  Windows download metadata; tracked deletions already existed and are preserved. Ignore rules do not remove tracked entries.
+[ D] client/public/494829494_2195526057525970_99610077561369956_n.png:Zone.Identifier
+  Windows download metadata; tracked deletions already existed and are preserved. Ignore rules do not remove tracked entries.
+
+SENSITIVE / REVIEW REQUIRED
+===========================
+[??] Manuscript/AAIE2027/analysis/audit_results.json
+  Aggregate-only historical audit includes fine-grained date/small-group breakdowns outside the primary cohort; review disclosure before public release. No individual-ID rows were found.
+[??] Manuscript/SystematicITS/coverletter.tex
+  Independent SLR reference copy contains author/reviewer contact or identity information. Confirm public sharing and repository placement.
+[??] Manuscript/SystematicITS/manuscript.tex
+  Independent unpublished SLR reference copy. Decide whether to version it here or in ResearchITS; no finding that its research claims have been verified.
+[??] Manuscript/SystematicITS/references(1).bib
+  Independent unpublished SLR reference copy. Decide whether to version it here or in ResearchITS; no finding that its research claims have been verified.
+[??] Manuscript/SystematicITS/synopsis.tex
+  Independent SLR reference copy contains author/reviewer contact or identity information. Confirm public sharing and repository placement.
+[??] Manuscript/SystematicITS/titlepage.tex
+  Independent SLR reference copy contains author/reviewer contact or identity information. Confirm public sharing and repository placement.
+[??] Manuscript/main(1).tex
+  Older manuscript contains author email/ORCID identity information. Review public sharing and distinguish this historical draft from the current anonymous comparison.
+[ M] client/api-OLD/postinstall.js
+  Pre-existing executable-bit change 100755 -> 100644, with zero text changes. Review intent before including; no secret content finding is implied by this category.
+[ M] client/api-OLD/test-deps.js
+  Pre-existing executable-bit change 100755 -> 100644, with zero text changes. Review intent before including; no secret content finding is implied by this category.
+[ M] client/server/index.js
+  Pre-existing executable-bit change 100755 -> 100644, with zero text changes. Review intent before including; no secret content finding is implied by this category.
+[??] fromSUpabase/content_items_rows.csv
+  Raw production item/answer-key export with teacher/linkage fields; release rights and privacy need review; not ignored.
+[??] fromSUpabase/knowledge_components_rows.csv
+  Raw production KC export; no direct student columns in header, but release authorization/provenance need review; not ignored.
+[??] fromSUpabase/responses_rows.csv
+  Raw student-linked answers, interaction fields and timestamps; not ignored; do not publish or stage.
+[??] fromSUpabase/students_rows.csv
+  Raw student-account export with names and authentication identifiers; not ignored; do not publish or stage.
+
+ADDITIONAL UNTRACKED FILES ALREADY IGNORED
+========================================
+SHOULD IGNORE: Manuscript/AAIE2027/build/author-support-source.zip
+  Generated PDF/ZIP packaging; retain source files instead. build/main.pdf is stale (audit paper).
+SHOULD IGNORE: Manuscript/AAIE2027/build/main.pdf
+  Generated PDF/ZIP packaging; retain source files instead. build/main.pdf is stale (audit paper).
+SHOULD IGNORE: Manuscript/AAIE2027/build/overleaf-source.zip
+  Generated PDF/ZIP packaging; retain source files instead. build/main.pdf is stale (audit paper).
+SHOULD IGNORE: Manuscript/SystematicITS/coverletter.tex:Zone.Identifier
+  Windows metadata; unnecessary for version control.
+SHOULD IGNORE: Manuscript/SystematicITS/manuscript.tex:Zone.Identifier
+  Windows metadata; unnecessary for version control.
+SHOULD IGNORE: Manuscript/SystematicITS/references(1).bib:Zone.Identifier
+  Windows metadata; unnecessary for version control.
+SHOULD IGNORE: Manuscript/SystematicITS/synopsis.tex:Zone.Identifier
+  Windows metadata; unnecessary for version control.
+SHOULD IGNORE: Manuscript/SystematicITS/titlepage.tex:Zone.Identifier
+  Windows metadata; unnecessary for version control.
+SHOULD IGNORE: Manuscript/main(1).tex:Zone.Identifier
+  Windows metadata; unnecessary for version control.
+SHOULD IGNORE: Manuscript/references(1).bib:Zone.Identifier
+  Windows metadata; unnecessary for version control.
+SHOULD IGNORE: fromSUpabase/content_items_rows.csv:Zone.Identifier
+  Windows metadata; unnecessary for version control.
+SHOULD IGNORE: fromSUpabase/knowledge_components_rows.csv:Zone.Identifier
+  Windows metadata; unnecessary for version control.
+SHOULD IGNORE: fromSUpabase/responses_rows.csv:Zone.Identifier
+  Windows metadata; unnecessary for version control.
+
+RAW EXPORT RISK / PROPOSED IGNORE RULE
+====================================
+All four CSVs remain untracked and not ignored at the end of this review.
+A broad future staging command could include them. Recommended root rule:
+  /fromSUpabase/
+This recommendation is NOT applied. Do not blanket-ignore all CSV or JSON files:
+sanitized fixtures and aggregate research results may be appropriate to version.
+Keep raw sources in protected storage with their existing hashes; do not delete,
+anonymize in place or modify them during repository cleanup. A future approved
+public derivative must be generated separately and reviewed for disclosure.
+
+EXISTING TRACKED RISKS OUTSIDE TODAY'S STATUS
+===========================================
+SENSITIVE / REVIEW REQUIRED: backup.sql
+SENSITIVE / REVIEW REQUIRED: backup_before_seed.sql
+SENSITIVE / REVIEW REQUIRED: production_data.sql
+SENSITIVE / REVIEW REQUIRED: backup.dump
+These are already tracked, not newly untracked. production_data.sql contains
+email-pattern text and student/password-field references. backup.dump is a
+PostgreSQL custom archive; visible strings include student/password-field
+references. The other dumps are not certified sanitized. No database tool was
+run, no dump was imported, and compressed/archive record contents were not
+exhaustively decoded. Treat all four as potentially sensitive pending review.
+Ignoring these names will not remove them from the index or existing history.
+No untracking, deletion, restore or history rewrite has been performed.
+
+Embedded JWT-shaped tokens found in these tracked files (values omitted):
+SENSITIVE / REVIEW REQUIRED: .env.example; decoded role(s): anon
+SENSITIVE / REVIEW REQUIRED: client/api-vercel-OLD/supabase.js; decoded role(s): anon
+SENSITIVE / REVIEW REQUIRED: netlify/functions/api.js; decoded role(s): anon
+SENSITIVE / REVIEW REQUIRED: netlify/functions/auth/login.js; decoded role(s): anon
+SENSITIVE / REVIEW REQUIRED: netlify/functions/login.js; decoded role(s): anon
+SENSITIVE / REVIEW REQUIRED: netlify/functions/utils/db-config.js; decoded role(s): anon
+All detected roles are anon/client roles, not service_role. An anon key can be
+intentionally public; its presence is not proof of a privileged secret leak.
+Check intended configuration and access controls separately; no token validity,
+permissions, live RLS or current service access was tested. No credential values
+are included in this report. Do not infer a need for rotation from this scan alone.
+
+Existing tracked SQL diagnostic/repair scripts also require review if the
+repository will be made public (filenames suggest real-ID or account operations;
+no claim that every script contains personal data):
+SENSITIVE / REVIEW REQUIRED: scripts/check-actual-ids.sql
+SENSITIVE / REVIEW REQUIRED: scripts/check-student-21.sql
+SENSITIVE / REVIEW REQUIRED: scripts/debug-parent-student-link.sql
+SENSITIVE / REVIEW REQUIRED: scripts/diagnose-parent-linking.sql
+SENSITIVE / REVIEW REQUIRED: scripts/fix-notification-sequence.sql
+SENSITIVE / REVIEW REQUIRED: scripts/fix-parent-linking-complete.sql
+SENSITIVE / REVIEW REQUIRED: scripts/fix-parent-linking-corrected.sql
+SENSITIVE / REVIEW REQUIRED: scripts/fix-parent-student-linking-complete.sql
+SENSITIVE / REVIEW REQUIRED: scripts/fix-parent-student-linking-safe.sql
+SENSITIVE / REVIEW REQUIRED: scripts/fix-parent-student-linking.sql
+SENSITIVE / REVIEW REQUIRED: scripts/fix-plain-text-passwords.sql
+SENSITIVE / REVIEW REQUIRED: scripts/fix-student-auth-ids.sql
+SENSITIVE / REVIEW REQUIRED: scripts/setup-supabase.sql
+SENSITIVE / REVIEW REQUIRED: scripts/test-parent-link-insert.sql
+SENSITIVE / REVIEW REQUIRED: scripts/test-with-real-ids.sql
+SENSITIVE / REVIEW REQUIRED: scripts/undo-rls-changes.sql
+SENSITIVE / REVIEW REQUIRED: scripts/verify-existing-ids.sql
+
+ENVIRONMENT / PATTERN-SCAN LIMITS
+================================
+No non-node_modules ignored .env-like working files were found. Tracked examples
+are not automatically safe: .env.example contains an anon-token candidate.
+No JWT/private-key/provider-secret-prefix match was found in the changed/untracked
+nonignored files. CSV headers establish direct/linked personal data independently
+of token-pattern results. Pattern checks are not an anonymization certificate or
+a complete credential audit. The wider tracked-file scan skipped binary content;
+no file exceeded the eight-million-byte content-scan limit. Git history and
+ignored dependencies/caches were not comprehensively scanned for secret values.
+
+TODAY'S RESEARCH SUMMARY
+========================
+Approved fixed-parameter source-pinned BKT versus implemented-adjustment replay:
+3,328 retained responses; 92 account IDs; 2,934 common scored targets.
+BKT Brier 0.09147; hybrid 0.09222; hybrid-minus-BKT +0.00074, paired account-
+bootstrap 95% interval [-0.00038, +0.00193]. No clear predictive benefit under
+this configuration; no equivalence, deployment-parity or learning-gain claim.
+Comparative LaTeX/BibTeX draft, 21 references, compact Mermaid sources and optional
+author-support documents are prepared. Older drafts are preserved. Actual ethics
+reference/consent, author declarations, setting/cohort verification, rendered
+figures and current anonymous compiled-PDF checks remain incomplete.
+Research memory updated from protocol, measured results and session evidence.
+No new experiment, database operation, source-code edit or submission occurred
+during closeout. No files were staged, committed, pushed, restored or deleted.
+
+EXACT NEXT TASK
+===============
+Open Manuscript/AAIE2027/AUTHOR_COMPLETION_FORM.txt with the investigator and
+complete the AAIE-specific author list, ethics approval/consent, collection
+setting/cohort, funding/interests and publication-overlap fields from actual
+records. Reconcile those facts into main.tex and submission_details.tex before
+hiding draft notes or preparing the final anonymous Overleaf PDF. Before any
+future staging, protect/review raw exports and the tracked risks listed above.

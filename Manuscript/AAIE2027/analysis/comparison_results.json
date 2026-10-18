@@ -1,0 +1,122 @@
+{
+  "checks": {
+    "metric_known_answer_checks_passed": true,
+    "paired_targets_and_count_assertions_passed": true,
+    "source_replay_fixture_checks": {
+      "limitation": "Tests use isolated synthetic fixtures and inert collections; no real database or deployment is validated.",
+      "passed": true,
+      "scope": [
+        "Bayesian closed-form updates",
+        "time branches",
+        "hint/attempt/recent penalties",
+        "bounds and mastery gate",
+        "actual wrapper with inert memory collections",
+        "descending-session behavior preserved",
+        "strict time window and ten-record limit",
+        "cross-KC context",
+        "current response present before update",
+        "future-prefix invariance",
+        "current answer/time/hints cannot alter their own prediction"
+      ]
+    }
+  },
+  "comparison": {
+    "accounts_with_equal_brier": 0,
+    "accounts_with_higher_hybrid_brier": 32,
+    "accounts_with_lower_hybrid_brier": 60,
+    "bootstrap_replicates": 2000,
+    "bootstrap_rng": "Python random.Random / Mersenne Twister, choices with replacement",
+    "bootstrap_seed": 20261018,
+    "brier_difference_hybrid_minus_bkt": 0.0007441349483992554,
+    "equal_account_brier_difference_hybrid_minus_bkt": 0.0006283890174434287,
+    "paired_account_bootstrap_95_percentile_interval": [
+      -0.0003836146067064936,
+      0.001930429179285101
+    ],
+    "percentile_interpolation": "linear at (n-1)*q"
+  },
+  "counts": {
+    "account_clusters": 92,
+    "context_only_practice_rows": 5,
+    "primary_rows": 3328,
+    "scored_negative": 229,
+    "scored_positive": 2705,
+    "scored_targets": 2934,
+    "student_kc_sequences": 394,
+    "window_rows": 3333
+  },
+  "date": "2026-10-18",
+  "implementation_notes": [
+    "Pure source functions and update wrapper extracted from pinned Git blobs; application modules never imported.",
+    "Inert in-memory collections emulate only the inspected read/update interfaces; no DB engine or network is used.",
+    "Replay clock equals response event time at millisecond precision; responses inserted before update, never future context.",
+    "Recent context retains original stored truthiness; excluded practice records may enter context but never update mastery.",
+    "Descending-session grouping behavior is preserved, not repaired.",
+    "Fixed parameters, first-event initialization, identical subsequent targets; no fitting, selection, or tuning.",
+    "Recorded cumulative time passed unchanged; no time repair or additional ablation performed.",
+    "Prediction-level values and account mappings remain in process memory; only aggregates are written."
+  ],
+  "limitations": [
+    "Account eligibility and test/demo status not independently verified.",
+    "Historical deployment and answer-key provenance not established.",
+    "Outcomes are application-validator derived; independent mathematical grading not performed.",
+    "Results concern this configured offline replay, not learning gains or counterfactual adaptive policies.",
+    "Uncertainty is conditional on account IDs as clusters."
+  ],
+  "models": {
+    "bkt": {
+      "brier": 0.09147227864481666,
+      "equal_account_brier": 0.09098171173157649,
+      "equal_account_log_loss": 0.32812333325521903,
+      "log_loss": 0.3289514983736901,
+      "mean_prediction": 0.8371573945798011,
+      "pooled_auc": 0.48839687139294047,
+      "prediction_max": 0.8999999999999998,
+      "prediction_min": 0.27200016320102505
+    },
+    "hybrid": {
+      "brier": 0.09221641359321592,
+      "equal_account_brier": 0.09161010074901992,
+      "equal_account_log_loss": 0.32899381801453104,
+      "log_loss": 0.3300071067132015,
+      "mean_prediction": 0.8371992948031977,
+      "pooled_auc": 0.49045758703355424,
+      "prediction_max": 0.9,
+      "prediction_min": 0.2203809011795022
+    }
+  },
+  "parameters": {
+    "pG": 0.2,
+    "pL0": 0.3,
+    "pS": 0.1,
+    "pT": 0.09
+  },
+  "protocol_approval": "Explicit user approval in this session, 2026-10-18",
+  "provenance": {
+    "analysis_script_sha256": {
+      "replay_models.cjs": "149826ed70bf6872e5aef681299329845ef942769b90abf9a2bd54288d1bef40",
+      "run_comparison.py": "bd3d758b81df99f687c8e5211cdba93cada048bf121e084a6f0c8e9586750f92"
+    },
+    "commit": "0c407d010d9dd5f1cb2a0eba42b5c0452c22e581",
+    "extractedFunctionSha256": "2d2b54ad68c51ce5702608744f994a78f69fd66b93e612051fd03f752b0e31a1",
+    "input_sha256": {
+      "content_items": "c56af9da4536024403c85ac7e3d8907bb21ae463270a30b408a81d6be45eb311",
+      "knowledge_components": "b90be9a767dd23ffc751301f69678d843e41b6cbd71af2a96a07e1fb9a6b550b",
+      "responses": "fb4bf972780e96dcf4f6be74d83333603c035656016b4272b1b28ea42aa9b9c7",
+      "students": "e7e63e88090d4ff83fef4722902abfec737d33c6746cfa66429f0ade467c176e"
+    },
+    "node": "v22.17.0",
+    "python": "3.11.8",
+    "sourceSha256": "acb3aeb9e4f557d55badc81da7f06a721049fbf30de445d38083628ccb8edd0e",
+    "validatorSha256": "4305b1a73e81e55b06aa69f9b4c3a223f49b833d2ad0fda806983a6451bfe428"
+  },
+  "replay_diagnostics": {
+    "derivedNegative": 260,
+    "derivedPositive": 3068,
+    "excludedContextOnly": 5,
+    "maxGoodSessions": 1,
+    "primary": 3328,
+    "sequences": 394,
+    "zeroStateFallbacks": 0
+  }
+}

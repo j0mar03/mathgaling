@@ -1,0 +1,63 @@
+SYSTEMATICITS REFERENCE ADAPTATION RECORD -- 2026-10-18
+
+Authorization: user requested reading all files under SystematicITS and using
+them as references for missing AAIE2027 submission files.
+Actual source directory: ../SystematicITS/ relative to this AAIE2027 directory.
+All five document sources and five Windows metadata companions were read.
+The companions contain transfer metadata, not research/submission evidence;
+their contents are not reproduced here. Sources were left unchanged.
+
+SOURCE INVENTORY (SHA-256)
+coverletter.tex: 99b1669ab91f752b723131b91162926f0b273ba5c431424b6d36c745c64bc5af
+coverletter.tex:Zone.Identifier: b952d24cf701bc4e7a7d21e1ae85c611824e80579a89836c0cb49b193446ccfe
+manuscript.tex: 69de7f4e105863d9f801b2f4162b89e371bb4d34490c1704765e6370cd97be32
+manuscript.tex:Zone.Identifier: b952d24cf701bc4e7a7d21e1ae85c611824e80579a89836c0cb49b193446ccfe
+references(1).bib: ceeccffe02661dd7c45ed18454739ac13f2f46e27f25a39428c343b19b16c8c0
+references(1).bib:Zone.Identifier: b952d24cf701bc4e7a7d21e1ae85c611824e80579a89836c0cb49b193446ccfe
+synopsis.tex: f1e425bfe159977a09247e2ebb8732e29b4b6727d660b04736ecc17dc05b4955
+synopsis.tex:Zone.Identifier: b952d24cf701bc4e7a7d21e1ae85c611824e80579a89836c0cb49b193446ccfe
+titlepage.tex: d95a366ab2e510bc23fedf30f6e9372074f301f0d2b977638c77dac6bca204a3
+titlepage.tex:Zone.Identifier: b952d24cf701bc4e7a7d21e1ae85c611824e80579a89836c0cb49b193446ccfe
+
+STRUCTURE ADAPTED
+../SystematicITS/titlepage.tex -> titlepage.tex and declarations.tex:
+  separate identifying metadata, declarations and author approval categories.
+../SystematicITS/coverletter.tex -> coverletter.tex:
+  recipient, study contribution, prior-work relationship and closing structure.
+../SystematicITS/synopsis.tex -> synopsis.tex:
+  problem, design, findings, significance and limitations organization.
+../SystematicITS/manuscript.tex -> separation of blinded manuscript from author
+  information only. Its Springer class and APA style do not apply to IEEE AAIE.
+../SystematicITS/references(1).bib -> inspected as part of the resources; no entries
+  copied. Current AAIE citations were already independently checked.
+
+EVIDENCE BOUNDARY
+The sources establish how the SLR documents are drafted, not that their research
+claims, funding, approvals or author declarations apply to the AAIE study.
+The SLR cover letter lists databases differently from its manuscript; that
+discrepancy is another reason not to reuse its substantive claims as a template.
+The local SLR bibliography is named references(1).bib while its manuscript calls
+bibliography{references}; no repair was made to the source resources.
+No claim about the completed validity or submission status of the SLR is made.
+
+AAIE EVIDENCE USED
+main.tex; COMPARISON_PROTOCOL.txt; analysis/comparison_results.json;
+comparison_numbers.tex; results_numbers.tex; references.bib; user confirmations
+already recorded in this session. Main-paper methods and results are unchanged.
+
+NOT TRANSFERRED
+SLR corpus counts, pooled effects, screening/quality methodology, affiliations,
+author order, degrees, email/ORCID values, funding, no-conflict declarations,
+author approval, suggested reviewers and not-applicable ethics/consent statements.
+No consequential cross-project research change was made. Requested structural
+adaptation is complete; study-specific assertions await the author response.
+
+OFFICIAL REQUIREMENTS CHECKED
+https://icaaie.org/submission.html
+https://icaaie.org/index.html
+Public instructions specify the full paper and anonymous review, not mandatory
+cover-letter/synopsis/title-page attachments. Portal fields remain behind login.
+
+VALIDATION LIMIT
+Checks are static source/package checks. No TeX/PDF or Mermaid compilation,
+live database operations, uploads, email, staging, commits or pushes were used.

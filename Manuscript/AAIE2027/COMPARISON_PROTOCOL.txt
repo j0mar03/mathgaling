@@ -1,0 +1,110 @@
+APPROVED AND EXECUTED -- 2026-10-18
+
+The user explicitly approved this comparison protocol in the current session:
+"yes already review and approve the comparison protocol".
+The approved proposal is preserved verbatim below and in archive/.
+
+Execution record:
+- Offline comparison completed on the pinned source and frozen four-file input.
+- Isolated source-replay fixtures and metric checks passed before evaluation.
+- Predictions, initialization, shared parameters, input selection, scoring and
+  paired account bootstrap follow the approved proposal.
+- Recorded time and existing session behavior were preserved.
+- Context uses original stored correctness truthiness, including context-only
+  practice rows, as the source queries do. Primary derived outcomes agree with
+  that truthiness for all included records.
+- Source wall-clock calls are replayed at each response's event timestamp;
+  exact historical server latency/concurrency is not reconstructed.
+- No fitting, threshold changes, extra model variants, database operations,
+  application edits, raw-data changes, or post-result tuning were performed.
+- See analysis/comparison_results.json for actual metrics and provenance.
+
+----- ORIGINAL APPROVED PROPOSAL (historical wording retained) -----
+
+PROPOSED PREDICTIVE COMPARISON -- AUTHOR REVIEW REQUIRED -- 2026-10-18
+
+Research question:
+Do the implemented fuzzy adjustments improve prediction of subsequent
+application-graded student answers compared with standard BKT?
+
+This is an offline replay on recorded trajectories. It is not a randomized
+learning-outcome study, and it does not establish which algorithm was deployed.
+
+Prepared inputs (no predictive evaluation has been run):
+- 111 accounts in students_rows.csv; 96 have exported responses; 15 have none.
+- July 2--4, 2025 contains 3,333 records from 92 accounts (34 Grade 3, 58 Grade 4).
+- Proposed primary input: sequential, nonpractice responses in that date window,
+  with account grade 3 or 4: 3,328 records, 92 accounts, 153 items, 14 KCs.
+- Omitting the first target in each student--KC sequence leaves 2,934 candidate
+  subsequent-answer targets. This is a preparation count, not model performance.
+- Known test/demo accounts cannot currently be identified. Account eligibility
+  remains unverified; no account is excluded based on a guess or performance.
+
+Proposed outcome reconstruction:
+Preserve all original CSV fields. In a separate analysis representation, compute
+application-graded correctness from the saved answer and exported answer key
+using the historical client validator extracted from revision 0c407d0.
+The same diagnostic classification is obtained at revision 339f043.
+For the proposed primary input, both validators accept all 3,068 stored true
+responses and reject all 260 blank-label responses. The blank practice record
+accepted by the validator lies outside the sequential/nonpractice input.
+This supports a specified reconstruction, not mathematical expert validation.
+Do not change the Supabase records or original CSVs. No reconstructed dataset
+has yet been saved or adopted. Author approval is required for this policy.
+
+Proposed models:
+1. Standard BKT: existing Bayesian update and transition, without fuzzy changes.
+2. Implemented BKT plus fuzzy adjustments: the identical Bayesian update followed
+   by the existing applyFuzzyAdjustments and documented wrapper behavior.
+Use the same exported KC parameters for both; current values are pL0=0.30,
+pT=0.09, pS=0.10, pG=0.20. No optimization or threshold changes are proposed.
+The BKT utility is byte-identical at the two inspected Git revisions.
+
+Implementation fidelity:
+Pin the source commit and file fingerprints. Verify isolated pure-function
+replay with synthetic fixtures before running on research data. Do not import
+application modules or initialize a DB. Review the wrapper's recent-performance
+windows, inclusion of the just-observed response, cross-KC histories, practice
+records, and session handling. Preserve implemented behavior; document any
+unreconstructable feature rather than silently fixing or inventing it.
+
+Timing proposal:
+For the primary as-implemented replay, pass the recorded time_spent value to
+the implemented rule unchanged. Explicitly report its cumulative timer semantics.
+This evaluates the rule with the recorded input; it does not establish that
+the rule operates on valid item-solving latency. Do not silently difference
+times or retune time thresholds. A time-feature ablation could be supplementary,
+but would be a separate stated model variant requiring direction.
+
+Prediction order:
+Initialize both models at the first available primary-window event for each
+student--KC pair, using the same prior. This initialization is an experimental
+choice, not recovery of historical online mastery. Order by parsed timestamp
+and stable response ID. Calculate p(correct)=L*(1-S)+(1-L)*G before observing
+the current target outcome. Score the same subsequent targets in both models.
+Only after prediction may the current answer, time and hints update mastery.
+Reconstruct recent context using records available by that update time; include
+explicit practice records in context only where the inspected wrapper would.
+Never use future responses or a later saved knowledge state in an earlier step.
+
+Proposed evaluation:
+- Primary metric: paired difference in Brier score (hybrid minus BKT).
+- Secondary metrics: log loss and pooled AUROC, with class counts reported.
+- Report response-weighted and equal-account summaries distinctly.
+- Paired account-cluster bootstrap, 2,000 replicates, fixed seed 20261018, for
+  uncertainty on the primary difference; retain both models' paired observations.
+- No parameter fitting, model selection, or repeated tuning against these results.
+- Report improvement, no clear difference, or deterioration as observed.
+- Confidence intervals are conditional on treating account IDs as clusters;
+  unknown account sharing/test status limits interpretation and generalization.
+
+Still needed for final submission:
+Actual ethics reference/body/date, final cohort description, any known exclusions,
+historical deploy evidence where available, author review of reconstructed-label
+meaning, and final publication-overlap statement.
+
+Approval requested:
+Approve the candidate cohort, separate validator-derived outcomes, unchanged
+recorded-time replay, source-faithful model comparison, and stated evaluation
+before research-data model evaluation. These are consequential methodology
+choices under AGENTS.md; title selection alone is not their approval.

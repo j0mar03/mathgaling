@@ -1,0 +1,63 @@
+% Optional: public AAIE instructions do not request a cover letter.
+% Structure informed by ../SystematicITS/coverletter.tex; all study content is AAIE-specific.
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{parskip}
+\usepackage{xcolor}
+\usepackage[hidelinks]{hyperref}
+\input{submission_details}
+\input{results_numbers}
+\begin{document}
+\thispagestyle{empty}
+\AAIEDraftNotice
+Submission date: \AAIEMissing
+
+To the AAIE2027 Program Committee
+
+\textbf{Subject: Full-paper submission for presentation and proceedings publication}
+
+Dear Program Committee,
+
+Please consider the manuscript entitled ``\AAIEPaperTitle'' for AAIE2027.
+The paper evaluates whether the contextual fuzzy adjustments implemented in an
+elementary mathematics tutor improve subsequent-answer predictions compared with
+the same Bayesian knowledge tracing update without those adjustments.
+
+The source-pinned offline comparison uses \ScoredTargets{} common prediction
+targets from 92 account identifiers, identical fixed BKT parameters and
+prediction-before-update ordering. Standard BKT achieved a Brier score of
+\BktBrier{}, compared with \HybridBrier{} for the adjusted model. The paired
+difference was \BrierDelta{}, with an account-bootstrap 95\% interval of
+[\BrierCILower{}, \BrierCIUpper{}]. The paper reports no clear predictive benefit
+under this configuration and explains the outcome, timing, cohort and deployment
+limitations. It does not claim improved learning outcomes.
+
+The contribution is a reproducible evaluation of an implemented contextual
+adjustment, aligned with the conference's topics of intelligent tutoring systems,
+adaptive learning and educational data mining.
+
+The related earlier paper, ``Adoption of Bayesian Knowledge Tracing With Fuzzy
+Logic in the Development of Personalized Math Learning System for Grade 3 and 4,''
+is cited in the manuscript. It reports system development and teacher evaluation;
+the current manuscript reports a predictive comparison. Its DOI is
+\url{https://doi.org/10.22492/issn.2186-5892.2026.131}.
+
+\textbf{Pending author declarations---complete before using this letter:}
+\begin{description}
+\item[Originality and submission exclusivity:] \AAIEOriginalityConfirmation
+\item[Final approval by all listed authors:] \AAIEAuthorApproval
+\item[Publication-overlap verification:] \AAIEOverlapConfirmation
+\item[Funding:] \AAIEFunding
+\item[Competing interests:] \AAIECompetingInterests
+\end{description}
+Ethics approval is reported by the investigator; the actual approval details and
+consent arrangements must be finalized in the manuscript before submission.
+
+Thank you for considering the paper.
+
+Sincerely,
+
+\AAIECorrespondingName\\
+\AAIEAffiliations\\
+\AAIECorrespondingEmail
+\end{document}

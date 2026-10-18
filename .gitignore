@@ -24,3 +24,12 @@ dist/
 # Operating system files
 .DS_Store
 Thumbs.db
+
+# Windows Zone.Identifier metadata
+*Zone.Identifier*
+
+# Protected local research exports
+/fromSUpabase/
+
+# Generated AAIE manuscript PDFs and source packages
+/Manuscript/AAIE2027/build/

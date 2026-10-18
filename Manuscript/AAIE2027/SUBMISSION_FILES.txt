@@ -1,0 +1,64 @@
+AAIE2027 FILE GUIDE -- 2026-10-18
+
+REQUIRED REVIEW SUBMISSION
+Prepare the current anonymous full-paper PDF in Overleaf from main.tex. The public
+site lists PDF or Word; this project uses PDF. Follow the authenticated portal's
+actual fields. Submit a full paper for presentation AND publication, not the
+abstract-only presentation route. Do not upload a source ZIP instead of the paper.
+Public instructions: https://icaaie.org/submission.html
+Portal: https://confsys.iconf.org/submission/aaie2027
+Deadline on https://icaaie.org/index.html : October 20, 2026; timezone unspecified.
+
+OVERLEAF REVIEW-PAPER SOURCES
+build/overleaf-source.zip contains the same seven anonymous working-source files
+as before this session. Required rendered figures must still be uploaded separately:
+  figures/prediction-order.pdf
+  figures/comparison-workflow.pdf
+See OVERLEAF.txt and SUBMISSION_READINESS.txt for body-text and rendering blockers.
+No PDF has been compiled during preparation of these supporting documents.
+
+NEW AUTHOR SUPPORTING SOURCES -- OPTIONAL, NOT AUTOMATIC REVIEW ATTACHMENTS
+submission_details.tex -- shared author/declaration fields; pending facts in red.
+titlepage.tex -- author metadata sheet for portal entry, or if specifically requested.
+declarations.tex -- study-specific ethics, funding, interests, data access, overlap
+  and AI-assistance draft; not a declaration that unknown facts are established.
+coverletter.tex -- optional committee letter, only if requested/allowed by portal.
+synopsis.tex -- optional author briefing; not the full-paper abstract-only route.
+submission_metadata.txt -- title, abstract and keywords expanded from current main.tex.
+AUTHOR_COMPLETION_FORM.txt -- concise list of facts the author must provide/verify.
+REFERENCE_ADAPTATION.txt -- source inventory, structural relationships and boundaries.
+
+The public AAIE instructions do not list a separate title page, declarations PDF,
+cover letter or synopsis as required initial uploads. Keep identifying sheets out
+of the anonymous review PDF. Do not send unsolicited documents to the committee.
+This guide and draft letters do not send messages or submit anything.
+
+SUPPORTING-SOURCE ZIP
+build/author-support-source.zip is a separate working package. It includes the four
+standalone supporting .tex documents, shared submission_details.tex and generated
+number files, plus the completion/metadata/guidance texts. It excludes the SLR,
+raw CSVs, credentials and analysis inputs. It is not an anonymous review-paper ZIP.
+
+OVERLEAF USE
+Open the supporting ZIP as a separate project, or add its files to your existing
+project. Select titlepage.tex, declarations.tex, coverletter.tex or synopsis.tex
+as the main document to typeset that supporting file. Keep all included inputs in
+the project root. Restore main.tex as the main document for the actual paper.
+All four use article format as administrative documents. Do not replace the IEEE
+class or layout of the conference manuscript with the SLR's Springer formatting.
+
+FINALIZATION ORDER
+1. Complete AUTHOR_COMPLETION_FORM.txt and submission_details.tex from actual facts.
+2. Reconcile those facts with main.tex's ethics/setting/cohort/overlap paragraphs.
+3. Review all results and citations; preserve the approved method and actual results.
+4. Export and upload both diagrams; compile and inspect the anonymous review PDF.
+5. Resolve author notes before hiding them. Remove supporting-draft banners and
+   pending-letter prompts only after each document is truthful and ready to use.
+6. Enter verified author metadata in the portal, upload the required review file,
+   check the submission preview and retain the confirmation receipt/identifier.
+7. After acceptance, follow instructions for identified camera-ready files,
+   publication forms, registration and presentation. Do not assume those files or
+   payments are needed for initial review unless the organizer says so.
+
+Source files still contain pending facts. Creating these files does not resolve
+missing approval references, authorship, setting or a final compiled-PDF check.

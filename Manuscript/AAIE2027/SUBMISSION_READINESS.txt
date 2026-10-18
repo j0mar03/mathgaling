@@ -1,0 +1,135 @@
+AAIE 2027 SUBMISSION READINESS REVIEW
+Checked: 2026-10-18 (Asia/Shanghai)
+Scope: local source files and public conference instructions. No current Overleaf
+PDF was available. No PDF compiled, account accessed or submission made.
+
+VERDICT
+The title and topic fit the published conference scope. The source follows the
+provided IEEE conference class, but the inspected draft is not submission-ready.
+Final page count, visual layout, PDF metadata and embedded fonts are unverified.
+There is no defensible numerical acceptance probability from the available evidence.
+
+PUBLIC RULES AND SOURCES
+https://icaaie.org/index.html
+- Submission deadline: October 20, 2026. No cutoff time/timezone is stated on the
+  inspected page; submit ahead of that date's end rather than assuming a timezone.
+- Notification: November 10, 2026; camera-ready and registration: November 25.
+- Author submission through iConf; PDF or Word files are listed.
+- Double-blind review; the stated similarity-index threshold is below 20 percent.
+- Proceedings publication is described as requiring registration and presentation.
+  Publication/indexing statements are conference claims, not independent guarantees.
+
+https://icaaie.org/submission.html
+- Full papers must contain 5--12 pages including tables, figures and references.
+- Five pages are covered by registration; additional pages cost USD 60 each.
+- Original work, not already published or under submission elsewhere, is required.
+- Abstract-only submission is for presentation without publication. A full paper is
+  appropriate for the author's stated presentation-and-publication objective.
+- Use the linked template and double-blind review format.
+
+https://icaaie.org/cfp.html
+- Explicit relevant topics: Intelligent Tutoring Systems; Adaptive and Personalized
+  Learning Systems; Learning Analytics and Educational Data Mining.
+
+https://confsys.iconf.org/submission/aaie2027
+- Official linked portal opens to login. Fields, file-size limits, supplementary
+  requirements and any separate deadline display were not visible without login.
+  No account was created and no files were uploaded.
+
+https://icaaie.org/reg.html
+- The table currently lists USD 550 for regular student-author registration after
+  September 5, but its registration rules also refer to a full member/non-member
+  registration for each paper. Confirm the applicable accepted-paper category
+  before paying. This is not an initial-upload requirement.
+
+https://conferences.ieeeauthorcenter.ieee.org/author-ethics/guidelines-and-policies/submission-policies/
+- IEEE requires disclosure of AI-generated content, naming the system, affected
+  sections and extent of use. The manuscript already includes such a disclosure;
+  retain an accurate statement after author review.
+
+SOURCE FORMAT FINDINGS
+- main.tex uses documentclass[conference]{IEEEtran}, as does the official template.
+- Bundled IEEEtran.cls is byte-identical to the class in the previously downloaded
+  official https://icaaie.org/IEEE-Latex.zip, inspected again during this review.
+- Abstract, keywords, numbered sections, figures, equations, tables and IEEEtran
+  bibliography style are present. No custom geometry or font-size reduction found.
+- Anonymous author block is present. Prior work is cited in the third person.
+- There are 21 unique BibTeX entries; all citation keys resolve.
+- The local Overleaf source ZIP matches its seven current source files.
+- No current compiled-PDF format compliance is established by these source checks.
+
+REQUIRED BEFORE UPLOADING THE REVIEW PDF
+1. Complete the truthful ethics statement: approving body/reference/date as
+   applicable, and actual consent/assent arrangements. Anonymize identifying details
+   as needed for blind review without inventing or suppressing material facts.
+2. Describe the collection setting and eligibility criteria. Reconcile account IDs
+   against authorized study records where possible. If participant verification or
+   test-account identification remains unavailable, report that limitation clearly;
+   do not silently relabel 92 accounts as 92 verified student participants.
+3. Verify and finalize the relationship to the IAFOR publication and any shared
+   data/material. Keep the earlier citation and explain the new comparison; do not
+   recycle earlier survey results as new findings. A similarity report is not a
+   substitute for an original contribution or proper attribution.
+4. Export the revised diagrams and upload these files into the Overleaf project:
+     figures/prediction-order.pdf
+     figures/comparison-workflow.pdf
+   Neither export exists in the inspected local figures directory. If PNG is used,
+   update the matching include filename in Overleaf; current commands expect PDF.
+5. Resolve both draftnote callouts, then change workingdrafttrue to workingdraftfalse.
+   This switch only hides callouts: it does not complete missing ethics text in the
+   body or fix any other unresolved research detail.
+6. Independently review the analysis, references and wording. Replace the final
+   acknowledgment's author-workflow instruction with an accurate final disclosure
+   after the review actually occurs. Preserve the required disclosure of assistance.
+7. Compile in Overleaf and inspect the CURRENT comparative PDF: 5--12 pages total,
+   no diagram placeholders or red notes, no unresolved references, readable figures
+   and tables, no clipped text or overfull lines, and no stale audit-paper content.
+   Do not use build/main.pdf: it predates the comparative manuscript.
+8. Keep the review PDF anonymous. Check document properties and filenames for
+   identifying author details. Keep self-citations as normal third-person scholarly
+   references unless the organizer supplies a more specific instruction.
+9. Run an authorized similarity check if available. The conference states below
+   20 percent; no similarity score has been measured by this inspection.
+
+FILES AND INFORMATION TO PREPARE
+- Initial review upload: current anonymous compiled full-paper PDF, for example
+  AAIE2027_BKT_Fuzzy_Anonymous.pdf. The site also permits Word, but PDF fits this
+  LaTeX workflow. Do not substitute the Overleaf source ZIP for the review PDF.
+- Portal metadata ready to enter: exact title, abstract, keywords, author names,
+  affiliations and corresponding-author email, subject to the actual portal fields.
+  Real author metadata in the portal is separate from the anonymous review PDF.
+- Local working source: main.tex, references.bib, comparison_numbers.tex,
+  results_numbers.tex, IEEEtran.cls and both rendered figures. diagrams.md remains
+  editable figure source; Mermaid is not directly typeset by Overleaf.
+- Keep ethics documentation, study-roster reconciliation, the earlier publication
+  and reproducibility records privately available for legitimate editorial queries.
+  Do not upload student CSVs, credentials or database exports by default.
+- After acceptance: revised identified camera-ready paper, required source files,
+  copyright/publication forms, registration and presentation preparation according
+  to the acceptance instructions. PDF eXpress is not specified on the public pages
+  inspected; follow any later official instructions rather than assume it is due now.
+
+RESEARCH ASSESSMENT (REVIEWER-STYLE JUDGMENT, NOT AN ACCEPTANCE FORECAST)
+Strengths: direct conference fit; explicit incremental-comparison question; common
+targets and parameters; prediction-before-update ordering; paired uncertainty;
+source fingerprints; transparent reporting of the unfavorable/uncertain finding.
+Main concerns: modest scope/novelty, fixed rather than fitted BKT parameters, no
+additional predictive baseline or component ablations, application-reconstructed
+outcomes, unknown account eligibility, cumulative timing inputs and unverified
+historical deployment of the replayed Express path. Pooled AUROC is near 0.5 for
+both models; probability losses and the result need careful, narrow interpretation.
+A confidence interval spanning zero does not establish equivalence or prove that
+all fuzzy methods fail. A negative result can be useful, but transparency alone
+does not guarantee acceptance. Do not add post-result tuning or new analyses
+silently; any such extension requires an explicitly specified separate evaluation.
+No reliable official acceptance-rate data was found on the inspected conference
+pages or targeted search. A percentage such as 70 or 90 would be unsupported.
+
+PROJECT MEMORY PROPOSALS
+RESEARCH_STATUS.md: record source-format compatibility and submission blockers;
+the current rendered PDF has not been inspected.
+TODO.md: complete ethics/setting/cohort/overlap review, export figures, compile and
+check the anonymous PDF and confirm portal requirements before the deadline.
+DECISIONS.md: distinguish the anonymous review PDF from the Overleaf working ZIP;
+keep the approved comparison unchanged during submission-format preparation.
+These are proposals; existing root project-memory files remain preserved.

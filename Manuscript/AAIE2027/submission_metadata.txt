@@ -1,0 +1,30 @@
+AAIE2027 PORTAL METADATA DRAFT -- 2026-10-18
+Title, abstract and keywords expanded directly from current main.tex.
+Refresh if the main manuscript changes. No portal-specific field limits
+have been verified behind login. Complete body-text blockers first.
+
+TITLE
+Do Fuzzy Adjustments Improve Bayesian Knowledge Tracing in an Elementary Mathematics Intelligent Tutoring System?
+
+ABSTRACT
+Contextual adjustments to Bayesian knowledge tracing (BKT) require evaluation against the same model without those adjustments. This study examines whether the fuzzy adjustments implemented in an elementary mathematics tutor improve prediction of subsequent application-graded answers. An offline replay retained 3,328 sequential nonpractice responses from 92 Grade 3–4 account identifiers during July 2–4, 2025, yielding 2,934 subsequent-answer targets. Both models used identical fixed BKT parameters, initialization and targets. The comparison extracted the implemented adjustment and update wrapper from a pinned source revision, retained recorded time inputs, and predicted each target before using its outcome or context to update mastery. Standard BKT achieved a Brier score of 0.09147, compared with 0.09222 for the hybrid. The hybrid-minus-BKT difference was +0.00074, with a paired account-cluster bootstrap 95% interval of [-0.00038, +0.00193]. Log loss was slightly higher for the hybrid, while pooled AUROC was slightly higher; both AUROC estimates were near 0.5. Equal-account probability-loss summaries also favored BKT. The interval includes zero, providing no clear evidence of predictive benefit from the implemented adjustments in this replay. Validator-derived outcomes, cumulative timing, unknown account eligibility and unverified historical deployment restrict interpretation. The result concerns a fixed implementation on recorded trajectories and does not establish learning gains or the value of alternative fuzzy designs.
+
+KEYWORDS
+Bayesian knowledge tracing, fuzzy adjustments, intelligent tutoring systems, student modeling, elementary mathematics, predictive evaluation
+
+AUTHOR METADATA
+Author names/order: Not yet documented
+Affiliations: Not yet documented
+Corresponding author/email: Not yet documented
+ORCID identifiers (if used): Not yet documented
+
+RELEVANT TOPICS
+Intelligent Tutoring Systems (ITS)
+Adaptive and Personalized Learning Systems
+Learning Analytics and Educational Data Mining
+Select the actual matching topic(s) offered by the submission portal.
+
+SUBMISSION ROUTE
+Full paper for presentation and proceedings publication.
+Attach the current anonymous compiled paper PDF; do not attach this text
+or any author sheet unless the portal specifically requests it.

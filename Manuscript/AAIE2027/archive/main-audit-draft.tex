@@ -1,0 +1,242 @@
+% AAIE 2027 working manuscript. Research direction awaits author confirmation.
+% Use the official IEEE conference class; preserve the existing IAFOR manuscript.
+\documentclass[conference]{IEEEtran}
+\usepackage{cite}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage{xcolor}
+\input{evidence_numbers}
+\newif\ifworkingdraft
+\workingdrafttrue
+\newcommand{\draftnote}[1]{\ifworkingdraft\par\noindent\textcolor{red}{\textbf{Author review:} #1}\par\fi}
+% Mermaid sources are in figures/diagrams.md. Export each diagram separately
+% and upload the named PDF to Overleaf. Until then, a visible placeholder
+% preserves the caption and reference without requiring a missing image file.
+\newcommand{\externaldiagram}[1]{%
+  \IfFileExists{#1}{\includegraphics[width=\columnwidth]{#1}}{%
+    \fbox{\parbox{0.9\columnwidth}{\centering\small
+      Export the corresponding Mermaid diagram from
+      \texttt{figures/diagrams.md} and upload it as
+      \texttt{\detokenize{#1}}.}}}}
+\begin{document}
+\title{Auditing Interaction Logs for Knowledge Tracing in an Elementary Mathematics Tutor}
+\author{\IEEEauthorblockN{Anonymous submission draft}}
+\maketitle
+\draftnote{Working draft for review, not a submission-ready paper. Confirm the retrospective audit research direction, participant/cohort description, ethics reference, historical deployed version, and the overlap statement before submission. No predictive model comparison has been performed.}
+
+\begin{abstract}
+Interaction logs from intelligent tutoring systems can support knowledge tracing only when their recorded outcomes, timing measures, and skill mappings have interpretable meanings. This paper presents a retrospective, read-only audit of three relational exports from an elementary mathematics tutor. The full export contains \ResponseCount{} responses associated with \StudentIDCount{} student identifiers, \ObservedItemCount{} answered items, and \ObservedKCCount{} knowledge components. All response records link to exported items and components, and response identifiers are unique. However, the correctness field contains \TrueCount{} true values, \BlankCount{} missing values, and no explicit false values. Diagnostic replay of the current client validator accepts every stored true response and one missing-label practice response. Inspection of the current API identifies a Boolean fallback that could explain lost false values; historical deployment equivalence remains unverified. The current client also records an accumulating quiz timer, limiting the interpretation of stored time as item response latency. Most student--component sequences contain eight records, and recorded attempt counts provide no retry variation. These findings identify prerequisites for reproducible predictive evaluation and distinguish structural completeness from measurement validity. They do not establish comparative model performance or learning gains.
+\end{abstract}
+\begin{IEEEkeywords}
+intelligent tutoring systems, knowledge tracing, learning analytics, data quality, elementary mathematics, reproducibility
+\end{IEEEkeywords}
+
+\section{Introduction}
+An intelligent tutoring system can produce apparently complete records while leaving the educational meaning of those records uncertain. A response may have a learner identifier, an item identifier, a timestamp, and an answer, yet still lack an interpretable correctness label or a valid item response time. These distinctions matter when operational records are reused to compare student models. A model comparison may otherwise measure differences in preprocessing assumptions rather than differences in the models themselves.
+
+Knowledge tracing represents the evolution of skill knowledge through successive learning opportunities. The foundational work of Corbett and Anderson maintains probabilities of skill acquisition and uses them to individualize practice \cite{corbett1994}. Applying such a model to an existing tutor requires an ordered relation among learners, opportunities, knowledge components (KCs), and observed outcomes. Extensions that use contextual information impose additional requirements on how hints, attempts, and time are measured.
+
+Choosing a student model also depends on its intended use and the structure of the learning process. Pel{\'{a}}nek situates Bayesian and logistic learner models within this broader modeling context and discusses corresponding evaluation issues \cite{pelanek2017}. This motivates examining the meaning and provenance of the available observations before treating an operational export as a benchmark dataset.
+
+This paper examines these requirements in an elementary mathematics tutoring application developed for Grades 3 and 4 in the Philippines. A previous publication on Math Tagumpay describes the system and its evaluation through teacher ratings \cite{ruiz2026}. The present investigation concerns the readiness of exported interaction records for subsequent knowledge-tracing analysis. Teacher evaluation and the validity of recorded behavioral measurements address different questions. Favorable perceptions do not, by themselves, establish that a field labeled response time measures item latency or that an omitted outcome can safely be interpreted as an incorrect answer.
+
+The contribution is an empirical case audit connecting observed export properties to the currently available client and API implementations. It provides three linked outputs: a reproducible structural and sequence audit; diagnostic evidence about the semantics of stored outcomes and interaction fields; and an evidence-to-validity mapping that identifies what must be resolved before comparing knowledge-tracing models. The study asks:
+\begin{enumerate}
+\item Are response records structurally complete and linked to usable item and KC information?
+\item Do stored correctness, time, and interaction fields support their intended interpretations?
+\item Which requirements remain unresolved before a reproducible knowledge-tracing comparison can be conducted?
+\end{enumerate}
+The findings support specific decisions about what can be reported from the exports and what requires additional provenance. They are descriptive findings about the audited snapshot, rather than evidence that a particular adaptive algorithm improves learning.
+
+\section{Background and Relationship to Prior Work}
+\subsection{Knowledge Tracing and Evaluation}
+For a conventional binary-outcome BKT model, let $L_t$ be the probability of mastery before opportunity $t$, and let $S$ and $G$ denote slip and guess probabilities. The predicted probability of a correct response is
+\begin{equation}
+\widehat{p}_t=L_t(1-S)+(1-L_t)G.
+\label{eq:prediction}
+\end{equation}
+The observed response then conditions the knowledge estimate, followed by a learning transition. This ordering distinguishes a prediction from an estimate calculated after seeing the outcome. A retrospective evaluation requires outcomes that preserve their intended meaning and a chronology that prevents future information from entering a current prediction.
+
+Gervet et al. compare learner-performance models across nine datasets and examine the conditions under which different approaches perform well, including dataset characteristics and model calibration \cite{gervet2020}. This evidence supports evaluating models in relation to the available data rather than assuming that greater architectural complexity will produce a better model for a particular tutor. It does not establish which approach would perform best on the export audited here.
+
+Sarsa, Leinonen, and Hellas show through empirical evaluation that knowledge-tracing comparisons depend on evaluation metrics, preprocessing and sequence-length choices, and replication conditions, as well as model architecture \cite{sarsa2022}. Their results motivate reporting simple baselines and an explicit evaluation protocol. The present study addresses an earlier requirement: whether the recorded variables are suitable inputs and targets for such a protocol. No ranking of predictive models is attempted here.
+
+The pyKT benchmark similarly standardizes preprocessing and evaluation, and identifies evaluation settings that can leak labels and inflate reported performance \cite{liu2022pykt}. Benchmark standardization addresses comparability once records have an agreed interpretation. The present case examines the preceding measurement boundary: whether a field actually encodes an observed outcome or duration in the way an evaluation assumes. Its contribution is specific to the audited application and is not a claim that a new predictive architecture or a universally validated audit instrument has been developed.
+
+Liu et al. subsequently introduce simpleKT as a reproducible baseline using question-specific variation and attention, with evaluation through the pyKT framework \cite{liu2023simplekt}. Together, these studies establish a reason to use explicit baselines and common protocols in a future predictive comparison. The present audit supplies neither a benchmark score nor evidence that any of those models can be reliably evaluated before the outcome and timing issues are resolved.
+
+\subsection{Contextual Student Modeling}
+Baker, Corbett, and Aleven estimate slip and guess probabilities from interaction context within BKT \cite{baker2008context}. Their study establishes a concrete precedent for using contextual information in student modeling. That approach differs from the conditional mastery adjustments in the inspected application: evidence for context-dependent slip and guess does not validate the local adjustment rules or their thresholds. The relevant question for this audit is whether the exported fields actually measure the context those local rules expect.
+
+\subsection{Documenting Operational Data}
+Gebru et al. propose documenting dataset motivation, composition, collection, and intended uses to improve transparency \cite{gebru2021}. For tutoring logs, composition alone is insufficient. The application code can determine whether an outcome is stored, whether an attempt count reflects observed retries, and where a timing interval starts and ends. Accordingly, the audit combines tabular checks with targeted inspection of the available recording paths. Source inspection is treated as evidence about the inspected implementation; it does not certify that the same revision generated every historical record.
+
+Breck et al. describe production data validation for machine-learning pipelines and show why input-data anomalies warrant attention alongside model algorithms \cite{breck2019validation}. The present audit applies that concern to an educational recording process. Its checks extend beyond whether a value satisfies a schema: a populated numeric field can be unsuitable for an analysis if it measures cumulative activity while the analyst assumes item latency. The analogy motivates the audit; it is not evidence that the production validation system in that work was deployed in this tutor.
+
+Missing outcomes require a further distinction between the amount of missingness and the process producing it. Rubin establishes conditions under which a missing-data mechanism can be ignored for inference \cite{rubin1976}. Here, a possible outcome-dependent recording path makes it inappropriate to assume ignorability solely from a missingness percentage. The audit does not identify a formal missingness mechanism from the export or perform an imputation analysis; it retains missing values and investigates their recording context.
+
+\subsection{Distinction from the Earlier System Paper}
+The earlier Math Tagumpay publication evaluates system development and teacher acceptance \cite{ruiz2026}. The present study analyzes exported student-linked interaction records and recording semantics. It does not reuse the earlier survey results as new observations. The new empirical material consists of export integrity, missingness, diagnostic validator agreement, temporal-field interpretation, and sequence coverage. The relationship between the student collection and the earlier implementation period must be described explicitly in the final manuscript.
+\draftnote{Confirm the exact relationship between the July student collection and the earlier teacher evaluation, including whether any interaction-log results have already appeared in another publication.}
+
+\section{Materials and Audit Procedure}
+\subsection{Data Sources and Unit of Analysis}
+Three CSV files exported from Supabase were supplied: responses, content items, and knowledge components. They contain \ResponseCount{}, \CatalogItemCount{}, and \CatalogKCCount{} rows, respectively. The response export includes student and item identifiers, saved answers, correctness, time spent, interaction metadata, and creation and update timestamps. The item export provides item content, difficulty, answer keys, options, and KC links. The KC export provides grade metadata and parameter metadata.
+
+The investigator confirms that actual student data collection occurred on July 2--4, 2025 and reports ethics approval covering the follow-up analysis. The complete response export extends from May 24, 2025 to March 3, 2026; \DayWindowRows{} records have UTC dates of July 2--4, 2025. The audit preserves the full export to make its composition and out-of-window records visible. A timestamp window alone is not used to verify participant eligibility. The \StudentIDCount{} distinct identifiers are therefore reported as database identifiers rather than a verified number of independent participants.
+
+The response record is the basic audit unit. Additional descriptive units are an item, a KC, and a student--KC sequence. A sequence contains the records sharing a student identifier and the KC linked through the item table. It does not necessarily represent a distinct lesson or an independently observed learning episode. Grade labels refer to item-linked KCs, not independently verified student enrollment.
+\draftnote{Insert the ethics committee, approval reference/date, consent and assent arrangements where applicable, collection setting, eligible participant count, and confirmed timezone. These details are not inferred from the database.}
+
+\subsection{Read-Only Processing and Provenance}
+Figure~\ref{fig:audit-workflow} summarizes the audit. The workflow preserves the full export and separates observations from code-based explanations; it does not impute labels or remove out-of-window records.
+
+\begin{figure}[t]
+\centering
+\externaldiagram{figures/audit-workflow.pdf}
+\caption{Read-only audit workflow. Export measurements and current-source diagnostics converge in an evidence-to-validity mapping. Historical deployment equivalence remains an unresolved provenance question.}
+\label{fig:audit-workflow}
+\end{figure}
+
+The files were parsed with Python's CSV reader using UTF-8 handling. The audit records file sizes, SHA-256 fingerprints, column names, row counts, missing values, malformed rows, and duplicate identifiers and complete rows. Fingerprints were checked again after processing. Neither the source files nor the database were changed.
+
+The analysis uses Python 3.11.8 and Node.js 22.17.0. Node.js executes only the extracted current client answer-validation function over in-memory inputs; it does not initialize application modules or connect to Supabase. Aggregate audit results and fingerprints of the relevant local source files are generated separately from the raw exports. The historical deployed commit and the original export execution time are not yet documented. These omissions limit historical causal attribution even though the analyzed snapshot is identifiable.
+
+\subsection{Structural Integrity and Coverage}
+Response identifiers and complete rows were checked for duplication. Each response item identifier was joined to the item catalog, and each corresponding KC identifier was joined to the KC catalog. Missingness was examined in the response fields and relevant item metadata. Coverage was summarized by distinct student, item, and KC identifiers, response counts per student, and student--KC sequence length. Repeated student--item combinations were counted as repetitions, not automatically classified as duplicate events or removed.
+
+\subsection{Outcome Semantics}
+The stored correctness field was tabulated without converting missing values to false. Saved answers were then compared with the current exported answer keys using the current client validator. The replay is a recording diagnostic, not an independent expert judgment of mathematical correctness. In particular, string normalization and permissive matching rules can explain agreement without establishing the validity of those rules.
+
+The relevant API expression was inspected to determine whether its JavaScript semantics could produce a pattern compatible with the observed missingness. Logical OR returns its right operand when its left operand is falsy; it is not restricted to testing whether a field is absent \cite{mdnOR}. A compatibility argument is distinguished from proof that a particular API revision generated a particular row. No reconstructed outcome labels were written to an analysis dataset.
+
+\subsection{Temporal and Interaction Semantics}
+Creation timestamps were parsed and checked for duplicate timestamps within students. Stored time values were summarized, and the client timer's increment and reset locations were inspected. To describe successive records, student histories were ordered chronologically and split at gaps exceeding 30 minutes. This is an exploratory grouping convention, not a validated definition of a quiz or pedagogical session. Within these groups, successive stored times were classified as increases, decreases, or ties.
+
+JSON interaction fields were parsed to inspect key presence and the distributions of attempts, hint requests, practice flags, and quiz modes. Missing mode information was retained as unknown. The audit did not infer that the absence of a practice flag proves a response was part of the study or that a constant attempt count represents successful first-attempt performance.
+
+\section{Results}
+\subsection{Structural Integrity and Catalog Coverage}
+Table~\ref{tab:inventory} summarizes the export. No malformed CSV rows, duplicate response identifiers, or identical duplicate response rows were found. All \ResponseCount{} response records map to an exported item and an exported KC. All have student and item identifiers, saved answers, time values, interaction metadata, and creation timestamps. Timestamps parse successfully, and no student has two responses with identical creation timestamps.
+
+\begin{table}[t]
+\caption{Full-Export Inventory and Observed Coverage}
+\label{tab:inventory}
+\centering
+\begin{tabular}{lr}
+\hline
+Measure & Count \\
+\hline
+Response records & \ResponseCount{} \\
+Distinct student identifiers & \StudentIDCount{} \\
+Catalog items / answered items & \CatalogItemCount{} / \ObservedItemCount{} \\
+Catalog KCs / observed KCs & \CatalogKCCount{} / \ObservedKCCount{} \\
+Student--KC sequences & \SequenceCount{} \\
+Sequences of exactly eight records & \EightSequenceCount{} \\
+Repeated student--item records beyond first & \RepeatCount{} \\
+Responses with missing item or KC links & 0 \\
+\hline
+\end{tabular}
+\end{table}
+
+Three catalog items lack KC links and one lacks difficulty metadata. None of these catalog gaps affects an observed response: every answered item has both a KC link and difficulty. All observed responses concern multiple-choice items. Item-linked grade metadata assigns 1,676 responses to Grade 3 components and 2,034 to Grade 4 components. These are content classifications, not demographic counts.
+
+\subsection{Correctness Missingness and Validator Replay}
+The stored correctness field has \TrueCount{} true values and \BlankCount{} blanks (\BlankPercent{}\% of responses), with no explicit false values. Omitting missing outcomes would therefore leave only the positive class. Such a complete-case subset cannot support a meaningful binary discrimination comparison between correct and incorrect outcomes.
+
+Diagnostic replay accepts all \TrueCount{} stored true responses. Among the blank records, it rejects 382 and accepts one. The accepted blank is marked as a practice response. Table~\ref{tab:labels} separates observed storage labels from the diagnostic output. The validator acceptance column must not be interpreted as independently adjudicated truth.
+
+\begin{table}[t]
+\caption{Stored Labels and Current-Validator Diagnostic}
+\label{tab:labels}
+\centering
+\begin{tabular}{lrr}
+\hline
+Stored correctness & Validator accepts & Validator rejects \\
+\hline
+True & \TrueCount{} & 0 \\
+Blank & 1 & 382 \\
+False & 0 & 0 \\
+\hline
+\end{tabular}
+\end{table}
+
+The inspected Netlify recording path obtains correctness through a logical-OR expression combining two alternative input names. When the first input is false and the alternative is absent, the expression yields an undefined value rather than false. This behavior offers a plausible mechanism for missing negative outcomes. It does not prove the historical write path or explain every row without deployment provenance.
+
+Exact answer-string comparison alone would also misrepresent the current application behavior: 61 stored true answers differ from their current answer-key strings, while all 61 are accepted by the validator. In the full catalog, 40 multiple-choice items have no exact string match between the answer key and an option; 46 response records concern these items. These observations warrant semantic review, but are not themselves a count of erroneous questions. Recorded item-update timestamps do not postdate the corresponding responses, although this does not establish that answer keys were historically immutable.
+
+\subsection{Timing and Interaction Fields}
+Stored time values range from 2 to 664, with median 33. The current client increments the timer once per second. However, it resets the timer when starting or restarting a quiz rather than after each question. Thus a stored value can contain time from preceding questions. The current implementation supports interpreting it as elapsed quiz time, subject to confirmation that the historical deployment used this recording path.
+
+The exploratory 30-minute gap grouping yields \DescriptiveSessionCount{} groups and 3,602 within-group successive-record comparisons. Stored time increases in \TimerIncreaseCount{} comparisons and decreases in \TimerDecreaseCount{}, with no ties. The minimum inter-record gap is approximately 0.084 seconds and the median is approximately 6.27 seconds. These server-record intervals and cumulative timer values are different measurements. Neither is automatically equivalent to active time spent solving a single item.
+
+The interaction metadata include \SequentialCount{} records marked sequential and \PracticeCount{} explicitly marked practice. Another 142 records contain neither mode marker. Attempts are recorded as one in all \AttemptRecordedCount{} records where that field exists; it is absent in the 30 practice records. The current quiz client supplies a literal value of one, so the field does not demonstrate observed retry frequency. Hint requests are zero in 3,466 records, one in \HintOneCount{}, and absent in 30. Their historical capture semantics still require confirmation before behavioral interpretation.
+
+\subsection{Sequence Coverage and Algorithm Provenance}
+The export contains \SequenceCount{} student--KC sequences. Of these, \EightSequenceCount{} contain exactly eight records. The median number of responses per student identifier is 32, with a range of 8--120. There are \RepeatCount{} records beyond the first occurrence of a student--item pair. These repetitions may be legitimate revisits and were retained.
+
+All \CatalogKCCount{} exported KCs contain the same BKT parameter values: initial mastery 0.30, learning transition 0.09, slip 0.10, and guess 0.20. This records configuration, not calibration evidence. The local Express utility implements a Bayesian update with additional conditional adjustments involving time, difficulty, hints, attempts, and recent performance. The local Netlify response handler instead applies an increment or decrement to mastery. Historical deployment equivalence between these paths has not been established. Consequently, the existence of BKT metadata does not establish which update generated the original learning sequence.
+
+\section{Discussion}
+\subsection{Structural Completeness Is Only One Requirement}
+The export passes basic relational checks while failing to resolve important measurement questions. Every response can be joined to an item and a KC, but the outcome field does not preserve an explicit negative class. Similarly, a fully populated time column can contain a cumulative interval rather than item latency. This case illustrates why a readiness assessment should distinguish a present value from an interpretable measurement.
+
+The outcome-label pattern has a direct consequence for evaluation design. Dropping missing labels produces a single-class subset; treating all blanks as incorrect introduces an assumption contradicted by at least one current-validator diagnostic. Neither action should be hidden inside preprocessing. A defensible reconstruction would retain the original field, define a separate derived label, document the rule and exceptions, and assess the influence of ambiguous records. The present audit identifies that requirement without adopting a reconstruction policy.
+
+\subsection{Implications for Contextual Mastery Adjustments}
+Using elapsed quiz time as if it were item latency could systematically penalize later questions. Even when later and earlier questions require equal effort, the later response may carry a larger accumulated timer value. A model using that field may then respond to position in the quiz rather than solving speed. Figure~\ref{fig:timer-semantics} illustrates this distinction without assigning synthetic durations to the study data. Differencing consecutive values is only a candidate reconstruction: transitions between questions, feedback viewing, timer resets, and changes of quiz context can contribute to the difference. No corrected timing variable is claimed here.
+
+\begin{figure}[t]
+\centering
+\externaldiagram{figures/timer-semantics.pdf}
+\caption{Schematic interpretation of the current client timer. A later saved value includes earlier quiz activity. Differences between cumulative values can also include feedback and navigation; they are not established measurements of item-solving latency. The diagram represents inspected code behavior, not a verified historical trace.}
+\label{fig:timer-semantics}
+\end{figure}
+
+The constant attempt field creates a related problem. A factor can be present in an algorithm and present in the database while contributing no observed variation. A follow-up ablation must therefore distinguish implemented branches from empirically exercised branches. An algorithm comparison using these records cannot substantiate a contribution from observed retries when retry behavior was not measured by that field.
+
+\subsection{Evidence-to-Validity Mapping}
+Table~\ref{tab:validity} links each principal observation to the interpretation it affects. These implications follow from the observed recording structure and the intended predictive task; they are not measured effect sizes. The mapping makes the practical contribution explicit: a structurally complete export can still require outcome reconstruction, measurement qualification, or source-version verification before it supports a particular analysis.
+
+\begin{table*}[t]
+\caption{Observed Evidence, Affected Interpretation, and Required Resolution}
+\label{tab:validity}
+\centering
+\small
+\begin{tabular}{p{0.28\textwidth}p{0.30\textwidth}p{0.34\textwidth}}
+\hline
+Observed evidence & Affected interpretation & Required resolution before predictive evaluation \\
+\hline
+\BlankCount{} blank outcomes and no explicit false values & Complete-case filtering leaves a single observed outcome class & Review recording provenance and specify any derived labels separately from original values. \\
+One blank practice record accepted by the current validator & A blanket blank-to-false conversion lacks complete diagnostic agreement & Adjudicate exceptions and report sensitivity to ambiguous records. \\
+Current timer continues across questions & Stored time is not established item latency & Verify historical timer semantics; justify a reconstruction or omit the feature. \\
+All recorded attempts equal one; client supplies a constant & Recorded attempts do not measure retry variation & Limit claims about attempt-aware adaptation and document instrumentation. \\
+Distinct Express and Netlify mastery updates & Parameter metadata alone do not identify the deployed algorithm & Identify the historical deployed revision and the update path it executed. \\
+\StudentIDCount{} identifiers across a broader export period & Database IDs and timestamps do not alone verify the study cohort & Reconcile identifiers with an authorized roster and document inclusion rules. \\
+\hline
+\end{tabular}
+\end{table*}
+
+\subsection{Requirements for a Subsequent Predictive Study}
+A subsequent comparison should first verify cohort membership and the historical deployment. It should then establish a separate label-reconstruction specification, review answer-key ambiguities, and decide whether timing supports reconstruction or must be omitted. These choices should precede model selection and be reported with the resulting inclusion counts.
+
+The predictive target must also be explicit. Equation~\ref{eq:prediction} concerns a future response probability, whereas a post-response mastery value already incorporates the current outcome. A future evaluation should score the prediction before updating on the target response and should prevent the target answer or its time from entering that prediction. Student-separated evaluation and uncertainty estimates that respect within-student dependence are candidate design choices requiring a complete protocol. An offline comparison would assess prediction on recorded trajectories; it would not estimate how different adaptation policies would have changed students' experiences or learning outcomes.
+
+\section{Limitations, Ethics, and Reproducibility}
+The study concerns one application and one supplied export snapshot. It does not estimate the prevalence of these issues across tutoring systems. Database identifiers have not been reconciled with a study roster, and records outside the confirmed collection dates may include other uses. The results therefore avoid treating every identifier as an independently verified participant. Current source code and exported answer keys are available, but the historical deployed revision, export execution time, and independent answer adjudication are not yet documented.
+
+The investigator reports existing ethics approval for the secondary analysis. The final ethics statement requires the actual approval reference and applicable consent and assent details. The analysis does not publish student identifiers or answer-level records. Raw exports remain restricted local materials; aggregate reporting and source fingerprints support verification without implying unrestricted data availability. Whether any further controlled sharing is permissible depends on the actual approval and institutional requirements.
+
+The read-only audit script and aggregate outputs provide a reproducible computational record for the supplied files. Integrity, joins, missingness, validator replay, and sequence counts can be regenerated from those files and the fingerprinted source revision. This reproducibility is conditional on authorized access to the original inputs; no public dataset release or archival code deposit has yet been made. No inferential tests, model fitting, parameter calibration, or learning-effect estimates were performed.
+
+\section{Conclusion}
+A retrospective audit of \ResponseCount{} tutoring responses found complete response-to-item and response-to-KC linkage alongside unresolved outcome and timing semantics. Missing negative labels, a cumulative timer, constant recorded attempts, and uncertain deployment provenance limit the immediate interpretation of the logs for knowledge-tracing comparison. Diagnostic agreement with the current client helps locate these issues but does not independently validate mathematical correctness or historical execution. The resulting evidence identifies concrete prerequisites for a subsequent predictive study while preserving the original records and separating software configuration from empirical model validation.
+
+\section*{Acknowledgment}
+OpenAI Codex assisted in preparing the audit scripts, drafting and revising Sections I--VII, preparing the tables, and preparing the Mermaid sources for Figs.~\ref{fig:audit-workflow} and~\ref{fig:timer-semantics}. The assistance included code and text generation, not only proofreading. No predictive model results were generated or substituted for observed audit findings.
+\draftnote{Independently verify the scripts, reported results, references, diagram exports, and final text. Revise the assistance statement if the final sections or figures change. Complete author review is required before submission.}
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+\end{document}

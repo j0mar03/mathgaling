@@ -1,0 +1,61 @@
+AAIE2027 AUTHOR COMPLETION FORM -- 2026-10-18
+Complete from this study's own records. Unknown means Not yet documented.
+Do not include student names, authentication identifiers or raw answers here.
+Administrative drafts are in titlepage.tex, declarations.tex and coverletter.tex;
+their shared editable values are in submission_details.tex.
+
+1. AUTHORS AND APPROVAL
+Exact author names and publication order: Not yet documented
+Affiliation(s), city and country for each author: Not yet documented
+Corresponding author name and email: Not yet documented
+ORCID(s), if used: Not yet documented
+Actual contributions by each author to THIS paper: Not yet documented
+Final approval and consent to submit by all listed authors: Not yet documented
+
+SystematicITS/titlepage.tex names Jomar B. Ruiz and Frescian C. Ruiz.
+That is evidence for the SLR draft's author list only. Confirm separately for AAIE.
+No coauthor, degree suffix, institution, email or ORCID was automatically imported.
+
+2. ETHICS AND COLLECTION
+Investigator reports approval for the follow-up: confirmed in this conversation.
+Approving body: Not yet documented
+Approval reference/number (if issued): Not yet documented
+Approval date: Not yet documented
+Coverage of the original collection and retrospective comparison: provide the
+actual scope or amendment details from the approval; do not infer from the SLR.
+Parent/guardian permission and student assent arrangements, or actual approved
+waiver if applicable: Not yet documented
+Any required publication consent arrangements: Not yet documented
+Setting (school/classroom context; anonymize as needed): Not yet documented
+Collection dates: July 2--4, 2025, investigator-confirmed.
+Eligibility criteria and grade verification: Not yet documented
+Whether 92 account IDs map to 92 eligible, distinct participants: Not yet documented
+Known test/demo accounts, sharing or repeated accounts: Not yet documented
+Keep supporting approval letters and rosters private; share only necessary
+non-identifying details for drafting. No raw data modification is requested.
+
+3. DECLARATIONS
+Funding for THIS study, including grant number if any, or verified no-funding
+statement: Not yet documented
+Financial/non-financial competing interests or verified absence: Not yet documented
+Conditions governing any code/data release or external access: Not yet documented
+Do not promise protected records on request without authorized access conditions.
+Originality and absence of concurrent submission of THIS paper: Not yet documented
+Exact overlap of data/text/figures/results with previous publications: Not yet documented
+Author's independent verification of analysis and cited claims: Not yet documented
+
+4. KNOWN RELATED PUBLICATION
+Ruiz (2026), ACE2025 official proceedings, pages 1719--1726.
+Adoption of Bayesian Knowledge Tracing With Fuzzy Logic in the Development of
+Personalized Math Learning System for Grade 3 and 4.
+DOI: 10.22492/issn.2186-5892.2026.131
+Already cited in references.bib as ruiz2026. New paper: source-pinned offline
+predictive comparison. Earlier teacher ratings are not new findings here.
+
+5. FINAL REVIEW FILE
+Export both revised Mermaid diagrams and include them in Overleaf.
+Complete missing body text and author review; only then hide draft callouts.
+Download the current anonymous full-paper PDF (5--12 pages including references).
+Check figures, tables, all references, metadata, similarity and the actual portal
+requirements. No current rendered PDF or similarity score has been verified here.
+The older build/main.pdf is not the current comparative paper.

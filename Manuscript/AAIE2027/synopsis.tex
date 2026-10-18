@@ -1,0 +1,56 @@
+% Optional author briefing, not an abstract-only submission or a required AAIE upload.
+% Organization informed by ../SystematicITS/synopsis.tex; no SLR results transferred.
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{parskip}
+\usepackage{xcolor}
+\usepackage[hidelinks]{hyperref}
+\input{submission_details}
+\input{comparison_numbers}
+\input{results_numbers}
+\begin{document}
+\begin{center}
+{\Large\bfseries Manuscript synopsis\par}
+\medskip
+\AAIEPaperTitle
+\end{center}
+\AAIEDraftNotice
+\section*{Problem and research question}
+Adding contextual rules to a learner model does not by itself establish improved
+prediction. This study asks whether the implemented fuzzy adjustments improve
+subsequent application-graded answer predictions compared with standard BKT.
+\section*{Study design}
+The approved retrospective replay retains \CandidateResponseCount{} sequential
+nonpractice responses from \CandidateAccountCount{} Grade 3--4 account identifiers
+during July 2--4, 2025. Both models use the same fixed BKT parameters, initial
+states and observed trajectories. The first response in each of 394 student--KC
+sequences updates state only, leaving \ScoredTargets{} common subsequent targets.
+Each probability is generated before the target response can update its state.
+\section*{Measured findings}
+Standard BKT has a Brier score of \BktBrier{}, compared with \HybridBrier{} for
+the adjusted model. The hybrid-minus-BKT difference is \BrierDelta{}, with an
+account-cluster bootstrap 95\% interval of [\BrierCILower{}, \BrierCIUpper{}].
+Log loss is \BktLogLoss{} and \HybridLogLoss{}, respectively. Pooled AUROC is
+\BktAUC{} and \HybridAUC{}, respectively. The interval spans zero; the evaluated
+adjustment therefore shows no clear predictive benefit under this configuration.
+The findings do not establish equivalence or universal failure of fuzzy modeling.
+\section*{Contribution and conference fit}
+The paper isolates the incremental effect of an existing contextual update using
+source-pinned execution, common targets, paired scoring and uncertainty estimates.
+It aligns with intelligent tutoring systems, adaptive learning and educational
+data mining. The contribution is a predictive evaluation, not an estimate of
+learning gains or the effects of an alternative task-selection policy.
+\section*{Relationship to prior work}
+The cited Math Tagumpay IAFOR paper reports system development and teacher
+evaluation. This follow-up evaluates student-linked answer predictions; the
+teacher ratings are not reused as new findings. The separate SystematicITS review
+supplies the organizational example for these supporting files only, not evidence
+or results for the AAIE study.
+\section*{Limits and pending author information}
+Outcomes are reconstructed using the historical application validator; timing is
+cumulative; account eligibility remains unverified; and the replayed Express
+algorithm is not established as the historical online deployment. No fitted-model
+benchmark or component ablation is claimed. Ethics approval is reported, while
+the actual reference, consent details, setting, author list and final declarations
+remain to be completed from study-specific records.
+\end{document}

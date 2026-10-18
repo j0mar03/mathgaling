@@ -1,0 +1,132 @@
+{
+  "accounts_with_exported_responses": 96,
+  "accounts_without_exported_responses": 15,
+  "all_exported_responses": {
+    "account_grade_counts": {
+      "3": 37,
+      "4": 59
+    },
+    "candidate_subsequent_targets_after_first_per_student_kc": 3298,
+    "explicit_practice_rows": 30,
+    "observed_items": 158,
+    "observed_kcs": 15,
+    "quiz_mode_counts": {
+      "MISSING": 172,
+      "sequential": 3538
+    },
+    "records": 3710,
+    "stored_correct_counts": {
+      "NULL": 383,
+      "true": 3327
+    },
+    "student_ids": 96,
+    "student_kc_sequences": 412
+  },
+  "candidate_sequential_nonpractice_grade3_4": {
+    "account_grade_counts": {
+      "3": 34,
+      "4": 58
+    },
+    "candidate_subsequent_targets_after_first_per_student_kc": 2934,
+    "explicit_practice_rows": 0,
+    "observed_items": 153,
+    "observed_kcs": 14,
+    "quiz_mode_counts": {
+      "sequential": 3328
+    },
+    "records": 3328,
+    "stored_correct_counts": {
+      "NULL": 260,
+      "true": 3068
+    },
+    "student_ids": 92,
+    "student_kc_sequences": 394
+  },
+  "confirmed_date_window_UTC_plus_8": {
+    "account_grade_counts": {
+      "3": 34,
+      "4": 58
+    },
+    "candidate_subsequent_targets_after_first_per_student_kc": 2938,
+    "explicit_practice_rows": 5,
+    "observed_items": 158,
+    "observed_kcs": 15,
+    "quiz_mode_counts": {
+      "MISSING": 5,
+      "sequential": 3328
+    },
+    "records": 3333,
+    "stored_correct_counts": {
+      "NULL": 263,
+      "true": 3070
+    },
+    "student_ids": 92,
+    "student_kc_sequences": 395
+  },
+  "date": "2026-10-18",
+  "duplicate_student_ids": 0,
+  "fingerprints": {
+    "content_items": "c56af9da4536024403c85ac7e3d8907bb21ae463270a30b408a81d6be45eb311",
+    "knowledge_components": "b90be9a767dd23ffc751301f69678d843e41b6cbd71af2a96a07e1fb9a6b550b",
+    "responses": "fb4bf972780e96dcf4f6be74d83333603c035656016b4272b1b28ea42aa9b9c7",
+    "students": "e7e63e88090d4ff83fef4722902abfec737d33c6746cfa66429f0ade467c176e"
+  },
+  "limitations": [
+    "Study eligibility and test/demo status remain unverified.",
+    "Historical deployment equivalence is not established by Git dates.",
+    "Proposed derived labels are application-graded outcomes, not independent mathematical adjudication.",
+    "Candidate filters and outcome reconstruction require protocol approval."
+  ],
+  "privacy": "Input students CSV contains name and auth_id. No values from these fields or individual IDs are output.",
+  "responding_ids_absent_from_students": 0,
+  "source_revisions": {
+    "0c407d0": {
+      "commit": "0c407d010d9dd5f1cb2a0eba42b5c0452c22e581",
+      "files": {
+        "client/server/utils/bktAlgorithm.js": {
+          "sha256": "acb3aeb9e4f557d55badc81da7f06a721049fbf30de445d38083628ccb8edd0e"
+        },
+        "client/src/components/student/QuizView.js": {
+          "sha256": "4305b1a73e81e55b06aa69f9b4c3a223f49b833d2ad0fda806983a6451bfe428"
+        },
+        "netlify/functions/api.js": {
+          "sha256": "b88dca9d6153c6eba9f9f172a8c689b4f2f17020c2e0871840b4e222d93d06c9"
+        }
+      },
+      "validator_function_sha256": "436a14863edc6f07b0650a38f33a908b2c2cbd615299a5c68a13bbb237f52113"
+    },
+    "339f043": {
+      "commit": "339f04365d3eca3e915b97b693a304d3f5c762a0",
+      "files": {
+        "client/server/utils/bktAlgorithm.js": {
+          "sha256": "acb3aeb9e4f557d55badc81da7f06a721049fbf30de445d38083628ccb8edd0e"
+        },
+        "client/src/components/student/QuizView.js": {
+          "sha256": "558b67a1570064858f6dc005adb4c696d1531efd3270bf2cfb22ac40328ccf4f"
+        },
+        "netlify/functions/api.js": {
+          "sha256": "75716a73cf0cd1af6f3c6d5662ebea81b60a6b2fe326104b9e7521d9dc49c984"
+        }
+      },
+      "validator_function_sha256": "436a14863edc6f07b0650a38f33a908b2c2cbd615299a5c68a13bbb237f52113"
+    }
+  },
+  "status": "Preparation only; protocol approval pending; no model evaluation performed.",
+  "student_accounts": 111,
+  "validator_diagnostics_not_adopted_labels": {
+    "0c407d0": {
+      "candidate_sequential:NULL:false": 260,
+      "candidate_sequential:true:true": 3068,
+      "collection_window:NULL:false": 262,
+      "collection_window:NULL:true": 1,
+      "collection_window:true:true": 3070
+    },
+    "339f043": {
+      "candidate_sequential:NULL:false": 260,
+      "candidate_sequential:true:true": 3068,
+      "collection_window:NULL:false": 262,
+      "collection_window:NULL:true": 1,
+      "collection_window:true:true": 3070
+    }
+  }
+}

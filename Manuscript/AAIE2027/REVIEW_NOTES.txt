@@ -1,0 +1,326 @@
+CURRENT STATUS -- APPROVED COMPARISON EXECUTED -- 2026-10-18
+
+SUPPORTING SUBMISSION DOCUMENTS -- 2026-10-18
+At the author's request, read all five research/submission documents and five
+Windows metadata companions in ../SystematicITS/. Adapted document organization
+only: titlepage.tex, declarations.tex, coverletter.tex and synopsis.tex, with shared
+submission_details.tex, a completion form, portal metadata and file guidance.
+REFERENCE_ADAPTATION.txt identifies every source and its role. These drafts use
+the existing AAIE results; no SLR outcomes, funding statements, ethics exemption,
+author order, coauthor approval or reviewer recommendations were transferred.
+The public AAIE requirements were rechecked; the extra administrative documents
+are optional unless the authenticated portal asks for them. Supporting and review
+source ZIPs are separate. No identifying author information was added to main.tex.
+Missing author, ethics, consent, setting and declaration facts remain explicitly
+Not yet documented. The user has been asked for these study-specific details.
+No analysis rerun, raw/source modification, PDF compilation or submission occurred.
+
+Proposed root-memory updates for author review: RESEARCH_STATUS.md should index
+these drafts and distinguish their existence from submission readiness; TODO.md
+should track completion of AUTHOR_COMPLETION_FORM.txt and final Overleaf review;
+DECISIONS.md should record the structural-only use of SystematicITS resources and
+separation of author metadata from the anonymous paper. Existing root files remain
+preserved. This preparation does not approve any consequential methodology change.
+
+FIGURE REVISION -- 2026-10-18
+Replaced the long Mermaid chains with two compact four-row diagrams, each with
+five nodes. Added consistent muted colors, short labels and tighter spacing.
+Figure 1 retains prediction before observation and separates scoring from state
+updates. Figure 2 retains shared records, both model branches, common targets
+and paired probability-loss evaluation. Detailed selection, context and bootstrap
+settings remain in the manuscript and explanatory prose outside the diagrams.
+This is a presentation change; the protocol and measured results are unchanged.
+Source checks cover initialization JSON, node/edge structure, four-row path depth
+and package contents. Rendering and final Overleaf readability remain to be checked
+by the author; no PDF was compiled. Proposed TODO.md addition: export the revised
+figures and review their legibility at actual column width.
+
+LITERATURE REVISION -- 2026-10-18
+Expanded the bibliography from 14 to 21 cited sources and integrated all seven
+additions into Related Work and Discussion. Retained the earlier IAFOR citation
+and expanded the distinction between teacher evaluation and predictive scoring.
+No model, approved protocol, measured result, application source or raw input
+was changed. No PDF compilation or analysis rerun was needed for this revision.
+
+Added-source verification (primary publication pages or author manuscripts):
+- Shen et al. (2024): https://arxiv.org/abs/2105.15106 (author version includes
+  journal reference, author list and DOI 10.1109/TLT.2024.3383325).
+- Pavlik et al. (2009): author manuscript at
+  https://pact.cs.cmu.edu/pubs/AIED%202009%20final%20Pavlik%20Cen%20Keodinger%20corrected.pdf
+- Piech et al. (2015): official NeurIPS proceedings abstract and manuscript,
+  https://proceedings.neurips.cc/paper_files/paper/2015/hash/bac9162b47c56fc8a4d2a519803d51b3-Abstract.html
+- Pardos and Heffernan (2010): Springer publication page and author manuscript,
+  https://link.springer.com/chapter/10.1007/978-3-642-13470-8_24
+- Badrinath et al. (2021): published EDM manuscript,
+  https://files.eric.ed.gov/fulltext/ED615610.pdf ; official proceedings index,
+  https://educationaldatamining.org/edm2021/proceedings/
+- Zadeh (1965): Elsevier publication page,
+  https://doi.org/10.1016/S0019-9958(65)90241-X
+- van de Sande (2013): JEDM publication page,
+  https://jedm.educationaldatamining.org/index.php/JEDM/article/view/35
+Prior-work metadata rechecked against https://papers.iafor.org/submission98323/ .
+The IAFOR proceedings citation year remains 2026 (conference edition: ACE2025).
+
+Proposed project-memory additions for author review:
+- RESEARCH_STATUS.md: note the expanded, source-checked comparative manuscript.
+- TODO.md: review cited claims and final Overleaf pagination after figure export.
+- DECISIONS.md: record that the added literature contextualizes the approved
+  comparison; it does not add experimental baselines or authorize model tuning.
+Root memory documents are preserved pending reconciliation with the session notes.
+
+Title revised on 2026-10-18 to explicitly identify the intelligent tutoring system:
+Do Fuzzy Adjustments Improve Bayesian Knowledge Tracing in an Elementary
+Mathematics Intelligent Tutoring System?
+This is a framing change only. The study remains a retrospective offline replay;
+the title does not establish deployment parity or imply a positive result.
+
+The user explicitly approved COMPARISON_PROTOCOL.txt in this session. The pinned
+comparison has now been run. The previously proposed protocol and unfinished
+comparison draft are preserved in archive/.
+
+Measured results (full precision in analysis/comparison_results.json):
+- Primary input: 3,328 sequential nonpractice responses from 92 account IDs.
+- Scored targets: 2,934; application-graded positives 2,705 and negatives 229.
+- BKT Brier 0.09147227864481666; hybrid Brier 0.09221641359321592.
+- Difference (hybrid minus BKT): +0.0007441349483992554.
+- Paired account-bootstrap 95% interval:
+  [-0.0003836146067064936, +0.001930429179285101].
+- BKT log loss 0.3289514983736901; hybrid 0.3300071067132015.
+- Pooled AUROC: BKT 0.48839687139294047; hybrid 0.49045758703355424.
+- Equal-account Brier also higher for the hybrid.
+- No clear predictive benefit established; no equivalence or universal no-effect
+  conclusion is supported. No learning-outcome claim is made.
+
+Verification and limits:
+- Source functions/wrapper extracted from commit
+  0c407d010d9dd5f1cb2a0eba42b5c0452c22e581. No application modules imported.
+- Isolated synthetic fixtures passed for BKT closed-form values, fuzzy branches,
+  penalties/gates/bounds, source-context windows/limits and existing session logic.
+- Prefix and current-target input invariance checks passed.
+- Independent known-answer metric examples passed, including AUROC ties and a
+  zero-difference paired bootstrap. Paired count assertions passed.
+- Original correctness truthiness is retained for recent context, including
+  context-only practice rows. Separate derived primary outcomes agree with it.
+- The replay event clock substitutes for source wall time; real server latency
+  and concurrent request behavior are not reconstructed.
+- Source descending-session behavior and cumulative time inputs preserved.
+  Maximum good-session count was one; no zero-state fallback was triggered.
+- All four raw file hashes checked unchanged after execution. No live database,
+  network call, source edit, parameter fitting, extra model or tuning was used.
+- Account IDs/eligibility, historical deployment and historical answer keys remain
+  unverified. Ethics reference, collection setting and overlap details remain to
+  be supplied. The author must independently review the work before submission.
+
+The manuscript now reports actual computed results and includes 14 cited sources.
+New primary references support probability scoring and account-cluster resampling:
+https://doi.org/10.1198/016214506000001437
+https://rss.onlinelibrary.wiley.com/doi/abs/10.1111/j.1467-9868.2007.00593.x
+No new claim about statistical validity beyond the stated cluster assumption is
+inferred from these references.
+
+Overleaf source includes main.tex, references.bib, comparison_numbers.tex,
+results_numbers.tex, the official IEEEtran class and Mermaid diagram sources.
+The source ZIP excludes raw data, identities, application code and analysis rows.
+No PDF was compiled. Check final page count after manual figure export in Overleaf.
+
+Proposed memory updates for author review:
+RESEARCH_STATUS.md: record completed approved offline comparison, measured results,
+source/input versions, and unresolved cohort, ethics and deployment limitations.
+TODO.md: author review of analysis, actual ethics/cohort/setting details, final
+publication-overlap statement, diagram exports and Overleaf pagination.
+DECISIONS.md: record the 2026-10-18 explicit approval of the fixed-parameter,
+validator-derived-label, as-recorded-time offline protocol, without implying
+approval of revised algorithms or verification of historical deployment.
+Existing research memory has been preserved in this session.
+
+----- HISTORICAL REVIEW NOTES (superseded status statements below) -----
+
+CURRENT DIRECTION -- PREDICTIVE COMPARISON -- 2026-10-18
+
+The author selected a BKT-versus-implemented-fuzzy predictive comparison.
+main.tex now reflects that direction. The earlier audit manuscript and diagrams
+are preserved in archive/ as historical preparation materials.
+
+Research question: Do the implemented fuzzy adjustments improve prediction of
+subsequent application-graded answers compared with standard BKT?
+
+COMPARISON_PROTOCOL.txt contains the proposed methodology and approval request.
+No model evaluation, parameter fitting, synthetic research results, or raw-data
+modifications have been performed. Draft predictive results and conclusions
+remain explicitly pending.
+
+New input evidence:
+- students_rows.csv contains 111 accounts, including names and auth_id.
+  Those identifying values are excluded from manuscript/aggregate outputs.
+- 96 accounts have exported responses; 15 have none; all response IDs join.
+- July 2--4 records: 3,333 responses from 92 account IDs, 34 Grade 3 and 58 Grade 4.
+- Proposed sequential/nonpractice input: 3,328 records; 394 student-KC sequences;
+  2,934 candidate subsequent targets; 153 items and 14 KCs.
+- Proposed input validator diagnostics agree at both inspected revisions:
+  all 3,068 stored true responses accepted and all 260 blank responses rejected.
+  No derived-label dataset has been adopted or exported.
+- Source at 0c407d0 and 339f043 has an identical Express BKT/fuzzy utility.
+  The inspected Netlify response handlers use a separate simpler update.
+  Historical online use of the Express utility remains unverified.
+
+Preparation reproduction:
+python3 Manuscript/AAIE2027/analysis/prepare_comparison_inputs.py
+Writes aggregate comparison_input_summary.json and comparison_numbers.tex only.
+No identities are output; the four raw file fingerprints are verified unchanged.
+
+The Overleaf package now includes comparison_numbers.tex. Its diagrams are
+comparison-workflow.pdf and prediction-order.pdf, exported manually from the
+updated figures/diagrams.md. No PDF was compiled. Final page count remains
+unverified. Existing source, raw exports, research memory and Git edits preserved.
+
+Proposed memory updates: record the active predictive-comparison direction and
+new aggregate input evidence in RESEARCH_STATUS.md; add protocol/eligibility/
+label/timing/evaluation tasks to TODO.md; record methodology in DECISIONS.md only
+when actually approved. Earlier recommendations below are historical.
+
+----- HISTORICAL REVIEW NOTES FROM THE AUDIT-DRAFT STAGES -----
+
+AAIE 2027 working draft -- 2026-10-18
+
+CURRENT REVISION: Overleaf source workflow requested by the author.
+main.tex now uses references.bib and the IEEEtran BibTeX style. Mermaid diagram
+sources are in figures/diagrams.md with two matching LaTeX figure placeholders.
+See OVERLEAF.txt for the exact upload files and exported figure filenames.
+No PDF was compiled for this revision. The earlier PDF and its five-page count
+describe the preceding revision only; they do not validate the current layout.
+The new references, figures, and table can change pagination. Check in Overleaf.
+
+Status: author-review draft, not submission-ready. Research direction has been
+proposed as a retrospective data-quality/knowledge-tracing readiness case study.
+The author has not yet explicitly selected this direction over a predictive
+BKT-versus-fuzzy comparison. No model-performance results are available.
+
+Existing Manuscript/main(1).tex and references(1).bib are preserved.
+Application source, exports, and project memory are preserved.
+
+Venue requirements checked 2026-10-18:
+https://icaaie.org/submission.html
+5--12 pages including references; double-blind review; full paper for publication.
+https://icaaie.org/index.html
+Submission deadline October 20, 2026; timezone not stated on the inspected page.
+Conference January 9--11, 2027, Tokyo. Acceptance/publication not guaranteed.
+
+Official template:
+https://icaaie.org/IEEE-Latex.zip
+IEEEtran.cls copied unchanged from conference-latex-template_10-17-19/IEEEtran.cls.
+The class licensing notices are preserved. No sample manuscript/assets copied.
+
+Prior published paper located and read:
+https://papers.iafor.org/submission98323/
+https://papers.iafor.org/wp-content/uploads/papers/ace2025/ACE2025_98323.pdf
+DOI: 10.22492/issn.2186-5892.2026.131
+ACE2025 proceedings, publication year 2026, pages 1719--1726.
+Draft cites the paper in third person and does not repeat its survey results
+as new data. Author must confirm any other prior reporting of the student logs.
+
+Outstanding author input:
+1. Confirm/approve this research direction. If prediction comparison is selected,
+   a label/timing/evaluation protocol and real experiments must precede results.
+2. Verify eligible participant count, cohort membership, school setting, collection
+   timezone, and student consent/assent arrangements. 96 database IDs are not a
+   verified participant count. July 2--4, 2025 collection was confirmed in chat.
+3. Ethics approval body, reference, date, and actual scope. Approval for follow-up
+   was reported in chat; documents were not inspected and no details invented.
+4. Historical Netlify deploy commit and historical answer-key version.
+5. Confirm the proposed overlap statement and final authorship/affiliation.
+6. Review AI assistance disclosure against the venue/publisher's applicable policy.
+7. Independent mathematical review of item/answer-key matching remains outstanding.
+
+The default draft is anonymous and shows red author-review notes. Keep notes visible
+until they are resolved. Setting workingdraftfalse only hides notes; it does not
+resolve the underlying gaps. Do not submit an unreviewed build.
+
+Reproduce descriptive audit from repository root:
+python3 Manuscript/AAIE2027/analysis/build_evidence.py
+Requires Python 3 and Node.js. Reads local CSVs and extracts only a pure client
+validation function. Does not start the app, access the DB, or write raw data.
+Writes aggregate analysis/audit_results.json and evidence_numbers.tex.
+All raw file hashes are rechecked before outputs are written.
+
+Compile and check the final document in Overleaf, as requested by the author.
+The current source package omits raw data, audit scripts, prior PDFs, and review
+notes. It includes the .tex/.bib inputs, official class, and Mermaid sources.
+
+Raw exports remain untracked and not ignored; do not stage them. No raw data are
+copied into this manuscript directory. Aggregate outputs do not certify complete
+anonymization. Existing tracked fallback credentials also require separate review;
+no credential values are copied into manuscript materials.
+
+Proposed project-memory updates after author approval:
+RESEARCH_STATUS.md: record published IAFOR DOI, reported deployment, confirmed
+student collection dates, audit snapshot/counts, and measurement limitations.
+TODO.md: resolve cohort, historical version, labeling, timing, ethics details,
+and manuscript validation.
+DECISIONS.md: record only the research direction/method actually approved,
+with approval date; do not present this draft as an approved experiment.
+
+Build environment for this draft:
+Portable Tectonic 0.17.0, downloaded from the official GitHub release.
+Compiler and package cache reside in /tmp, outside the repository.
+PyMuPDF 1.28.2 in /tmp is used only for local PDF inspection.
+No system-wide TeX or Python packages were installed.
+
+Historical validation for the preceding PDF build (not this source revision):
+- Compiled successfully with portable Tectonic 0.17.0.
+- PDF has 5 US Letter pages; inspected rendered pages and extracted text.
+- No unresolved citations, cross-references, or missing-character replacements.
+- Engine reports three underfull bibliography-line warnings at the long MDN URL;
+  no fatal errors. These are spacing warnings, not missing content.
+- Aggregate audit rerun after adding snapshot guards; raw hashes unchanged.
+- git diff --check passed. Nothing staged, committed, pushed, restored, or deleted.
+
+Current revision: contribution and claim scope
+- Added explicit audit contributions and a table mapping evidence to validity.
+- Added the primary pyKT benchmark paper to distinguish benchmark evaluation
+  standardization from the recording-semantics question investigated here.
+- Twelve cited records reside in references.bib after the literature expansion;
+  original IAFOR sources are preserved.
+- The audit remains a single-system descriptive case study, with no measured
+  model-performance effect or validated general-purpose audit instrument.
+- Double-blind author block is preserved. Citation to the earlier system paper
+  remains in third person; author should confirm final venue-specific handling.
+- Added an accurate OpenAI Codex assistance disclosure under Acknowledgment,
+  covering script development, manuscript generation, tables, and Mermaid figures.
+  The author must independently review the analysis and final disclosure.
+  IEEE policy checked 2026-10-18:
+  https://journals.ieeeauthorcenter.ieee.org/become-an-ieee-journal-author/publishing-ethics/guidelines-and-policies/submission-and-peer-review-policies/
+- No acceptance guarantee or probability can be supported. In particular, an
+  audit-only contribution should not be described as a completed BKT/fuzzy trial.
+
+Additional primary reference verified 2026-10-18:
+pyKT, NeurIPS 2022 Datasets and Benchmarks track:
+https://proceedings.neurips.cc/paper_files/paper/2022/hash/75ca2b23d9794f02a92449af65a57556-Abstract-Datasets_and_Benchmarks.html
+DOI: 10.52202/068431-1347
+
+Citation expansion -- 2026-10-18:
+The manuscript bibliography expanded from 6 to 12 references. Added sources
+support specific literature claims; no additional empirical outcomes were inferred.
+New sources verified against publisher, proceedings, author, or institutional pages:
+- Pelanek (2017), learner-modeling context and evaluation:
+  https://link.springer.com/article/10.1007/s11257-017-9193-2
+- Gervet et al. (2020), dataset-dependent model performance and calibration:
+  https://jedm.educationaldatamining.org/index.php/JEDM/article/view/451
+- Baker et al. (2008), contextual slip and guess estimation:
+  https://link.springer.com/chapter/10.1007/978-3-540-69132-7_44
+  Author's erratum exists; no formulas or effect sizes were copied:
+  https://learninganalytics.upenn.edu/ryanbaker/BCA2008erratum.html
+- Breck et al. (2019), machine-learning data validation:
+  https://proceedings.mlsys.org/paper_files/paper/2019/file/928f1160e52192e3e0017fb63ab65391-Paper.pdf
+  Published PDF author order used; proceedings abstract-page order differs.
+- Rubin (1976), the role of the missing-data mechanism:
+  https://dash.harvard.edu/entities/publication/73120378-8764-6bd4-e053-0100007fdf3b
+  No missingness mechanism was statistically identified in the local export.
+- Liu et al. (2023), simpleKT as a reproducible baseline:
+  https://openreview.net/forum?id=9HiGqC9C-KA
+
+Prior IAFOR publication is retained under key ruiz2026 in the introduction and
+prior-work subsection. Its 2026 publication year follows the official archive,
+although the proceedings conference is ACE2025. It is cited to credit the earlier
+system/teacher evaluation and make the new contribution explicit. An additional
+citation is not evidence of new findings or a guarantee against publication overlap.
+No PDF compilation was performed. Recheck final pagination in Overleaf.
